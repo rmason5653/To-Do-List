@@ -318,11 +318,9 @@ function buildCells(task: Task, schema: SlackColumn[]): Record<string, unknown>[
   push("due_date", (col) => {
     if (!task.due_date) return { date: null };
     if (col.type.includes("date")) {
-      const epoch = Math.floor(
-        Date.UTC(
-          ...(task.due_date.split("-").map(Number) as [number, number, number]),
-        ) / 1000,
-      );
+      const [y, m, d] = task.due_date.split("-").map(Number);
+      // Date.UTC expects a 0-indexed month.
+      const epoch = Math.floor(Date.UTC(y, m - 1, d) / 1000);
       return { date: epoch };
     }
     return { text: task.due_date };
