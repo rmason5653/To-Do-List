@@ -3,8 +3,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import QuickAdd from "./QuickAdd";
 import TaskCard from "./TaskCard";
+import { AssigneePicker } from "./Assignee";
 import { groupTasks, isDone, todayISO } from "@/lib/grouping";
-import type { Category, SyncStatus, Task, TaskInput } from "@/lib/types";
+import type {
+  Category,
+  SyncStatus,
+  Task,
+  TaskInput,
+  TeamMember,
+} from "@/lib/types";
 
 type Filter = "all" | "ops" | "personal";
 
@@ -24,6 +31,7 @@ function Section({
   accent,
   tasks,
   today,
+  team,
   onPatch,
   onDelete,
   collapsible,
@@ -32,6 +40,7 @@ function Section({
   accent: string;
   tasks: Task[];
   today: string;
+  team: TeamMember[];
   onPatch: (id: string, patch: Partial<TaskInput>) => void;
   onDelete: (id: string) => void;
   collapsible?: boolean;
@@ -61,6 +70,7 @@ function Section({
               key={t.id}
               task={t}
               today={today}
+              team={team}
               onPatch={(patch) => onPatch(t.id, patch)}
               onDelete={() => onDelete(t.id)}
             />
@@ -91,15 +101,19 @@ function StatTile({
 export default function Dashboard({
   initialTasks,
   initialSync,
+  initialTeam,
   loadError,
 }: {
   initialTasks: Task[];
   initialSync: SyncStatus | null;
+  initialTeam: TeamMember[];
   loadError: string | null;
 }) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [sync, setSync] = useState<SyncStatus | null>(initialSync);
+  const [team, setTeam] = useState<TeamMember[]>(initialTeam);
   const [filter, setFilter] = useState<Filter>("all");
+  const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [syncing, setSyncing] = useState(false);
   const busy = useRef(0);
@@ -115,6 +129,7 @@ export default function Dashboard({
       if (busy.current > 0) return;
       setTasks(data.tasks ?? []);
       if (data.sync) setSync(data.sync);
+      if (data.team) setTeam(data.team);
     } catch {
       /* offline; keep current view */
     }
@@ -203,13 +218,14 @@ export default function Dashboard({
     const q = query.trim().toLowerCase();
     return tasks.filter((t) => {
       if (filter !== "all" && t.category !== filter) return false;
+      if (assigneeFilter && t.assignee !== assigneeFilter) return false;
       if (!q) return true;
       return (
         t.title.toLowerCase().includes(q) ||
         (t.description ?? "").toLowerCase().includes(q)
       );
     });
-  }, [tasks, filter, query]);
+  }, [tasks, filter, assigneeFilter, query]);
 
   const groups = useMemo(() => groupTasks(filtered, today), [filtered, today]);
 
@@ -315,6 +331,7 @@ export default function Dashboard({
       <div className="mb-4">
         <QuickAdd
           defaultCategory={filter === "personal" ? "personal" : "ops"}
+          team={team}
           onAdd={addTask}
         />
       </div>
@@ -341,6 +358,15 @@ export default function Dashboard({
           placeholder="Search tasks…"
           className="min-w-[10rem] flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-indigo-400"
         />
+        {team.length > 0 && (
+          <AssigneePicker
+            team={team}
+            value={assigneeFilter}
+            onChange={setAssigneeFilter}
+            unassignedLabel="Anyone"
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 outline-none focus:border-indigo-400"
+          />
+        )}
       </div>
 
       {tasks.length === 0 ? (
@@ -359,6 +385,7 @@ export default function Dashboard({
             accent="bg-rose-500"
             tasks={groups.overdue}
             today={today}
+            team={team}
             onPatch={patchTask}
             onDelete={removeTask}
           />
@@ -367,6 +394,7 @@ export default function Dashboard({
             accent="bg-amber-500"
             tasks={groups.dueToday}
             today={today}
+            team={team}
             onPatch={patchTask}
             onDelete={removeTask}
           />
@@ -375,6 +403,7 @@ export default function Dashboard({
             accent="bg-sky-500"
             tasks={groups.thisWeek}
             today={today}
+            team={team}
             onPatch={patchTask}
             onDelete={removeTask}
           />
@@ -383,6 +412,7 @@ export default function Dashboard({
             accent="bg-indigo-400"
             tasks={groups.later}
             today={today}
+            team={team}
             onPatch={patchTask}
             onDelete={removeTask}
           />
@@ -391,6 +421,7 @@ export default function Dashboard({
             accent="bg-slate-400"
             tasks={groups.someday}
             today={today}
+            team={team}
             onPatch={patchTask}
             onDelete={removeTask}
           />
@@ -399,6 +430,7 @@ export default function Dashboard({
             accent="bg-emerald-500"
             tasks={groups.done.slice(0, 50)}
             today={today}
+            team={team}
             onPatch={patchTask}
             onDelete={removeTask}
             collapsible

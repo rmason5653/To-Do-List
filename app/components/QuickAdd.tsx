@@ -1,18 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import type { Category, TaskInput } from "@/lib/types";
+import { AssigneePicker } from "./Assignee";
+import type { Category, TaskInput, TeamMember } from "@/lib/types";
 
 export default function QuickAdd({
   defaultCategory,
+  team,
   onAdd,
 }: {
   defaultCategory: Category;
+  team: TeamMember[];
   onAdd: (input: TaskInput) => Promise<void> | void;
 }) {
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState<Category>(defaultCategory);
   const [due, setDue] = useState("");
+  const [assignee, setAssignee] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -24,10 +28,12 @@ export default function QuickAdd({
         title: trimmed,
         category,
         due_date: due || null,
+        assignee,
         status: "not_started",
       });
       setTitle("");
       setDue("");
+      setAssignee(null);
     } finally {
       setBusy(false);
     }
@@ -66,6 +72,14 @@ export default function QuickAdd({
           onChange={(e) => setDue(e.target.value)}
           className="rounded-lg border border-slate-200 px-2 py-2 text-sm text-slate-600 outline-none focus:border-indigo-400"
         />
+        {team.length > 0 && (
+          <AssigneePicker
+            team={team}
+            value={assignee}
+            onChange={setAssignee}
+            className="rounded-lg border border-slate-200 px-2 py-2 text-sm text-slate-600 outline-none focus:border-indigo-400"
+          />
+        )}
         <button
           onClick={submit}
           disabled={busy || !title.trim()}

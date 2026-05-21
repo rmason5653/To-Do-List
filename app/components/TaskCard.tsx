@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { dueLabel } from "@/lib/grouping";
-import type { Status, Task, TaskInput } from "@/lib/types";
+import { AssigneePicker, AssigneeTag } from "./Assignee";
+import type { Status, Task, TaskInput, TeamMember } from "@/lib/types";
 
 const PRIORITY_STYLE: Record<number, string> = {
   3: "bg-rose-100 text-rose-700",
@@ -26,11 +27,13 @@ function initials(value: string): string {
 export default function TaskCard({
   task,
   today,
+  team,
   onPatch,
   onDelete,
 }: {
   task: Task;
   today: string;
+  team: TeamMember[];
   onPatch: (patch: Partial<TaskInput>) => void;
   onDelete: () => void;
 }) {
@@ -47,6 +50,9 @@ export default function TaskCard({
 
   const done = task.completed || task.status === "done";
   const overdue = !done && task.due_date && task.due_date < today;
+  const assigneeMember = task.assignee
+    ? team.find((m) => m.id === task.assignee)
+    : undefined;
 
   return (
     <div className="rounded-xl bg-white ring-1 ring-black/5 transition hover:ring-black/10">
@@ -112,14 +118,16 @@ export default function TaskCard({
                 {dueLabel(task.due_date, today)}
               </span>
             )}
-            {task.assignee && (
+            {assigneeMember ? (
+              <AssigneeTag member={assigneeMember} />
+            ) : task.assignee ? (
               <span
                 title={task.assignee}
                 className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600"
               >
                 {initials(task.assignee)}
               </span>
-            )}
+            ) : null}
             {task.description && !expanded && (
               <span className="truncate text-[11px] text-slate-400">
                 {task.description.replace(/\s+/g, " ").slice(0, 80)}
@@ -215,16 +223,18 @@ export default function TaskCard({
             </label>
           </div>
 
-          <div className="mt-2 flex items-center gap-2">
-            <input
-              defaultValue={task.assignee ?? ""}
-              onBlur={(e) => {
-                const v = e.target.value.trim();
-                if (v !== (task.assignee ?? "")) onPatch({ assignee: v || null });
-              }}
-              placeholder="Assignee (name or email)"
-              className="flex-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm outline-none focus:border-indigo-400"
-            />
+          <div className="mt-2 flex items-end gap-2">
+            <label className="flex flex-1 flex-col gap-1">
+              <span className="text-[11px] font-medium text-slate-500">
+                Assignee
+              </span>
+              <AssigneePicker
+                team={team}
+                value={task.assignee}
+                onChange={(id) => onPatch({ assignee: id })}
+                className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm outline-none focus:border-indigo-400"
+              />
+            </label>
             <button
               onClick={() => {
                 if (confirm("Delete this task?")) onDelete();

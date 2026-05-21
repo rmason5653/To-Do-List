@@ -2,6 +2,7 @@ import {
   createListItem,
   deleteListItem,
   fetchListItems,
+  fetchWorkspaceUsers,
   getListSchema,
   parseItem,
   slackEnabled,
@@ -9,6 +10,7 @@ import {
   type ParsedItem,
   type SlackColumn,
 } from "./slack";
+import { getTeamRecord, setTeam } from "./team";
 import {
   addSlackTombstone,
   createTask,
@@ -39,6 +41,25 @@ function pendingLocal(task: Task): boolean {
   return task.last_synced_at == null || task.updated_at > task.last_synced_at;
 }
 
+const TEAM_TTL_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Keep the workspace directory fresh so assignee ids resolve to names.
+ * Throttled to once every few hours and non-fatal — a failure here (e.g. a
+ * missing users:read scope) must never block the task sync.
+ */
+async function refreshTeam(): Promise<void> {
+  try {
+    const record = await getTeamRecord();
+    const ageMs = record ? Date.now() - Date.parse(record.updatedAt) : Infinity;
+    if (ageMs < TEAM_TTL_MS) return;
+    const users = await fetchWorkspaceUsers();
+    if (users.length) await setTeam(users);
+  } catch {
+    // Names just won't refresh this run.
+  }
+}
+
 /**
  * Full two-way reconciliation between the app database and the Slack List.
  * Tool-side edits also push immediately via pushTaskToSlack(); this catches
@@ -67,6 +88,8 @@ export async function runSync(): Promise<SyncStatus> {
         "Could not read the Slack List columns. Check SLACK_LIST_ID and that the token has lists:read.",
       );
     }
+
+    await refreshTeam();
 
     const slackItems = await fetchListItems();
     const dbTasks = await listTasks();
