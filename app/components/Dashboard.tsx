@@ -2,8 +2,17 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import QuickAdd from "./QuickAdd";
-import TaskRow, { ROW_GRID } from "./TaskRow";
+import TaskRow from "./TaskRow";
 import { AssigneePicker } from "./Assignee";
+import {
+  COLUMNS,
+  DEFAULT_COLUMN_ORDER,
+  gridTemplate,
+  loadColumnOrder,
+  reorderColumns,
+  saveColumnOrder,
+  type ColumnId,
+} from "./columns";
 import { groupByPriority, groupByTime, isDone, todayISO } from "@/lib/grouping";
 import type { SyncStatus, Task, TaskInput, TeamMember } from "@/lib/types";
 
@@ -70,6 +79,24 @@ function Chevron({ open }: { open: boolean }) {
   );
 }
 
+function Grip() {
+  return (
+    <svg
+      viewBox="0 0 8 14"
+      className="h-3 w-2 shrink-0 text-line"
+      fill="currentColor"
+      aria-hidden="true"
+    >
+      <circle cx="2" cy="3" r="1" />
+      <circle cx="6" cy="3" r="1" />
+      <circle cx="2" cy="7" r="1" />
+      <circle cx="6" cy="7" r="1" />
+      <circle cx="2" cy="11" r="1" />
+      <circle cx="6" cy="11" r="1" />
+    </svg>
+  );
+}
+
 export default function Dashboard({
   initialTasks,
   initialSync,
@@ -91,6 +118,9 @@ export default function Dashboard({
   const [syncing, setSyncing] = useState(false);
   const [theme, setTheme] = useState<"dark" | "light">("dark");
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set(["done"]));
+  const [columnOrder, setColumnOrder] = useState<ColumnId[]>(DEFAULT_COLUMN_ORDER);
+  const [dragOverCol, setDragOverCol] = useState<ColumnId | null>(null);
+  const dragCol = useRef<ColumnId | null>(null);
   const busy = useRef(0);
 
   const today = todayISO();
@@ -99,6 +129,7 @@ export default function Dashboard({
     setTheme(
       document.documentElement.classList.contains("light") ? "light" : "dark",
     );
+    setColumnOrder(loadColumnOrder());
     try {
       const g = localStorage.getItem("todo_grouping");
       if (g === "time" || g === "priority") setGrouping(g);
@@ -134,6 +165,18 @@ export default function Dashboard({
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
+      return next;
+    });
+  }, []);
+
+  const handleColumnDrop = useCallback((target: ColumnId) => {
+    const dragged = dragCol.current;
+    dragCol.current = null;
+    setDragOverCol(null);
+    if (!dragged) return;
+    setColumnOrder((prev) => {
+      const next = reorderColumns(prev, dragged, target);
+      saveColumnOrder(next);
       return next;
     });
   }, []);
@@ -381,17 +424,40 @@ export default function Dashboard({
       ) : (
         <div className="overflow-hidden rounded-xl border border-line bg-panel">
           <div className="overflow-x-auto">
-            <div className="min-w-[680px]">
+            <div className="min-w-[800px]">
               <div
-                className={`${ROW_GRID} border-b border-line px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted`}
+                className="grid items-center gap-2 border-b border-line px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted"
+                style={{ gridTemplateColumns: gridTemplate(columnOrder) }}
               >
                 <span />
-                <span>Task</span>
-                <span>Status</span>
-                <span>Priority</span>
-                <span />
-                <span>Assignee</span>
-                <span>Due date</span>
+                {columnOrder.map((id) => (
+                  <div
+                    key={id}
+                    draggable
+                    onDragStart={() => {
+                      dragCol.current = id;
+                    }}
+                    onDragEnd={() => {
+                      dragCol.current = null;
+                      setDragOverCol(null);
+                    }}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      if (dragOverCol !== id) setDragOverCol(id);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      handleColumnDrop(id);
+                    }}
+                    title="Drag to reorder this column"
+                    className={`flex cursor-grab select-none items-center gap-1 transition-colors ${
+                      dragOverCol === id ? "text-mason-red" : "hover:text-ink"
+                    }`}
+                  >
+                    <Grip />
+                    {COLUMNS[id].label}
+                  </div>
+                ))}
               </div>
 
               {groups.every((g) => g.tasks.length === 0) ? (
@@ -421,6 +487,7 @@ export default function Dashboard({
                             task={t}
                             today={today}
                             team={team}
+                            columnOrder={columnOrder}
                             onPatch={(patch) => patchTask(t.id, patch)}
                             onDelete={() => removeTask(t.id)}
                           />

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { AssigneePicker } from "./Assignee";
+import PriorityStars from "./PriorityStars";
 import type { Category, TaskInput, TeamMember } from "@/lib/types";
 
 export default function QuickAdd({
@@ -17,6 +18,7 @@ export default function QuickAdd({
   const [category, setCategory] = useState<Category>(defaultCategory);
   const [due, setDue] = useState("");
   const [assignee, setAssignee] = useState<string | null>(null);
+  const [priority, setPriority] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
   async function submit() {
@@ -29,11 +31,13 @@ export default function QuickAdd({
         category,
         due_date: due || null,
         assignee,
+        priority,
         status: "not_started",
       });
       setTitle("");
       setDue("");
       setAssignee(null);
+      setPriority(null);
     } finally {
       setBusy(false);
     }
@@ -69,6 +73,12 @@ export default function QuickAdd({
         onChange={(e) => setDue(e.target.value)}
         className="field text-muted"
       />
+      <div
+        className="flex items-center rounded-lg border border-line bg-panel2 px-2.5 py-2"
+        title="Priority"
+      >
+        <PriorityStars priority={priority} onChange={setPriority} />
+      </div>
       {team.length > 0 && (
         <AssigneePicker team={team} value={assignee} onChange={setAssignee} />
       )}
