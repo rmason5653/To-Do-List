@@ -327,9 +327,27 @@ function optionIdForLabel(column: SlackColumn, label: string): string | undefine
   return column.options.find((o) => o.label.trim().toLowerCase() === target)?.id;
 }
 
+/** A plain string as a Block Kit rich_text value for a List text cell. */
+function richTextValue(value: string): unknown[] {
+  if (!value) return [];
+  return [
+    {
+      type: "rich_text",
+      elements: [
+        {
+          type: "rich_text_section",
+          elements: [{ type: "text", text: value }],
+        },
+      ],
+    },
+  ];
+}
+
 /**
- * Build the cell payload for a create/update call. Each entry is keyed by
- * column id and carries a typed value chosen from the column's declared type.
+ * Build the cell payload for a create/update call. Value shapes follow the
+ * Slack Lists API: text columns take Block Kit rich_text; date, number and
+ * select columns take arrays; checkbox takes a boolean; person columns take
+ * an array of user ids.
  */
 function buildCells(task: Task, schema: SlackColumn[]): Record<string, unknown>[] {
   const cells: Record<string, unknown>[] = [];
@@ -344,41 +362,32 @@ function buildCells(task: Task, schema: SlackColumn[]): Record<string, unknown>[
     if (payload) cells.push({ column_id: col.id, ...payload });
   };
 
-  push("title", () => ({ text: task.title }));
+  push("title", () => ({ rich_text: richTextValue(task.title) }));
 
-  push("description", () =>
-    task.description ? { text: task.description } : { text: "" },
-  );
+  push("description", () => ({
+    rich_text: richTextValue(task.description ?? ""),
+  }));
 
   push("status", (col) => {
     if (col.type.includes("select") || col.options.length) {
       const id = optionIdForLabel(col, statusLabel(task.status));
-      return id ? { select: [id] } : { text: statusLabel(task.status) };
+      return id ? { select: [id] } : { rich_text: richTextValue(statusLabel(task.status)) };
     }
-    return { text: statusLabel(task.status) };
+    return { rich_text: richTextValue(statusLabel(task.status)) };
   });
 
   push("priority", (col) => {
-    if (task.priority == null) return null;
     if (col.type.includes("select") || col.options.length) {
+      if (task.priority == null) return { select: [] };
       const id = optionIdForLabel(col, String(task.priority));
       return id ? { select: [id] } : null;
     }
-    return { number: task.priority };
+    return { number: task.priority == null ? [] : [task.priority] };
   });
 
   push("completed", () => ({ checkbox: task.completed }));
 
-  push("due_date", (col) => {
-    if (!task.due_date) return { date: null };
-    if (col.type.includes("date")) {
-      const [y, m, d] = task.due_date.split("-").map(Number);
-      // Date.UTC expects a 0-indexed month.
-      const epoch = Math.floor(Date.UTC(y, m - 1, d) / 1000);
-      return { date: epoch };
-    }
-    return { text: task.due_date };
-  });
+  push("due_date", () => ({ date: task.due_date ? [task.due_date] : [] }));
 
   push("assignee", (col) => {
     const value = task.assignee?.trim() || "";
@@ -390,7 +399,7 @@ function buildCells(task: Task, schema: SlackColumn[]): Record<string, unknown>[
       // A Person cell takes an array of user ids; an empty array clears it.
       return { user: isUserId ? [value] : [] };
     }
-    return { text: value };
+    return { rich_text: richTextValue(value) };
   });
 
   return cells;
@@ -417,7 +426,6 @@ export async function updateListItem(
   }));
   await callJson("slackLists.items.update", {
     list_id: listId(),
-    id: itemId,
     cells,
   });
 }
