@@ -126,3 +126,13 @@ export async function addSlackTombstone(slackItemId: string): Promise<void> {
   if (ids.includes(slackItemId)) return;
   await setSlackTombstones([...ids, slackItemId]);
 }
+
+/** Temporary: store the live Slack schema + a sample row for diagnosis. */
+export async function setSlackDebug(value: unknown): Promise<void> {
+  const sb = getSupabase();
+  await sb.from("app_meta").upsert({
+    key: "slack_debug",
+    value: value as never,
+    updated_at: new Date().toISOString(),
+  });
+}
