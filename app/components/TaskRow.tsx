@@ -6,7 +6,7 @@ import { AssigneePicker, AssigneeTag, memberInitials } from "./Assignee";
 import type { Status, Task, TaskInput, TeamMember } from "@/lib/types";
 
 export const ROW_GRID =
-  "grid grid-cols-[1.75rem_minmax(11rem,1fr)_6.5rem_4.75rem_8.75rem_6.75rem] items-center gap-2";
+  "grid grid-cols-[1.75rem_minmax(11rem,1fr)_7rem_5rem_2rem_8.75rem_6.75rem] items-center gap-2";
 
 const STATUS_LABEL: Record<Status, string> = {
   not_started: "Not started",
@@ -20,26 +20,69 @@ const STATUS_STYLE: Record<Status, string> = {
   done: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
 };
 
-function StatusPill({ status }: { status: Status }) {
+/** Status shown as a pill that is itself a dropdown — click to change. */
+function StatusSelect({
+  status,
+  onChange,
+}: {
+  status: Status;
+  onChange: (s: Status) => void;
+}) {
   return (
-    <span
-      className={`inline-block rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${STATUS_STYLE[status]}`}
+    <select
+      value={status}
+      onChange={(e) => onChange(e.target.value as Status)}
+      title="Change status"
+      className={`w-full cursor-pointer appearance-none rounded-md border px-1.5 py-1 text-center text-[10px] font-semibold uppercase tracking-wide outline-none ${STATUS_STYLE[status]}`}
     >
-      {STATUS_LABEL[status]}
+      {(["not_started", "in_progress", "done"] as Status[]).map((s) => (
+        <option key={s} value={s}>
+          {STATUS_LABEL[s]}
+        </option>
+      ))}
+    </select>
+  );
+}
+
+/** Three stars — click a star to set that priority, click it again to clear. */
+function PriorityStars({
+  priority,
+  onChange,
+}: {
+  priority: number | null;
+  onChange: (p: number | null) => void;
+}) {
+  return (
+    <span className="flex gap-0.5 text-sm">
+      {[1, 2, 3].map((n) => (
+        <button
+          key={n}
+          onClick={() => onChange(priority === n ? null : n)}
+          title={`Set priority ${n}`}
+          className={`leading-none transition hover:scale-125 ${
+            priority != null && n <= priority
+              ? "text-mason-yellow"
+              : "text-line hover:text-mason-yellow"
+          }`}
+        >
+          ★
+        </button>
+      ))}
     </span>
   );
 }
 
-function PriorityStars({ priority }: { priority: number | null }) {
-  if (priority == null) return <span className="text-xs text-muted">—</span>;
+function NotesIcon() {
   return (
-    <span className="flex gap-0.5 text-xs" title={`Priority ${priority}`}>
-      {[1, 2, 3].map((n) => (
-        <span key={n} className={n <= priority ? "text-mason-yellow" : "text-line"}>
-          ★
-        </span>
-      ))}
-    </span>
+    <svg
+      viewBox="0 0 16 16"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+    >
+      <path d="M3 4h10M3 8h10M3 12h6" strokeLinecap="round" />
+    </svg>
   );
 }
 
@@ -81,10 +124,11 @@ export default function TaskRow({
   const done = task.completed || task.status === "done";
   const overdue = !done && !!task.due_date && task.due_date < today;
   const member = task.assignee ? team.find((m) => m.id === task.assignee) : undefined;
+  const hasNotes = !!task.description && task.description.trim() !== "";
 
   return (
     <div className="border-b border-line last:border-b-0">
-      <div className={`${ROW_GRID} px-3 py-2 transition-colors hover:bg-panel2`}>
+      <div className={`${ROW_GRID} px-3 py-3 transition-colors hover:bg-panel2`}>
         <button
           aria-label={done ? "Mark not done" : "Mark done"}
           onClick={() => onPatch({ completed: !done })}
@@ -112,15 +156,23 @@ export default function TaskRow({
           >
             {task.title || "Untitled task"}
           </span>
-          {task.description && (
-            <span className="block truncate text-[11px] text-muted">
-              {task.description.replace(/\s+/g, " ")}
-            </span>
-          )}
         </button>
 
-        <StatusPill status={task.status} />
-        <PriorityStars priority={task.priority} />
+        <StatusSelect status={task.status} onChange={(s) => onPatch({ status: s })} />
+        <PriorityStars
+          priority={task.priority}
+          onChange={(p) => onPatch({ priority: p })}
+        />
+
+        <button
+          onClick={() => setExpanded(true)}
+          title={hasNotes ? "View / edit notes" : "Add notes"}
+          className={`flex justify-center transition hover:text-mason-red ${
+            hasNotes ? "text-ink" : "text-line"
+          }`}
+        >
+          <NotesIcon />
+        </button>
 
         <div className="min-w-0">
           {member ? (
@@ -173,7 +225,7 @@ export default function TaskRow({
               }
             }}
             placeholder="Notes / details"
-            rows={2}
+            rows={3}
             className="field mt-2 w-full resize-y"
           />
 

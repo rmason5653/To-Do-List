@@ -99,6 +99,12 @@ export default function Dashboard({
     setTheme(
       document.documentElement.classList.contains("light") ? "light" : "dark",
     );
+    try {
+      const g = localStorage.getItem("todo_grouping");
+      if (g === "time" || g === "priority") setGrouping(g);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const toggleTheme = useCallback(() => {
@@ -112,6 +118,15 @@ export default function Dashboard({
       }
       return next;
     });
+  }, []);
+
+  const changeGrouping = useCallback((g: Grouping) => {
+    setGrouping(g);
+    try {
+      localStorage.setItem("todo_grouping", g);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   const toggleCollapsed = useCallback((id: string) => {
@@ -336,7 +351,7 @@ export default function Dashboard({
             { id: "priority", label: "by priority" },
           ]}
           value={grouping}
-          onChange={setGrouping}
+          onChange={changeGrouping}
         />
         <input
           value={query}
@@ -374,6 +389,7 @@ export default function Dashboard({
                 <span>Task</span>
                 <span>Status</span>
                 <span>Priority</span>
+                <span />
                 <span>Assignee</span>
                 <span>Due date</span>
               </div>
