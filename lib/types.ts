@@ -48,3 +48,11 @@ export interface TeamMember {
   email: string | null;
   avatar: string | null;
 }
+
+/** How often a task repeats. Stored app-side, keyed by task id. */
+export type Recurrence = "daily" | "weekdays" | "weekly" | "biweekly" | "monthly";
+
+export type RecurrenceMap = Record<string, Recurrence>;
+
+/** A task edit, optionally also changing the task's recurrence rule. */
+export type TaskPatch = Partial<TaskInput> & { recurrence?: Recurrence | null };

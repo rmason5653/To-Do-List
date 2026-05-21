@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createTask, getSyncStatus, listTasks } from "@/lib/tasks";
 import { getTeam } from "@/lib/team";
+import { getRecurrenceMap } from "@/lib/recurrence";
 import { pushTaskToSlack } from "@/lib/sync";
 import { normalizeInput } from "@/lib/normalize";
 
@@ -8,12 +9,13 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const [tasks, sync, team] = await Promise.all([
+    const [tasks, sync, team, recurrence] = await Promise.all([
       listTasks(),
       getSyncStatus(),
       getTeam(),
+      getRecurrenceMap(),
     ]);
-    return NextResponse.json({ tasks, sync, team });
+    return NextResponse.json({ tasks, sync, team, recurrence });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }

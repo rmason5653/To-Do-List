@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
-import { deleteTask, getTask, updateTask } from "@/lib/tasks";
+import { createTask, deleteTask, getTask, updateTask } from "@/lib/tasks";
 import { deleteTaskFromSlack, pushTaskToSlack } from "@/lib/sync";
 import { normalizeInput } from "@/lib/normalize";
+import { isDone, todayISO } from "@/lib/grouping";
+import {
+  getRecurrenceMap,
+  isRecurrence,
+  nextDueDate,
+  setRecurrenceMap,
+} from "@/lib/recurrence";
 
 export const dynamic = "force-dynamic";
 
@@ -18,11 +25,41 @@ export async function PATCH(
 
     const body = await req.json().catch(() => ({}));
     const patch = normalizeInput(body);
-    if (Object.keys(patch).length === 0) {
-      return NextResponse.json({ task: existing });
+
+    const task =
+      Object.keys(patch).length > 0 ? await updateTask(id, patch) : existing;
+
+    const map = await getRecurrenceMap();
+    let mapChanged = false;
+
+    // A recurrence rule passed in the body sets or clears the task's schedule.
+    if ("recurrence" in body) {
+      if (isRecurrence(body.recurrence)) map[id] = body.recurrence;
+      else delete map[id];
+      mapChanged = true;
     }
 
-    const task = await updateTask(id, patch);
+    // Completing a recurring task spawns the next occurrence and moves the
+    // rule onto it, so the schedule rolls forward automatically.
+    let spawned = null;
+    if (!isDone(existing) && isDone(task) && map[id]) {
+      const rule = map[id];
+      spawned = await createTask({
+        title: task.title,
+        description: task.description,
+        status: "not_started",
+        priority: task.priority,
+        assignee: task.assignee,
+        due_date: nextDueDate(task.due_date, rule, todayISO()),
+        completed: false,
+        category: task.category,
+      });
+      delete map[id];
+      map[spawned.id] = rule;
+      mapChanged = true;
+    }
+
+    if (mapChanged) await setRecurrenceMap(map);
 
     if (task.category === "ops" || existing.category === "ops") {
       try {
@@ -31,8 +68,15 @@ export async function PATCH(
         // Saved locally; the next sync retries the Slack push.
       }
     }
+    if (spawned && spawned.category === "ops") {
+      try {
+        await pushTaskToSlack(spawned.id);
+      } catch {
+        // Saved locally; the next sync retries the Slack push.
+      }
+    }
 
-    return NextResponse.json({ task });
+    return NextResponse.json({ task, spawned, recurrence: map });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
@@ -60,6 +104,17 @@ export async function DELETE(
     }
 
     await deleteTask(id);
+
+    try {
+      const map = await getRecurrenceMap();
+      if (map[id]) {
+        delete map[id];
+        await setRecurrenceMap(map);
+      }
+    } catch {
+      // A stale recurrence entry is harmless; leave it if cleanup fails.
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
