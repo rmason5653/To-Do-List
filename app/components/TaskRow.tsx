@@ -2,10 +2,11 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { dueLabel } from "@/lib/grouping";
+import { RECURRENCE_LABEL, RECURRENCE_RULES } from "@/lib/recurrence";
 import { AssigneePicker, AssigneeTag, memberInitials } from "./Assignee";
 import PriorityStars from "./PriorityStars";
 import { type ColumnId, gridTemplate } from "./columns";
-import type { Status, Task, TaskInput, TeamMember } from "@/lib/types";
+import type { Recurrence, Status, Task, TaskPatch, TeamMember } from "@/lib/types";
 
 const STATUS_LABEL: Record<Status, string> = {
   not_started: "Not started",
@@ -72,11 +73,32 @@ function ClockIcon() {
   );
 }
 
+function RepeatIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.4"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M17 2l4 4-4 4" />
+      <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+      <path d="M7 22l-4-4 4-4" />
+      <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+    </svg>
+  );
+}
+
 export default function TaskRow({
   task,
   today,
   team,
   columnOrder,
+  recurrence,
   onPatch,
   onDelete,
 }: {
@@ -84,7 +106,8 @@ export default function TaskRow({
   today: string;
   team: TeamMember[];
   columnOrder: ColumnId[];
-  onPatch: (patch: Partial<TaskInput>) => void;
+  recurrence?: Recurrence;
+  onPatch: (patch: TaskPatch) => void;
   onDelete: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -103,15 +126,23 @@ export default function TaskRow({
     task: (
       <button
         onClick={() => setExpanded((v) => !v)}
-        className="block w-full min-w-0 text-left"
+        className="flex w-full min-w-0 items-center gap-1.5 text-left"
       >
         <span
-          className={`block truncate text-sm ${
+          className={`min-w-0 truncate text-sm ${
             done ? "text-muted line-through" : "text-ink"
           }`}
         >
           {task.title || "Untitled task"}
         </span>
+        {recurrence && (
+          <span
+            className="shrink-0 text-muted"
+            title={`Repeats — ${RECURRENCE_LABEL[recurrence]}`}
+          >
+            <RepeatIcon />
+          </span>
+        )}
       </button>
     ),
     status: (
@@ -282,8 +313,8 @@ export default function TaskRow({
             </label>
           </div>
 
-          <div className="mt-2 flex items-end gap-2">
-            <label className="flex flex-1 flex-col gap-1">
+          <div className="mt-2 flex flex-wrap items-end gap-2">
+            <label className="flex min-w-[10rem] flex-1 flex-col gap-1">
               <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
                 Assignee
               </span>
@@ -293,6 +324,27 @@ export default function TaskRow({
                 onChange={(id) => onPatch({ assignee: id })}
                 className="field"
               />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                Repeats
+              </span>
+              <select
+                value={recurrence ?? ""}
+                onChange={(e) =>
+                  onPatch({
+                    recurrence: (e.target.value || null) as Recurrence | null,
+                  })
+                }
+                className="field"
+              >
+                <option value="">Does not repeat</option>
+                {RECURRENCE_RULES.map((r) => (
+                  <option key={r} value={r}>
+                    {RECURRENCE_LABEL[r]}
+                  </option>
+                ))}
+              </select>
             </label>
             <button
               onClick={() => {

@@ -14,12 +14,19 @@ import {
   type ColumnId,
 } from "./columns";
 import { groupByPriority, groupByTime, isDone, todayISO } from "@/lib/grouping";
-import type { SyncStatus, Task, TaskInput, TeamMember } from "@/lib/types";
+import type {
+  RecurrenceMap,
+  SyncStatus,
+  Task,
+  TaskInput,
+  TaskPatch,
+  TeamMember,
+} from "@/lib/types";
 
 type Filter = "all" | "ops" | "personal";
 type Grouping = "time" | "priority";
 
-function mergeTask(t: Task, patch: Partial<TaskInput>): Task {
+function mergeTask(t: Task, patch: TaskPatch): Task {
   const next = { ...t, ...patch } as Task;
   if (patch.completed === true) next.status = "done";
   if (patch.completed === false && next.status === "done") next.status = "not_started";
@@ -101,16 +108,19 @@ export default function Dashboard({
   initialTasks,
   initialSync,
   initialTeam,
+  initialRecurrence,
   loadError,
 }: {
   initialTasks: Task[];
   initialSync: SyncStatus | null;
   initialTeam: TeamMember[];
+  initialRecurrence: RecurrenceMap;
   loadError: string | null;
 }) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [sync, setSync] = useState<SyncStatus | null>(initialSync);
   const [team, setTeam] = useState<TeamMember[]>(initialTeam);
+  const [recurrence, setRecurrence] = useState<RecurrenceMap>(initialRecurrence);
   const [filter, setFilter] = useState<Filter>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
   const [grouping, setGrouping] = useState<Grouping>("time");
@@ -191,6 +201,7 @@ export default function Dashboard({
       setTasks(data.tasks ?? []);
       if (data.sync) setSync(data.sync);
       if (data.team) setTeam(data.team);
+      if (data.recurrence) setRecurrence(data.recurrence);
     } catch {
       /* offline; keep current view */
     }
@@ -242,8 +253,16 @@ export default function Dashboard({
     }
   }, []);
 
-  const patchTask = useCallback(async (id: string, patch: Partial<TaskInput>) => {
+  const patchTask = useCallback(async (id: string, patch: TaskPatch) => {
     setTasks((prev) => prev.map((t) => (t.id === id ? mergeTask(t, patch) : t)));
+    if (patch.recurrence !== undefined) {
+      setRecurrence((prev) => {
+        const next = { ...prev };
+        if (patch.recurrence) next[id] = patch.recurrence;
+        else delete next[id];
+        return next;
+      });
+    }
     busy.current += 1;
     try {
       const res = await fetch(`/api/tasks/${id}`, {
@@ -252,8 +271,12 @@ export default function Dashboard({
         body: JSON.stringify(patch),
       });
       if (res.ok) {
-        const { task } = await res.json();
-        setTasks((prev) => prev.map((t) => (t.id === id ? task : t)));
+        const data = await res.json();
+        setTasks((prev) => {
+          const replaced = prev.map((t) => (t.id === id ? data.task : t));
+          return data.spawned ? [...replaced, data.spawned] : replaced;
+        });
+        if (data.recurrence) setRecurrence(data.recurrence);
       }
     } finally {
       busy.current -= 1;
@@ -488,6 +511,7 @@ export default function Dashboard({
                             today={today}
                             team={team}
                             columnOrder={columnOrder}
+                            recurrence={recurrence[t.id]}
                             onPatch={(patch) => patchTask(t.id, patch)}
                             onDelete={() => removeTask(t.id)}
                           />
