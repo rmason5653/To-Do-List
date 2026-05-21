@@ -109,6 +109,45 @@ export function findColumn(
   return schema.find((c) => aliases.includes(c.name.trim().toLowerCase()));
 }
 
+// --- Users ------------------------------------------------------------------
+
+export interface SlackUser {
+  id: string;
+  name: string;
+  email: string | null;
+  avatar: string | null;
+}
+
+/**
+ * Active human members of the workspace. Used to resolve the assignee column
+ * (a Slack Person column whose cells are user ids) into real names.
+ */
+export async function fetchWorkspaceUsers(): Promise<SlackUser[]> {
+  const users: SlackUser[] = [];
+  let cursor: string | undefined;
+  let guard = 0;
+  do {
+    const params: Record<string, string> = { limit: "200" };
+    if (cursor) params.cursor = cursor;
+    const json = await callForm("users.list", params);
+    for (const m of json.members ?? []) {
+      if (!m || m.deleted || m.is_bot || m.id === "USLACKBOT") continue;
+      const profile = m.profile ?? {};
+      users.push({
+        id: String(m.id),
+        name: String(
+          profile.real_name || profile.display_name || m.real_name || m.name || m.id,
+        ),
+        email: profile.email ? String(profile.email) : null,
+        avatar: profile.image_72 || profile.image_48 || null,
+      });
+    }
+    cursor = json.response_metadata?.next_cursor || undefined;
+    guard += 1;
+  } while (cursor && guard < 25);
+  return users;
+}
+
 // --- Reading items ----------------------------------------------------------
 
 export interface ParsedItem {
@@ -204,6 +243,20 @@ function cellSelectLabels(cell: any, column?: SlackColumn): string[] {
     .filter(Boolean);
 }
 
+const USER_ID = /^[UW][A-Z0-9]{6,}$/;
+
+/** Slack user ids referenced by a Person cell. */
+function cellUsers(cell: any): string[] {
+  if (cell == null) return [];
+  let raw =
+    cell.user ?? cell.users ?? cell.people ?? cell.select ?? cell.options ?? cell.value;
+  if (raw == null) return [];
+  if (!Array.isArray(raw)) raw = [raw];
+  return raw
+    .map((u: any) => (typeof u === "object" && u ? u.id ?? u.user ?? u.value : u))
+    .filter((u: any) => typeof u === "string" && USER_ID.test(u));
+}
+
 function statusFromLabel(label: string): Status {
   const l = label.trim().toLowerCase();
   if (l.includes("progress")) return "in_progress";
@@ -251,7 +304,8 @@ export function parseItem(item: any, schema: SlackColumn[]): ParsedItem {
     status: parsedStatus,
     priority: parsedPriority,
     assignee: assignee.col
-      ? cellText(assignee.cell).trim() ||
+      ? cellUsers(assignee.cell)[0] ||
+        cellText(assignee.cell).trim() ||
         cellSelectLabels(assignee.cell, assignee.col)[0] ||
         null
       : null,
@@ -327,8 +381,16 @@ function buildCells(task: Task, schema: SlackColumn[]): Record<string, unknown>[
   });
 
   push("assignee", (col) => {
-    if (col.type.includes("user")) return null; // user mapping handled separately
-    return { text: task.assignee ?? "" };
+    const value = task.assignee?.trim() || "";
+    const isUserId = USER_ID.test(value);
+    const t = col.type.toLowerCase();
+    const isUserCol =
+      t.includes("user") || t.includes("person") || t.includes("people");
+    if (isUserCol || isUserId) {
+      // A Person cell takes an array of user ids; an empty array clears it.
+      return { user: isUserId ? [value] : [] };
+    }
+    return { text: value };
   });
 
   return cells;
@@ -348,10 +410,15 @@ export async function updateListItem(
   task: Task,
   schema: SlackColumn[],
 ): Promise<void> {
+  // slackLists.items.update identifies the row by row_id on each cell.
+  const cells = buildCells(task, schema).map((cell) => ({
+    ...cell,
+    row_id: itemId,
+  }));
   await callJson("slackLists.items.update", {
     list_id: listId(),
     id: itemId,
-    cells: buildCells(task, schema),
+    cells,
   });
 }
 

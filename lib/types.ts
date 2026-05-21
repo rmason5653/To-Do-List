@@ -40,3 +40,11 @@ export interface SyncStatus {
   pushed: number;
   slackConfigured: boolean;
 }
+
+/** A workspace member who can be tagged as a task assignee. */
+export interface TeamMember {
+  id: string; // Slack user id (U…/W…)
+  name: string;
+  email: string | null;
+  avatar: string | null;
+}
