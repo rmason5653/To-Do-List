@@ -29,3 +29,10 @@ create table if not exists app_meta (
   value      jsonb,
   updated_at timestamptz not null default now()
 );
+
+-- The app talks to Supabase with a single key used server-side only, behind
+-- the app's own password gate. Open the two tables to that key so either a
+-- service_role key or a publishable/anon key works.
+alter table tasks    disable row level security;
+alter table app_meta disable row level security;
+grant select, insert, update, delete on tasks, app_meta to anon;
