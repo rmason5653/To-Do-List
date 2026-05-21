@@ -18,6 +18,7 @@ import {
   getSlackTombstones,
   getTask,
   listTasks,
+  setSlackDebug,
   setSlackTombstones,
   setSyncStatus,
   updateTask,
@@ -92,6 +93,11 @@ export async function runSync(): Promise<SyncStatus> {
     await refreshTeam();
 
     const slackItems = await fetchListItems();
+    try {
+      await setSlackDebug({ at: ranAt, schema, sample: slackItems.slice(0, 2) });
+    } catch {
+      /* diagnostic only */
+    }
     const dbTasks = await listTasks();
 
     const bySlackId = new Map<string, Task>();
