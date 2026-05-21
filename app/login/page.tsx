@@ -37,10 +37,15 @@ export default function LoginPage() {
     <main className="flex min-h-screen items-center justify-center px-4">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5"
+        className="w-full max-w-sm rounded-2xl border border-line bg-panel p-8"
       >
-        <h1 className="text-xl font-semibold text-slate-900">Ops To-Do</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <h1 className="text-2xl font-extrabold tracking-tight text-ink">
+          OPS <span className="text-mason-red">TO-DO</span>
+        </h1>
+        <p className="mt-1 text-xs font-medium uppercase tracking-wide text-muted">
+          Mason Homes
+        </p>
+        <p className="mt-4 text-sm text-muted">
           Enter your access password to continue.
         </p>
         <input
@@ -49,13 +54,13 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
-          className="mt-5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          className="field mt-4 w-full"
         />
-        {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
+        {error && <p className="mt-2 text-sm text-mason-red">{error}</p>}
         <button
           type="submit"
           disabled={busy}
-          className="mt-5 w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-60"
+          className="mt-5 w-full rounded-lg bg-mason-red px-3 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-60"
         >
           {busy ? "Checking…" : "Unlock"}
         </button>

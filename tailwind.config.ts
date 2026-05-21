@@ -16,6 +16,18 @@ const config: Config = {
           "sans-serif",
         ],
       },
+      colors: {
+        mason: {
+          red: "#E20602",
+          yellow: "#FFD60A",
+        },
+        canvas: "var(--canvas)",
+        panel: "var(--panel)",
+        panel2: "var(--panel-2)",
+        line: "var(--line)",
+        ink: "var(--ink)",
+        muted: "var(--muted)",
+      },
     },
   },
   plugins: [],

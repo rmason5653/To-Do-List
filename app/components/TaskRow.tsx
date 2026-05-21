@@ -1,0 +1,273 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { dueLabel } from "@/lib/grouping";
+import { AssigneePicker, AssigneeTag, memberInitials } from "./Assignee";
+import type { Status, Task, TaskInput, TeamMember } from "@/lib/types";
+
+export const ROW_GRID =
+  "grid grid-cols-[1.75rem_minmax(11rem,1fr)_6.5rem_4.75rem_8.75rem_6.75rem] items-center gap-2";
+
+const STATUS_LABEL: Record<Status, string> = {
+  not_started: "Not started",
+  in_progress: "In progress",
+  done: "Done",
+};
+
+const STATUS_STYLE: Record<Status, string> = {
+  not_started: "border-line bg-panel2 text-muted",
+  in_progress: "border-mason-yellow/30 bg-mason-yellow/10 text-mason-yellow",
+  done: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+};
+
+function StatusPill({ status }: { status: Status }) {
+  return (
+    <span
+      className={`inline-block rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${STATUS_STYLE[status]}`}
+    >
+      {STATUS_LABEL[status]}
+    </span>
+  );
+}
+
+function PriorityStars({ priority }: { priority: number | null }) {
+  if (priority == null) return <span className="text-xs text-muted">—</span>;
+  return (
+    <span className="flex gap-0.5 text-xs" title={`Priority ${priority}`}>
+      {[1, 2, 3].map((n) => (
+        <span key={n} className={n <= priority ? "text-mason-yellow" : "text-line"}>
+          ★
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function ClockIcon() {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className="h-3 w-3 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+    >
+      <circle cx="8" cy="8" r="6" />
+      <path d="M8 4.6V8l2.4 1.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export default function TaskRow({
+  task,
+  today,
+  team,
+  onPatch,
+  onDelete,
+}: {
+  task: Task;
+  today: string;
+  team: TeamMember[];
+  onPatch: (patch: Partial<TaskInput>) => void;
+  onDelete: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const [title, setTitle] = useState(task.title);
+  const [description, setDescription] = useState(task.description ?? "");
+
+  useEffect(() => setTitle(task.title), [task.title]);
+  useEffect(() => setDescription(task.description ?? ""), [task.description]);
+
+  const done = task.completed || task.status === "done";
+  const overdue = !done && !!task.due_date && task.due_date < today;
+  const member = task.assignee ? team.find((m) => m.id === task.assignee) : undefined;
+
+  return (
+    <div className="border-b border-line last:border-b-0">
+      <div className={`${ROW_GRID} px-3 py-2 transition-colors hover:bg-panel2`}>
+        <button
+          aria-label={done ? "Mark not done" : "Mark done"}
+          onClick={() => onPatch({ completed: !done })}
+          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
+            done
+              ? "border-emerald-500 bg-emerald-500 text-white"
+              : "border-line hover:border-emerald-500"
+          }`}
+        >
+          {done && (
+            <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor">
+              <path d="M7.6 13.2 4.4 10l-1.1 1.1 4.3 4.3 9-9L15.5 5.3z" />
+            </svg>
+          )}
+        </button>
+
+        <button
+          onClick={() => setExpanded((v) => !v)}
+          className="min-w-0 text-left"
+        >
+          <span
+            className={`block truncate text-sm ${
+              done ? "text-muted line-through" : "text-ink"
+            }`}
+          >
+            {task.title || "Untitled task"}
+          </span>
+          {task.description && (
+            <span className="block truncate text-[11px] text-muted">
+              {task.description.replace(/\s+/g, " ")}
+            </span>
+          )}
+        </button>
+
+        <StatusPill status={task.status} />
+        <PriorityStars priority={task.priority} />
+
+        <div className="min-w-0">
+          {member ? (
+            <AssigneeTag member={member} />
+          ) : task.assignee ? (
+            <span
+              title={task.assignee}
+              className="rounded-full border border-line bg-panel2 px-2 py-0.5 text-[11px] text-muted"
+            >
+              {memberInitials(task.assignee)}
+            </span>
+          ) : (
+            <span className="text-xs text-muted">—</span>
+          )}
+        </div>
+
+        {task.due_date ? (
+          <span
+            className={`flex items-center gap-1 text-[11px] font-medium ${
+              overdue ? "text-mason-red" : "text-muted"
+            }`}
+          >
+            <ClockIcon />
+            {dueLabel(task.due_date, today)}
+          </span>
+        ) : (
+          <span className="text-xs text-muted">—</span>
+        )}
+      </div>
+
+      {expanded && (
+        <div className="border-t border-line bg-panel2 p-3">
+          <input
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            onBlur={() => {
+              if (title.trim() && title.trim() !== task.title) {
+                onPatch({ title: title.trim() });
+              }
+            }}
+            placeholder="Task title"
+            className="field w-full"
+          />
+          <textarea
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onBlur={() => {
+              if (description !== (task.description ?? "")) {
+                onPatch({ description: description || null });
+              }
+            }}
+            placeholder="Notes / details"
+            rows={2}
+            className="field mt-2 w-full resize-y"
+          />
+
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                Status
+              </span>
+              <select
+                value={task.status}
+                onChange={(e) => onPatch({ status: e.target.value as Status })}
+                className="field"
+              >
+                {(["not_started", "in_progress", "done"] as Status[]).map((s) => (
+                  <option key={s} value={s}>
+                    {STATUS_LABEL[s]}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                Priority
+              </span>
+              <select
+                value={task.priority ?? ""}
+                onChange={(e) =>
+                  onPatch({
+                    priority: e.target.value === "" ? null : Number(e.target.value),
+                  })
+                }
+                className="field"
+              >
+                <option value="">None</option>
+                <option value="3">★★★ P3</option>
+                <option value="2">★★ P2</option>
+                <option value="1">★ P1</option>
+                <option value="0">P0</option>
+              </select>
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                Due date
+              </span>
+              <input
+                type="date"
+                value={task.due_date ?? ""}
+                onChange={(e) => onPatch({ due_date: e.target.value || null })}
+                className="field"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                List
+              </span>
+              <select
+                value={task.category}
+                onChange={(e) =>
+                  onPatch({ category: e.target.value as Task["category"] })
+                }
+                className="field"
+              >
+                <option value="ops">Ops</option>
+                <option value="personal">Personal</option>
+              </select>
+            </label>
+          </div>
+
+          <div className="mt-2 flex items-end gap-2">
+            <label className="flex flex-1 flex-col gap-1">
+              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
+                Assignee
+              </span>
+              <AssigneePicker
+                team={team}
+                value={task.assignee}
+                onChange={(id) => onPatch({ assignee: id })}
+                className="field"
+              />
+            </label>
+            <button
+              onClick={() => {
+                if (confirm("Delete this task?")) onDelete();
+              }}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-mason-red transition hover:bg-mason-red/10"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
