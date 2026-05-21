@@ -385,7 +385,12 @@ function buildCells(task: Task, schema: SlackColumn[]): Record<string, unknown>[
   });
 
   push("priority", (col) => {
-    if (col.type.includes("select") || col.options.length) {
+    const t = col.type.toLowerCase();
+    // The Ops List "Priority" is a rating column — it takes a rating array.
+    if (t.includes("rating")) {
+      return { rating: task.priority == null ? [] : [task.priority] };
+    }
+    if (t.includes("select") || col.options.length) {
       if (task.priority == null) return { select: [] };
       const id = optionIdForLabel(col, String(task.priority));
       return id ? { select: [id] } : null;
@@ -402,7 +407,10 @@ function buildCells(task: Task, schema: SlackColumn[]): Record<string, unknown>[
     const isUserId = USER_ID.test(value);
     const t = col.type.toLowerCase();
     const isUserCol =
-      t.includes("user") || t.includes("person") || t.includes("people");
+      t.includes("user") ||
+      t.includes("person") ||
+      t.includes("people") ||
+      t.includes("assignee");
     if (isUserCol || isUserId) {
       // A Person cell takes an array of user ids; an empty array clears it.
       return { user: isUserId ? [value] : [] };
