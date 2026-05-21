@@ -61,7 +61,7 @@ See [`.env.example`](.env.example). Minimum to run:
 1. Go to [api.slack.com/apps](https://api.slack.com/apps) → **Create New App**
    → **From scratch** → choose your workspace.
 2. Under **OAuth & Permissions**, add these **User Token Scopes**:
-   `lists:read`, `lists:write`, `users:read`, `users:read.email`.
+   `lists:read`, `lists:write`, `files:read`, `users:read`, `users:read.email`.
 3. **Install to Workspace** and copy the **User OAuth Token** (`xoxp-…`) into
    `SLACK_TOKEN`.
 4. Make sure the Ops List is `F09FSF0BD89` (or set `SLACK_LIST_ID`).
