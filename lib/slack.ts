@@ -354,3 +354,10 @@ export async function updateListItem(
     cells: buildCells(task, schema),
   });
 }
+
+export async function deleteListItem(itemId: string): Promise<void> {
+  await callJson("slackLists.items.delete", {
+    list_id: listId(),
+    id: itemId,
+  });
+}

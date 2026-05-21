@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { deleteTask, getTask, updateTask } from "@/lib/tasks";
-import { pushTaskToSlack } from "@/lib/sync";
+import { deleteTaskFromSlack, pushTaskToSlack } from "@/lib/sync";
 import { normalizeInput } from "@/lib/normalize";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +44,21 @@ export async function DELETE(
 ) {
   try {
     const { id } = await ctx.params;
+    const existing = await getTask(id);
+    if (!existing) {
+      return NextResponse.json({ ok: true });
+    }
+
+    // Tombstone + push the Slack delete before dropping the local row, so a
+    // crash mid-delete cannot leave an orphaned row that re-imports later.
+    if (existing.category === "ops" && existing.slack_item_id) {
+      try {
+        await deleteTaskFromSlack(existing.slack_item_id);
+      } catch {
+        // Saved as a tombstone; the next sync retries the Slack delete.
+      }
+    }
+
     await deleteTask(id);
     return NextResponse.json({ ok: true });
   } catch (err) {

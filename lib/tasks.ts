@@ -93,3 +93,36 @@ export async function setSyncStatus(status: SyncStatus): Promise<void> {
     .upsert({ key: SYNC_KEY, value: status, updated_at: new Date().toISOString() });
   if (error) throw new Error(error.message);
 }
+
+const TOMBSTONE_KEY = "slack_tombstones";
+
+/**
+ * Slack row ids whose app task was deleted but whose Slack-side delete may not
+ * have completed yet. runSync() retries the delete and, crucially, refuses to
+ * re-import a tombstoned row as a brand new task.
+ */
+export async function getSlackTombstones(): Promise<string[]> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("app_meta")
+    .select("value")
+    .eq("key", TOMBSTONE_KEY)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const value = data?.value;
+  return Array.isArray(value) ? (value as string[]) : [];
+}
+
+export async function setSlackTombstones(ids: string[]): Promise<void> {
+  const sb = getSupabase();
+  const { error } = await sb
+    .from("app_meta")
+    .upsert({ key: TOMBSTONE_KEY, value: ids, updated_at: new Date().toISOString() });
+  if (error) throw new Error(error.message);
+}
+
+export async function addSlackTombstone(slackItemId: string): Promise<void> {
+  const ids = await getSlackTombstones();
+  if (ids.includes(slackItemId)) return;
+  await setSlackTombstones([...ids, slackItemId]);
+}
