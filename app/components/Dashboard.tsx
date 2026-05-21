@@ -2,99 +2,71 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import QuickAdd from "./QuickAdd";
-import TaskCard from "./TaskCard";
+import TaskRow, { ROW_GRID } from "./TaskRow";
 import { AssigneePicker } from "./Assignee";
-import { groupTasks, isDone, todayISO } from "@/lib/grouping";
-import type {
-  Category,
-  SyncStatus,
-  Task,
-  TaskInput,
-  TeamMember,
-} from "@/lib/types";
+import { groupByPriority, groupByTime, isDone, todayISO } from "@/lib/grouping";
+import type { SyncStatus, Task, TaskInput, TeamMember } from "@/lib/types";
 
 type Filter = "all" | "ops" | "personal";
+type Grouping = "time" | "priority";
 
 function mergeTask(t: Task, patch: Partial<TaskInput>): Task {
   const next = { ...t, ...patch } as Task;
   if (patch.completed === true) next.status = "done";
-  if (patch.completed === false && next.status === "done") {
-    next.status = "not_started";
-  }
+  if (patch.completed === false && next.status === "done") next.status = "not_started";
   if (patch.status === "done") next.completed = true;
   if (patch.status && patch.status !== "done") next.completed = false;
   return next;
 }
 
-function Section({
-  title,
-  accent,
-  tasks,
-  today,
-  team,
-  onPatch,
-  onDelete,
-  collapsible,
-}: {
-  title: string;
-  accent: string;
-  tasks: Task[];
-  today: string;
-  team: TeamMember[];
-  onPatch: (id: string, patch: Partial<TaskInput>) => void;
-  onDelete: (id: string) => void;
-  collapsible?: boolean;
-}) {
-  const [open, setOpen] = useState(!collapsible);
-  if (tasks.length === 0) return null;
-
+function StatTile({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
-    <section className="mb-5">
-      <button
-        onClick={() => collapsible && setOpen((v) => !v)}
-        className="mb-2 flex w-full items-center gap-2"
-      >
-        <span className={`h-2.5 w-2.5 rounded-full ${accent}`} />
-        <h2 className="text-sm font-semibold text-slate-700">{title}</h2>
-        <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-600">
-          {tasks.length}
-        </span>
-        {collapsible && (
-          <span className="text-xs text-slate-400">{open ? "Hide" : "Show"}</span>
-        )}
-      </button>
-      {open && (
-        <div className="flex flex-col gap-2">
-          {tasks.map((t) => (
-            <TaskCard
-              key={t.id}
-              task={t}
-              today={today}
-              team={team}
-              onPatch={(patch) => onPatch(t.id, patch)}
-              onDelete={() => onDelete(t.id)}
-            />
-          ))}
-        </div>
-      )}
-    </section>
+    <div className="rounded-xl border border-line bg-panel p-3">
+      <div className={`text-2xl font-bold ${tone}`}>{value}</div>
+      <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+        {label}
+      </div>
+    </div>
   );
 }
 
-function StatTile({
-  label,
+function Segmented<T extends string>({
+  options,
   value,
-  tone,
+  onChange,
 }: {
-  label: string;
-  value: number;
-  tone: string;
+  options: { id: T; label: string }[];
+  value: T;
+  onChange: (v: T) => void;
 }) {
   return (
-    <div className="rounded-xl bg-white p-3 ring-1 ring-black/5">
-      <div className={`text-2xl font-semibold ${tone}`}>{value}</div>
-      <div className="text-xs font-medium text-slate-500">{label}</div>
+    <div className="flex rounded-lg border border-line bg-panel2 p-0.5 text-xs font-semibold">
+      {options.map((o) => (
+        <button
+          key={o.id}
+          onClick={() => onChange(o.id)}
+          className={`rounded-md px-3 py-1.5 capitalize transition ${
+            value === o.id ? "bg-mason-red text-white" : "text-muted hover:text-ink"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
     </div>
+  );
+}
+
+function Chevron({ open }: { open: boolean }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      className={`h-3.5 w-3.5 shrink-0 text-muted transition-transform ${open ? "" : "-rotate-90"}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M4 6l4 4 4-4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -114,11 +86,42 @@ export default function Dashboard({
   const [team, setTeam] = useState<TeamMember[]>(initialTeam);
   const [filter, setFilter] = useState<Filter>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
+  const [grouping, setGrouping] = useState<Grouping>("time");
   const [query, setQuery] = useState("");
   const [syncing, setSyncing] = useState(false);
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set(["done"]));
   const busy = useRef(0);
 
   const today = todayISO();
+
+  useEffect(() => {
+    setTheme(
+      document.documentElement.classList.contains("light") ? "light" : "dark",
+    );
+  }, []);
+
+  const toggleTheme = useCallback(() => {
+    setTheme((prev) => {
+      const next = prev === "dark" ? "light" : "dark";
+      document.documentElement.classList.toggle("light", next === "light");
+      try {
+        localStorage.setItem("todo_theme", next);
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  }, []);
+
+  const toggleCollapsed = useCallback((id: string) => {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }, []);
 
   const refresh = useCallback(async () => {
     if (busy.current > 0) return;
@@ -181,28 +184,23 @@ export default function Dashboard({
     }
   }, []);
 
-  const patchTask = useCallback(
-    async (id: string, patch: Partial<TaskInput>) => {
-      setTasks((prev) =>
-        prev.map((t) => (t.id === id ? mergeTask(t, patch) : t)),
-      );
-      busy.current += 1;
-      try {
-        const res = await fetch(`/api/tasks/${id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(patch),
-        });
-        if (res.ok) {
-          const { task } = await res.json();
-          setTasks((prev) => prev.map((t) => (t.id === id ? task : t)));
-        }
-      } finally {
-        busy.current -= 1;
+  const patchTask = useCallback(async (id: string, patch: Partial<TaskInput>) => {
+    setTasks((prev) => prev.map((t) => (t.id === id ? mergeTask(t, patch) : t)));
+    busy.current += 1;
+    try {
+      const res = await fetch(`/api/tasks/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(patch),
+      });
+      if (res.ok) {
+        const { task } = await res.json();
+        setTasks((prev) => prev.map((t) => (t.id === id ? task : t)));
       }
-    },
-    [],
-  );
+    } finally {
+      busy.current -= 1;
+    }
+  }, []);
 
   const removeTask = useCallback(async (id: string) => {
     setTasks((prev) => prev.filter((t) => t.id !== id));
@@ -227,17 +225,27 @@ export default function Dashboard({
     });
   }, [tasks, filter, assigneeFilter, query]);
 
-  const groups = useMemo(() => groupTasks(filtered, today), [filtered, today]);
+  const groups = useMemo(
+    () => (grouping === "time" ? groupByTime(filtered, today) : groupByPriority(filtered)),
+    [grouping, filtered, today],
+  );
 
-  const openCount =
-    groups.overdue.length +
-    groups.dueToday.length +
-    groups.thisWeek.length +
-    groups.later.length +
-    groups.someday.length;
-  const doneToday = filtered.filter(
-    (t) => isDone(t) && t.updated_at.slice(0, 10) === today,
-  ).length;
+  const stats = useMemo(() => {
+    let overdue = 0;
+    let dueToday = 0;
+    let open = 0;
+    let doneToday = 0;
+    for (const t of filtered) {
+      if (isDone(t)) {
+        if (t.updated_at.slice(0, 10) === today) doneToday += 1;
+        continue;
+      }
+      open += 1;
+      if (t.due_date && t.due_date < today) overdue += 1;
+      else if (t.due_date === today) dueToday += 1;
+    }
+    return { overdue, dueToday, open, doneToday };
+  }, [filtered, today]);
 
   const dateLabel = new Date().toLocaleDateString(undefined, {
     weekday: "long",
@@ -248,84 +256,60 @@ export default function Dashboard({
   if (loadError) {
     return (
       <main className="mx-auto max-w-2xl px-4 py-16">
-        <div className="rounded-2xl bg-white p-8 ring-1 ring-black/5">
-          <h1 className="text-lg font-semibold text-slate-900">
-            Finish the setup
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            The app could not reach its database:
-          </p>
-          <pre className="mt-2 overflow-auto rounded-lg bg-slate-50 p-3 text-xs text-rose-600">
+        <div className="rounded-2xl border border-line bg-panel p-8">
+          <h1 className="text-lg font-bold text-ink">Finish the setup</h1>
+          <p className="mt-2 text-sm text-muted">The app could not reach its database:</p>
+          <pre className="mt-2 overflow-auto rounded-lg bg-panel2 p-3 text-xs text-mason-red">
             {loadError}
           </pre>
-          <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm text-slate-600">
-            <li>Create a Supabase project.</li>
-            <li>
-              Run <code className="text-slate-800">supabase/schema.sql</code> in
-              the Supabase SQL editor.
-            </li>
-            <li>
-              Set <code className="text-slate-800">SUPABASE_URL</code> and{" "}
-              <code className="text-slate-800">SUPABASE_SERVICE_ROLE_KEY</code>{" "}
-              environment variables, then redeploy.
-            </li>
-          </ol>
-          <p className="mt-4 text-xs text-slate-400">
-            Full instructions are in the project README.
+          <p className="mt-4 text-xs text-muted">
+            Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, then redeploy. Full
+            instructions are in the project README.
           </p>
         </div>
       </main>
     );
   }
 
-  const syncTone = !sync
-    ? "text-slate-500"
-    : sync.ok
-      ? "text-emerald-600"
-      : "text-rose-600";
+  const syncTone = !sync ? "text-muted" : sync.ok ? "text-emerald-400" : "text-mason-red";
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-6 sm:py-8">
+    <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-slate-900">Ops To-Do</h1>
-          <p className="text-sm text-slate-500">{dateLabel}</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-ink">
+            OPS <span className="text-mason-red">TO-DO</span>
+          </h1>
+          <p className="text-xs font-medium uppercase tracking-wide text-muted">
+            Mason Homes · {dateLabel}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <span className={`text-xs font-medium ${syncTone}`}>
-            {syncing
-              ? "Syncing…"
-              : sync
-                ? sync.message
-                : "Standalone mode"}
+            {syncing ? "Syncing…" : sync ? sync.message : "Standalone mode"}
           </span>
           <button
             onClick={triggerSync}
             disabled={syncing}
-            className="rounded-lg bg-slate-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-slate-700 disabled:opacity-50"
+            className="rounded-lg border border-mason-red px-3 py-1.5 text-xs font-bold text-mason-red transition hover:bg-mason-red hover:text-white disabled:opacity-50"
           >
             Sync now
+          </button>
+          <button
+            onClick={toggleTheme}
+            className="rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-muted transition hover:text-ink"
+            title="Toggle theme"
+          >
+            {theme === "dark" ? "Light" : "Dark"}
           </button>
         </div>
       </header>
 
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatTile
-          label="Overdue"
-          value={groups.overdue.length}
-          tone="text-rose-600"
-        />
-        <StatTile
-          label="Due today"
-          value={groups.dueToday.length}
-          tone="text-amber-600"
-        />
-        <StatTile
-          label="Completed today"
-          value={doneToday}
-          tone="text-emerald-600"
-        />
-        <StatTile label="Open total" value={openCount} tone="text-slate-800" />
+        <StatTile label="Overdue" value={stats.overdue} tone="text-mason-red" />
+        <StatTile label="Due today" value={stats.dueToday} tone="text-mason-yellow" />
+        <StatTile label="Completed today" value={stats.doneToday} tone="text-emerald-400" />
+        <StatTile label="Open total" value={stats.open} tone="text-ink" />
       </div>
 
       <div className="mb-4">
@@ -336,27 +320,29 @@ export default function Dashboard({
         />
       </div>
 
-      <div className="mb-5 flex flex-wrap items-center gap-2">
-        <div className="flex rounded-lg bg-slate-200 p-0.5 text-xs font-medium">
-          {(["all", "ops", "personal"] as Filter[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`rounded-md px-3 py-1.5 capitalize transition ${
-                filter === f
-                  ? "bg-white text-slate-800 shadow-sm"
-                  : "text-slate-500"
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <Segmented<Filter>
+          options={[
+            { id: "all", label: "all" },
+            { id: "ops", label: "ops" },
+            { id: "personal", label: "personal" },
+          ]}
+          value={filter}
+          onChange={setFilter}
+        />
+        <Segmented<Grouping>
+          options={[
+            { id: "time", label: "by time" },
+            { id: "priority", label: "by priority" },
+          ]}
+          value={grouping}
+          onChange={setGrouping}
+        />
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search tasks…"
-          className="min-w-[10rem] flex-1 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm outline-none focus:border-indigo-400"
+          className="field min-w-[9rem] flex-1"
         />
         {team.length > 0 && (
           <AssigneePicker
@@ -364,14 +350,13 @@ export default function Dashboard({
             value={assigneeFilter}
             onChange={setAssigneeFilter}
             unassignedLabel="Anyone"
-            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-600 outline-none focus:border-indigo-400"
           />
         )}
       </div>
 
       {tasks.length === 0 ? (
-        <div className="rounded-xl bg-white p-8 text-center ring-1 ring-black/5">
-          <p className="text-sm text-slate-600">
+        <div className="rounded-xl border border-line bg-panel p-8 text-center">
+          <p className="text-sm text-muted">
             No tasks yet. Add one above
             {sync?.slackConfigured
               ? ' or hit "Sync now" to import your Slack Ops List.'
@@ -379,66 +364,61 @@ export default function Dashboard({
           </p>
         </div>
       ) : (
-        <>
-          <Section
-            title="Overdue"
-            accent="bg-rose-500"
-            tasks={groups.overdue}
-            today={today}
-            team={team}
-            onPatch={patchTask}
-            onDelete={removeTask}
-          />
-          <Section
-            title="Today"
-            accent="bg-amber-500"
-            tasks={groups.dueToday}
-            today={today}
-            team={team}
-            onPatch={patchTask}
-            onDelete={removeTask}
-          />
-          <Section
-            title="This week"
-            accent="bg-sky-500"
-            tasks={groups.thisWeek}
-            today={today}
-            team={team}
-            onPatch={patchTask}
-            onDelete={removeTask}
-          />
-          <Section
-            title="Later"
-            accent="bg-indigo-400"
-            tasks={groups.later}
-            today={today}
-            team={team}
-            onPatch={patchTask}
-            onDelete={removeTask}
-          />
-          <Section
-            title="Anytime"
-            accent="bg-slate-400"
-            tasks={groups.someday}
-            today={today}
-            team={team}
-            onPatch={patchTask}
-            onDelete={removeTask}
-          />
-          <Section
-            title="Recently done"
-            accent="bg-emerald-500"
-            tasks={groups.done.slice(0, 50)}
-            today={today}
-            team={team}
-            onPatch={patchTask}
-            onDelete={removeTask}
-            collapsible
-          />
-        </>
+        <div className="overflow-hidden rounded-xl border border-line bg-panel">
+          <div className="overflow-x-auto">
+            <div className="min-w-[680px]">
+              <div
+                className={`${ROW_GRID} border-b border-line px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted`}
+              >
+                <span />
+                <span>Task</span>
+                <span>Status</span>
+                <span>Priority</span>
+                <span>Assignee</span>
+                <span>Due date</span>
+              </div>
+
+              {groups.every((g) => g.tasks.length === 0) ? (
+                <p className="px-3 py-8 text-center text-sm text-muted">
+                  No tasks match these filters.
+                </p>
+              ) : (
+                groups.map((g) =>
+                  g.tasks.length === 0 ? null : (
+                    <div key={g.id}>
+                      <button
+                        onClick={() => toggleCollapsed(g.id)}
+                        className="flex w-full items-center gap-2 border-b border-line bg-panel2 px-3 py-1.5"
+                      >
+                        <Chevron open={!collapsed.has(g.id)} />
+                        <span className="text-xs font-semibold uppercase tracking-wide text-ink">
+                          {g.title}
+                        </span>
+                        <span className="rounded-full border border-line bg-panel px-1.5 py-0.5 text-[10px] font-medium text-muted">
+                          {g.tasks.length}
+                        </span>
+                      </button>
+                      {!collapsed.has(g.id) &&
+                        g.tasks.map((t) => (
+                          <TaskRow
+                            key={t.id}
+                            task={t}
+                            today={today}
+                            team={team}
+                            onPatch={(patch) => patchTask(t.id, patch)}
+                            onDelete={() => removeTask(t.id)}
+                          />
+                        ))}
+                    </div>
+                  ),
+                )
+              )}
+            </div>
+          </div>
+        </div>
       )}
 
-      <footer className="mt-8 text-center text-xs text-slate-400">
+      <footer className="mt-8 text-center text-xs text-muted">
         Ops tasks sync with Slack · Personal tasks stay private to this app
       </footer>
     </main>

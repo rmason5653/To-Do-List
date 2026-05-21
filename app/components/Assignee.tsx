@@ -24,21 +24,21 @@ export function Avatar({ member }: { member: TeamMember }) {
     );
   }
   return (
-    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-indigo-200 text-[8px] font-semibold text-indigo-800">
+    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-mason-red text-[8px] font-bold text-white">
       {memberInitials(member.name)}
     </span>
   );
 }
 
-/** Small avatar + name pill shown on a task card. */
+/** Small avatar + name pill shown on a task row. */
 export function AssigneeTag({ member }: { member: TeamMember }) {
   return (
     <span
       title={member.email ? `${member.name} · ${member.email}` : member.name}
-      className="flex items-center gap-1 rounded-full bg-slate-100 py-0.5 pl-0.5 pr-2 text-[11px] font-medium text-slate-600"
+      className="flex w-fit items-center gap-1.5 rounded-full border border-line bg-panel2 py-0.5 pl-0.5 pr-2 text-[11px] font-medium text-ink"
     >
       <Avatar member={member} />
-      <span className="max-w-[8rem] truncate">{member.name}</span>
+      <span className="max-w-[6.5rem] truncate">{member.name}</span>
     </span>
   );
 }
@@ -48,7 +48,7 @@ export function AssigneePicker({
   team,
   value,
   onChange,
-  className,
+  className = "field",
   unassignedLabel = "Unassigned",
 }: {
   team: TeamMember[];
@@ -57,8 +57,8 @@ export function AssigneePicker({
   className?: string;
   unassignedLabel?: string;
 }) {
-  // An assignee that isn't in the directory yet (e.g. an id from before the
-  // first team sync) is still listed so the control stays controlled.
+  // An assignee that isn't in the directory yet (e.g. a deactivated member)
+  // is still listed so the control stays controlled.
   const known = !value || team.some((m) => m.id === value);
   return (
     <select
