@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createTask, getSyncStatus, listTasks } from "@/lib/tasks";
 import { getTeam } from "@/lib/team";
 import { getRecurrenceMap } from "@/lib/recurrence";
+import { getReminderIds, notifyAssignment } from "@/lib/notifications";
 import { pushTaskToSlack } from "@/lib/sync";
 import { normalizeInput } from "@/lib/normalize";
 
@@ -9,13 +10,14 @@ export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const [tasks, sync, team, recurrence] = await Promise.all([
+    const [tasks, sync, team, recurrence, reminders] = await Promise.all([
       listTasks(),
       getSyncStatus(),
       getTeam(),
       getRecurrenceMap(),
+      getReminderIds(),
     ]);
-    return NextResponse.json({ tasks, sync, team, recurrence });
+    return NextResponse.json({ tasks, sync, team, recurrence, reminders });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
@@ -36,6 +38,9 @@ export async function POST(req: Request) {
       } catch {
         // Saved locally; the next sync retries the Slack push.
       }
+    }
+    if (task.assignee) {
+      await notifyAssignment(task);
     }
 
     return NextResponse.json({ task });

@@ -1,4 +1,4 @@
-# Ops To-Do
+# Punch List
 
 A daily task hub that keeps your **Slack Ops List** and your **personal
 to-dos** in one clean dashboard. Ops tasks sync two-way with the native Slack

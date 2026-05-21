@@ -93,12 +93,31 @@ function RepeatIcon() {
   );
 }
 
+function BellIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5 shrink-0"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.7 21a2 2 0 0 1-3.4 0" />
+    </svg>
+  );
+}
+
 export default function TaskRow({
   task,
   today,
   team,
   columnOrder,
   recurrence,
+  reminder,
   onPatch,
   onDelete,
 }: {
@@ -107,6 +126,7 @@ export default function TaskRow({
   team: TeamMember[];
   columnOrder: ColumnId[];
   recurrence?: Recurrence;
+  reminder?: boolean;
   onPatch: (patch: TaskPatch) => void;
   onDelete: () => void;
 }) {
@@ -141,6 +161,11 @@ export default function TaskRow({
             title={`Repeats — ${RECURRENCE_LABEL[recurrence]}`}
           >
             <RepeatIcon />
+          </span>
+        )}
+        {reminder && (
+          <span className="shrink-0 text-muted" title="Slack reminder on">
+            <BellIcon />
           </span>
         )}
       </button>
@@ -345,6 +370,20 @@ export default function TaskRow({
                   </option>
                 ))}
               </select>
+            </label>
+            <label
+              className="flex items-center gap-2 rounded-lg border border-line bg-panel2 px-3 py-2"
+              title="DM the assignee in Slack when this task is due or overdue"
+            >
+              <input
+                type="checkbox"
+                checked={!!reminder}
+                onChange={(e) => onPatch({ reminder: e.target.checked })}
+                className="h-4 w-4 accent-mason-red"
+              />
+              <span className="whitespace-nowrap text-xs font-medium text-ink">
+                Remind in Slack
+              </span>
             </label>
             <button
               onClick={() => {

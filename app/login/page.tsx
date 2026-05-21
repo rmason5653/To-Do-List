@@ -40,7 +40,7 @@ export default function LoginPage() {
         className="w-full max-w-sm rounded-2xl border border-line bg-panel p-8"
       >
         <h1 className="text-2xl font-extrabold tracking-tight text-ink">
-          OPS <span className="text-mason-red">TO-DO</span>
+          PUNCH <span className="text-mason-red">LIST</span>
         </h1>
         <p className="mt-1 text-xs font-medium uppercase tracking-wide text-muted">
           Mason Homes
