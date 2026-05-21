@@ -452,3 +452,13 @@ export async function deleteListItem(itemId: string): Promise<void> {
     id: itemId,
   });
 }
+
+// --- Messaging --------------------------------------------------------------
+
+/** DM a Slack user. `userId` works directly as the channel for chat.postMessage. */
+export async function sendDirectMessage(
+  userId: string,
+  text: string,
+): Promise<void> {
+  await callJson("chat.postMessage", { channel: userId, text });
+}

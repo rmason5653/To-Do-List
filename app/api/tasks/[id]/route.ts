@@ -9,6 +9,11 @@ import {
   nextDueDate,
   setRecurrenceMap,
 } from "@/lib/recurrence";
+import {
+  getReminderIds,
+  notifyAssignment,
+  setReminderIds,
+} from "@/lib/notifications";
 
 export const dynamic = "force-dynamic";
 
@@ -29,18 +34,31 @@ export async function PATCH(
     const task =
       Object.keys(patch).length > 0 ? await updateTask(id, patch) : existing;
 
+    // A recurrence rule passed in the body sets or clears the task's schedule.
     const map = await getRecurrenceMap();
     let mapChanged = false;
-
-    // A recurrence rule passed in the body sets or clears the task's schedule.
     if ("recurrence" in body) {
       if (isRecurrence(body.recurrence)) map[id] = body.recurrence;
       else delete map[id];
       mapChanged = true;
     }
 
-    // Completing a recurring task spawns the next occurrence and moves the
-    // rule onto it, so the schedule rolls forward automatically.
+    // The reminder flag opts a task in or out of daily due/overdue DMs.
+    let reminderIds = await getReminderIds();
+    let remindersChanged = false;
+    if ("reminder" in body) {
+      const has = reminderIds.includes(id);
+      if (body.reminder && !has) {
+        reminderIds = [...reminderIds, id];
+        remindersChanged = true;
+      } else if (!body.reminder && has) {
+        reminderIds = reminderIds.filter((x) => x !== id);
+        remindersChanged = true;
+      }
+    }
+
+    // Completing a recurring task spawns the next occurrence and carries the
+    // recurrence rule and reminder flag onto it.
     let spawned = null;
     if (!isDone(existing) && isDone(task) && map[id]) {
       const rule = map[id];
@@ -57,9 +75,14 @@ export async function PATCH(
       delete map[id];
       map[spawned.id] = rule;
       mapChanged = true;
+      if (reminderIds.includes(id)) {
+        reminderIds = [...reminderIds.filter((x) => x !== id), spawned.id];
+        remindersChanged = true;
+      }
     }
 
     if (mapChanged) await setRecurrenceMap(map);
+    if (remindersChanged) await setReminderIds(reminderIds);
 
     if (task.category === "ops" || existing.category === "ops") {
       try {
@@ -76,7 +99,17 @@ export async function PATCH(
       }
     }
 
-    return NextResponse.json({ task, spawned, recurrence: map });
+    // Notify a teammate when a task is newly assigned (or reassigned) to them.
+    if (task.assignee && task.assignee !== existing.assignee) {
+      await notifyAssignment(task);
+    }
+
+    return NextResponse.json({
+      task,
+      spawned,
+      recurrence: map,
+      reminders: reminderIds,
+    });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
   }
@@ -112,7 +145,15 @@ export async function DELETE(
         await setRecurrenceMap(map);
       }
     } catch {
-      // A stale recurrence entry is harmless; leave it if cleanup fails.
+      // A stale recurrence entry is harmless if cleanup fails.
+    }
+    try {
+      const ids = await getReminderIds();
+      if (ids.includes(id)) {
+        await setReminderIds(ids.filter((x) => x !== id));
+      }
+    } catch {
+      // A stale reminder entry is harmless if cleanup fails.
     }
 
     return NextResponse.json({ ok: true });

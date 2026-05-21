@@ -109,18 +109,23 @@ export default function Dashboard({
   initialSync,
   initialTeam,
   initialRecurrence,
+  initialReminders,
   loadError,
 }: {
   initialTasks: Task[];
   initialSync: SyncStatus | null;
   initialTeam: TeamMember[];
   initialRecurrence: RecurrenceMap;
+  initialReminders: string[];
   loadError: string | null;
 }) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [sync, setSync] = useState<SyncStatus | null>(initialSync);
   const [team, setTeam] = useState<TeamMember[]>(initialTeam);
   const [recurrence, setRecurrence] = useState<RecurrenceMap>(initialRecurrence);
+  const [reminders, setReminders] = useState<Set<string>>(
+    () => new Set(initialReminders),
+  );
   const [filter, setFilter] = useState<Filter>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
   const [grouping, setGrouping] = useState<Grouping>("time");
@@ -202,6 +207,7 @@ export default function Dashboard({
       if (data.sync) setSync(data.sync);
       if (data.team) setTeam(data.team);
       if (data.recurrence) setRecurrence(data.recurrence);
+      if (data.reminders) setReminders(new Set<string>(data.reminders));
     } catch {
       /* offline; keep current view */
     }
@@ -263,6 +269,14 @@ export default function Dashboard({
         return next;
       });
     }
+    if (patch.reminder !== undefined) {
+      setReminders((prev) => {
+        const next = new Set(prev);
+        if (patch.reminder) next.add(id);
+        else next.delete(id);
+        return next;
+      });
+    }
     busy.current += 1;
     try {
       const res = await fetch(`/api/tasks/${id}`, {
@@ -277,6 +291,7 @@ export default function Dashboard({
           return data.spawned ? [...replaced, data.spawned] : replaced;
         });
         if (data.recurrence) setRecurrence(data.recurrence);
+        if (data.reminders) setReminders(new Set<string>(data.reminders));
       }
     } finally {
       busy.current -= 1;
@@ -359,7 +374,7 @@ export default function Dashboard({
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">
-            OPS <span className="text-mason-red">TO-DO</span>
+            PUNCH <span className="text-mason-red">LIST</span>
           </h1>
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
             Mason Homes · {dateLabel}
@@ -512,6 +527,7 @@ export default function Dashboard({
                             team={team}
                             columnOrder={columnOrder}
                             recurrence={recurrence[t.id]}
+                            reminder={reminders.has(t.id)}
                             onPatch={(patch) => patchTask(t.id, patch)}
                             onDelete={() => removeTask(t.id)}
                           />

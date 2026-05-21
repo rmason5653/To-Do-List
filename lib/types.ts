@@ -54,5 +54,8 @@ export type Recurrence = "daily" | "weekdays" | "weekly" | "biweekly" | "monthly
 
 export type RecurrenceMap = Record<string, Recurrence>;
 
-/** A task edit, optionally also changing the task's recurrence rule. */
-export type TaskPatch = Partial<TaskInput> & { recurrence?: Recurrence | null };
+/** A task edit, optionally also changing recurrence or the reminder flag. */
+export type TaskPatch = Partial<TaskInput> & {
+  recurrence?: Recurrence | null;
+  reminder?: boolean;
+};

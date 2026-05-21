@@ -2,7 +2,13 @@ import { NextResponse, type NextRequest } from "next/server";
 import { AUTH_COOKIE, hashPassword } from "@/lib/auth";
 
 // Paths that handle their own auth (or must stay public for Slack/cron).
-const OPEN_PATHS = ["/login", "/api/login", "/api/slack", "/api/sync"];
+const OPEN_PATHS = [
+  "/login",
+  "/api/login",
+  "/api/slack",
+  "/api/sync",
+  "/api/reminders",
+];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
