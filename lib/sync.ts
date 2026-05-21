@@ -1,5 +1,6 @@
 import {
   createListItem,
+  deleteListItem,
   fetchListItems,
   getListSchema,
   parseItem,
@@ -9,9 +10,13 @@ import {
   type SlackColumn,
 } from "./slack";
 import {
+  addSlackTombstone,
   createTask,
+  deleteTask,
+  getSlackTombstones,
   getTask,
   listTasks,
+  setSlackTombstones,
   setSyncStatus,
   updateTask,
 } from "./tasks";
@@ -73,13 +78,34 @@ export async function runSync(): Promise<SyncStatus> {
       else if (t.category === "ops") unlinkedOpsByTitle.set(t.title.trim(), t);
     }
 
+    const tombstones = new Set(await getSlackTombstones());
+    const clearedTombstones = new Set<string>();
+    const seenSlackIds = new Set<string>();
+
     let pulled = 0;
     let pushed = 0;
+    let deletedLocal = 0;
+    let deletedSlack = 0;
 
     // --- Slack -> app -------------------------------------------------------
     for (const raw of slackItems) {
       const item = parseItem(raw, schema);
-      if (!item.id || !item.title) continue;
+      if (!item.id) continue;
+      seenSlackIds.add(item.id);
+
+      // A row the app already deleted: drop it from Slack, never re-import.
+      if (tombstones.has(item.id)) {
+        try {
+          await deleteListItem(item.id);
+          clearedTombstones.add(item.id);
+          deletedSlack += 1;
+        } catch {
+          // Keep the tombstone; the next sync retries the delete.
+        }
+        continue;
+      }
+
+      if (!item.title) continue;
 
       let task = bySlackId.get(item.id);
 
@@ -145,13 +171,38 @@ export async function runSync(): Promise<SyncStatus> {
       }
     }
 
+    // --- Slack -> app deletions --------------------------------------------
+    // A linked task whose Slack row is gone was deleted in Slack. Skipped when
+    // the List came back empty, so a transient empty response cannot wipe
+    // every task at once.
+    if (slackItems.length > 0) {
+      for (const [slackId, task] of bySlackId) {
+        if (seenSlackIds.has(slackId)) continue;
+        await deleteTask(task.id);
+        deletedLocal += 1;
+      }
+    }
+
+    // Retire tombstones whose Slack row is now gone; keep the rest to retry.
+    const finalTombstones = [...tombstones].filter(
+      (id) => !clearedTombstones.has(id) && seenSlackIds.has(id),
+    );
+    if (finalTombstones.length !== tombstones.size) {
+      await setSlackTombstones(finalTombstones);
+    }
+
+    const summary: string[] = [];
+    if (pulled) summary.push(`${pulled} in from Slack`);
+    if (pushed) summary.push(`${pushed} out to Slack`);
+    if (deletedLocal) summary.push(`${deletedLocal} removed here`);
+    if (deletedSlack) summary.push(`${deletedSlack} removed in Slack`);
+
     const status: SyncStatus = {
       ok: true,
       ranAt,
-      message:
-        pulled || pushed
-          ? `Synced — ${pulled} in from Slack, ${pushed} out to Slack.`
-          : "Up to date with Slack.",
+      message: summary.length
+        ? `Synced — ${summary.join(", ")}.`
+        : "Up to date with Slack.",
       pulled,
       pushed,
       slackConfigured: true,
@@ -201,5 +252,21 @@ export async function pushTaskToSlack(taskId: string): Promise<void> {
     if (newId) {
       await updateTask(task.id, { slack_item_id: newId, last_synced_at: now });
     }
+  }
+}
+
+/**
+ * Remove a task's row from the Slack List after the task is deleted in the app.
+ * The id is tombstoned first, so a failed delete is retried by runSync() rather
+ * than re-importing the orphaned row as a brand new task on the next poll.
+ */
+export async function deleteTaskFromSlack(slackItemId: string): Promise<void> {
+  if (!slackEnabled()) return;
+
+  await addSlackTombstone(slackItemId);
+  try {
+    await deleteListItem(slackItemId);
+  } catch {
+    // Tombstone retained; runSync() retries the delete and then clears it.
   }
 }

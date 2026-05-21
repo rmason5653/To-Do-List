@@ -22,6 +22,9 @@ today, and completed today.
   catches anything missed; an optional Slack webhook makes it instant.
 - **Conflicts:** an unsynced local edit wins and is pushed; otherwise Slack's
   value is accepted. Failed pushes retry automatically on the next sync.
+- **Deletes:** deleting an ops task in the app removes its Slack row; deleting
+  a row in Slack removes the matching task on the next sync. A failed delete is
+  tombstoned and retried, so a deleted row is never silently re-imported.
 - The app runs fully as a standalone to-do app even with Slack disconnected.
 
 ## Setup
