@@ -24,6 +24,14 @@ function listId(): string {
   return process.env.SLACK_LIST_ID as string;
 }
 
+/** Build a descriptive error, including Slack's per-field detail when present. */
+function slackError(method: string, status: number, json: any): Error {
+  const messages = json?.response_metadata?.messages;
+  const detail =
+    Array.isArray(messages) && messages.length ? ` — ${messages.join("; ")}` : "";
+  return new Error(`Slack ${method}: ${json?.error || `HTTP ${status}`}${detail}`);
+}
+
 async function callJson(method: string, body: Record<string, unknown>): Promise<any> {
   const res = await fetch(`${API}/${method}`, {
     method: "POST",
@@ -35,7 +43,7 @@ async function callJson(method: string, body: Record<string, unknown>): Promise<
   });
   const json = await res.json().catch(() => ({}));
   if (!json.ok) {
-    throw new Error(`Slack ${method}: ${json.error || `HTTP ${res.status}`}`);
+    throw slackError(method, res.status, json);
   }
   return json;
 }
@@ -51,7 +59,7 @@ async function callForm(method: string, params: Record<string, string>): Promise
   });
   const json = await res.json().catch(() => ({}));
   if (!json.ok) {
-    throw new Error(`Slack ${method}: ${json.error || `HTTP ${res.status}`}`);
+    throw slackError(method, res.status, json);
   }
   return json;
 }
