@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { dueLabel } from "@/lib/grouping";
 import { AssigneePicker, AssigneeTag, memberInitials } from "./Assignee";
+import PriorityStars from "./PriorityStars";
+import { type ColumnId, gridTemplate } from "./columns";
 import type { Status, Task, TaskInput, TeamMember } from "@/lib/types";
-
-export const ROW_GRID =
-  "grid grid-cols-[1.75rem_minmax(11rem,1fr)_7rem_5rem_2rem_8.75rem_6.75rem] items-center gap-2";
 
 const STATUS_LABEL: Record<Status, string> = {
   not_started: "Not started",
@@ -44,34 +43,6 @@ function StatusSelect({
   );
 }
 
-/** Three stars — click a star to set that priority, click it again to clear. */
-function PriorityStars({
-  priority,
-  onChange,
-}: {
-  priority: number | null;
-  onChange: (p: number | null) => void;
-}) {
-  return (
-    <span className="flex gap-0.5 text-sm">
-      {[1, 2, 3].map((n) => (
-        <button
-          key={n}
-          onClick={() => onChange(priority === n ? null : n)}
-          title={`Set priority ${n}`}
-          className={`leading-none transition hover:scale-125 ${
-            priority != null && n <= priority
-              ? "text-mason-yellow"
-              : "text-line hover:text-mason-yellow"
-          }`}
-        >
-          ★
-        </button>
-      ))}
-    </span>
-  );
-}
-
 function NotesIcon() {
   return (
     <svg
@@ -105,12 +76,14 @@ export default function TaskRow({
   task,
   today,
   team,
+  columnOrder,
   onPatch,
   onDelete,
 }: {
   task: Task;
   today: string;
   team: TeamMember[];
+  columnOrder: ColumnId[];
   onPatch: (patch: Partial<TaskInput>) => void;
   onDelete: () => void;
 }) {
@@ -126,9 +99,73 @@ export default function TaskRow({
   const member = task.assignee ? team.find((m) => m.id === task.assignee) : undefined;
   const hasNotes = !!task.description && task.description.trim() !== "";
 
+  const cells: Record<ColumnId, ReactNode> = {
+    task: (
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="block w-full min-w-0 text-left"
+      >
+        <span
+          className={`block truncate text-sm ${
+            done ? "text-muted line-through" : "text-ink"
+          }`}
+        >
+          {task.title || "Untitled task"}
+        </span>
+      </button>
+    ),
+    status: (
+      <StatusSelect status={task.status} onChange={(s) => onPatch({ status: s })} />
+    ),
+    priority: (
+      <PriorityStars
+        priority={task.priority}
+        onChange={(p) => onPatch({ priority: p })}
+      />
+    ),
+    notes: (
+      <button
+        onClick={() => setExpanded(true)}
+        title={hasNotes ? "View / edit notes" : "Add notes"}
+        className={`flex w-full justify-center transition hover:text-mason-red ${
+          hasNotes ? "text-ink" : "text-line"
+        }`}
+      >
+        <NotesIcon />
+      </button>
+    ),
+    assignee: member ? (
+      <AssigneeTag member={member} />
+    ) : task.assignee ? (
+      <span
+        title={task.assignee}
+        className="rounded-full border border-line bg-panel2 px-2 py-0.5 text-[11px] text-muted"
+      >
+        {memberInitials(task.assignee)}
+      </span>
+    ) : (
+      <span className="text-xs text-muted">—</span>
+    ),
+    due: task.due_date ? (
+      <span
+        className={`flex items-center gap-1 text-[11px] font-medium ${
+          overdue ? "text-mason-red" : "text-muted"
+        }`}
+      >
+        <ClockIcon />
+        {dueLabel(task.due_date, today)}
+      </span>
+    ) : (
+      <span className="text-xs text-muted">—</span>
+    ),
+  };
+
   return (
     <div className="border-b border-line last:border-b-0">
-      <div className={`${ROW_GRID} px-3 py-3 transition-colors hover:bg-panel2`}>
+      <div
+        className="grid items-center gap-2 px-3 py-3 transition-colors hover:bg-panel2"
+        style={{ gridTemplateColumns: gridTemplate(columnOrder) }}
+      >
         <button
           aria-label={done ? "Mark not done" : "Mark done"}
           onClick={() => onPatch({ completed: !done })}
@@ -144,63 +181,11 @@ export default function TaskRow({
             </svg>
           )}
         </button>
-
-        <button
-          onClick={() => setExpanded((v) => !v)}
-          className="min-w-0 text-left"
-        >
-          <span
-            className={`block truncate text-sm ${
-              done ? "text-muted line-through" : "text-ink"
-            }`}
-          >
-            {task.title || "Untitled task"}
-          </span>
-        </button>
-
-        <StatusSelect status={task.status} onChange={(s) => onPatch({ status: s })} />
-        <PriorityStars
-          priority={task.priority}
-          onChange={(p) => onPatch({ priority: p })}
-        />
-
-        <button
-          onClick={() => setExpanded(true)}
-          title={hasNotes ? "View / edit notes" : "Add notes"}
-          className={`flex justify-center transition hover:text-mason-red ${
-            hasNotes ? "text-ink" : "text-line"
-          }`}
-        >
-          <NotesIcon />
-        </button>
-
-        <div className="min-w-0">
-          {member ? (
-            <AssigneeTag member={member} />
-          ) : task.assignee ? (
-            <span
-              title={task.assignee}
-              className="rounded-full border border-line bg-panel2 px-2 py-0.5 text-[11px] text-muted"
-            >
-              {memberInitials(task.assignee)}
-            </span>
-          ) : (
-            <span className="text-xs text-muted">—</span>
-          )}
-        </div>
-
-        {task.due_date ? (
-          <span
-            className={`flex items-center gap-1 text-[11px] font-medium ${
-              overdue ? "text-mason-red" : "text-muted"
-            }`}
-          >
-            <ClockIcon />
-            {dueLabel(task.due_date, today)}
-          </span>
-        ) : (
-          <span className="text-xs text-muted">—</span>
-        )}
+        {columnOrder.map((id) => (
+          <div key={id} className="min-w-0">
+            {cells[id]}
+          </div>
+        ))}
       </div>
 
       {expanded && (
