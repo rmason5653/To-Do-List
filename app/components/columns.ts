@@ -27,11 +27,17 @@ export const DEFAULT_COLUMN_ORDER: ColumnId[] = [
 ];
 
 const CHECKBOX_WIDTH = "1.75rem";
+const MORE_WIDTH = "2rem";
 const STORAGE_KEY = "todo_columns";
 
-/** CSS grid-template-columns: the fixed checkbox column plus the data columns. */
+/** CSS grid-template-columns: the fixed checkbox column, the data columns,
+ *  and the fixed trailing "more" column. */
 export function gridTemplate(order: ColumnId[]): string {
-  return [CHECKBOX_WIDTH, ...order.map((id) => COLUMNS[id].width)].join(" ");
+  return [
+    CHECKBOX_WIDTH,
+    ...order.map((id) => COLUMNS[id].width),
+    MORE_WIDTH,
+  ].join(" ");
 }
 
 /** Read the saved column order, falling back to the default if missing or stale. */
