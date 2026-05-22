@@ -13,7 +13,7 @@ import {
   saveColumnOrder,
   type ColumnId,
 } from "./columns";
-import { groupByPriority, groupByTime, isDone, todayISO } from "@/lib/grouping";
+import { groupByPriority, groupByRecent, groupByTime, isDone, todayISO } from "@/lib/grouping";
 import type {
   RecurrenceMap,
   SyncStatus,
@@ -24,7 +24,7 @@ import type {
 } from "@/lib/types";
 
 type Filter = "all" | "ops" | "personal";
-type Grouping = "time" | "priority";
+type Grouping = "time" | "priority" | "recent";
 
 function mergeTask(t: Task, patch: TaskPatch): Task {
   const next = { ...t, ...patch } as Task;
@@ -147,7 +147,7 @@ export default function Dashboard({
     setColumnOrder(loadColumnOrder());
     try {
       const g = localStorage.getItem("todo_grouping");
-      if (g === "time" || g === "priority") setGrouping(g);
+      if (g === "time" || g === "priority" || g === "recent") setGrouping(g);
     } catch {
       /* ignore */
     }
@@ -321,10 +321,11 @@ export default function Dashboard({
     });
   }, [tasks, filter, assigneeFilter, query]);
 
-  const groups = useMemo(
-    () => (grouping === "time" ? groupByTime(filtered, today) : groupByPriority(filtered)),
-    [grouping, filtered, today],
-  );
+  const groups = useMemo(() => {
+    if (grouping === "priority") return groupByPriority(filtered);
+    if (grouping === "recent") return groupByRecent(filtered);
+    return groupByTime(filtered, today);
+  }, [grouping, filtered, today]);
 
   const stats = useMemo(() => {
     let overdue = 0;
@@ -370,7 +371,7 @@ export default function Dashboard({
   const syncTone = !sync ? "text-muted" : sync.ok ? "text-emerald-400" : "text-mason-red";
 
   return (
-    <main className="mx-auto max-w-5xl px-4 py-6 sm:py-8">
+    <main className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">
@@ -428,6 +429,7 @@ export default function Dashboard({
         />
         <Segmented<Grouping>
           options={[
+            { id: "recent", label: "recent" },
             { id: "time", label: "by time" },
             { id: "priority", label: "by priority" },
           ]}
