@@ -33,7 +33,7 @@ function StatusSelect({
       value={status}
       onChange={(e) => onChange(e.target.value as Status)}
       title="Change status"
-      className={`w-full cursor-pointer appearance-none rounded-md border px-1.5 py-1 text-center text-[10px] font-semibold uppercase tracking-wide outline-none ${STATUS_STYLE[status]}`}
+      className={`cursor-pointer appearance-none rounded-md border px-1.5 py-1 text-center text-[10px] font-semibold uppercase tracking-wide outline-none ${STATUS_STYLE[status]}`}
     >
       {(["not_started", "in_progress", "done"] as Status[]).map((s) => (
         <option key={s} value={s}>
@@ -183,7 +183,7 @@ export default function TaskRow({
       <button
         onClick={() => setExpanded(true)}
         title={hasNotes ? "View / edit notes" : "Add notes"}
-        className={`flex w-full justify-center transition hover:text-mason-red ${
+        className={`flex transition hover:text-mason-red ${
           hasNotes ? "text-ink" : "text-line"
         }`}
       >
@@ -216,32 +216,52 @@ export default function TaskRow({
     ),
   };
 
+  const checkbox = (
+    <button
+      aria-label={done ? "Mark not done" : "Mark done"}
+      onClick={() => onPatch({ completed: !done })}
+      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
+        done
+          ? "border-emerald-500 bg-emerald-500 text-white"
+          : "border-line hover:border-emerald-500"
+      }`}
+    >
+      {done && (
+        <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor">
+          <path d="M7.6 13.2 4.4 10l-1.1 1.1 4.3 4.3 9-9L15.5 5.3z" />
+        </svg>
+      )}
+    </button>
+  );
+
   return (
     <div className="border-b border-line last:border-b-0">
+      {/* Desktop: an aligned grid row */}
       <div
-        className="grid items-center gap-2 px-3 py-3 transition-colors hover:bg-panel2"
+        className="hidden items-center gap-2 px-3 py-3 transition-colors hover:bg-panel2 sm:grid"
         style={{ gridTemplateColumns: gridTemplate(columnOrder) }}
       >
-        <button
-          aria-label={done ? "Mark not done" : "Mark done"}
-          onClick={() => onPatch({ completed: !done })}
-          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
-            done
-              ? "border-emerald-500 bg-emerald-500 text-white"
-              : "border-line hover:border-emerald-500"
-          }`}
-        >
-          {done && (
-            <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor">
-              <path d="M7.6 13.2 4.4 10l-1.1 1.1 4.3 4.3 9-9L15.5 5.3z" />
-            </svg>
-          )}
-        </button>
+        {checkbox}
         {columnOrder.map((id) => (
           <div key={id} className="min-w-0">
             {cells[id]}
           </div>
         ))}
+      </div>
+
+      {/* Mobile: a stacked card */}
+      <div className="flex items-start gap-3 px-3 py-3 transition-colors hover:bg-panel2 sm:hidden">
+        {checkbox}
+        <div className="min-w-0 flex-1">
+          {cells.task}
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            {cells.status}
+            {cells.priority}
+            {cells.assignee}
+            {cells.due}
+            {cells.notes}
+          </div>
+        </div>
       </div>
 
       {expanded && (
