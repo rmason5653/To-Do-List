@@ -377,7 +377,7 @@ export default function Dashboard({
             PUNCH <span className="text-mason-red">LIST</span>
           </h1>
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
-            Mason Homes · {dateLabel}
+            {dateLabel}
           </p>
         </div>
         <div className="flex items-center gap-2">
