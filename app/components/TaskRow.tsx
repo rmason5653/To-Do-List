@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { dueLabel } from "@/lib/grouping";
 import { RECURRENCE_LABEL, RECURRENCE_RULES } from "@/lib/recurrence";
 import { AssigneePicker, AssigneeTag, memberInitials } from "./Assignee";
@@ -124,6 +124,78 @@ function MoreIcon() {
 const DASHED_CHIP =
   "rounded-full border border-dashed border-line px-2 py-0.5 text-[11px] text-muted transition hover:text-ink";
 
+/** The task-title editor: a textarea that grows to fit its content, so a long
+ *  title wraps onto extra lines and the row extends instead of clipping. */
+function TitleCell({
+  title,
+  done,
+  recurrence,
+  reminder,
+  onChange,
+  onCommit,
+}: {
+  title: string;
+  done: boolean;
+  recurrence?: Recurrence;
+  reminder?: boolean;
+  onChange: (value: string) => void;
+  onCommit: () => void;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const resize = useCallback(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  // Re-fit on content change and when the column width changes (window resize).
+  useEffect(() => {
+    resize();
+  }, [title, resize]);
+
+  useEffect(() => {
+    window.addEventListener("resize", resize);
+    return () => window.removeEventListener("resize", resize);
+  }, [resize]);
+
+  return (
+    <div className="flex w-full min-w-0 items-start gap-1.5">
+      <textarea
+        ref={ref}
+        value={title}
+        rows={1}
+        onChange={(e) => onChange(e.target.value)}
+        onBlur={onCommit}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            e.currentTarget.blur();
+          }
+        }}
+        placeholder="Untitled task"
+        className={`min-w-0 flex-1 resize-none overflow-hidden rounded border-0 bg-transparent px-1 py-0.5 text-sm outline-none focus:bg-canvas ${
+          done ? "text-muted line-through" : "text-ink"
+        }`}
+      />
+      {recurrence && (
+        <span
+          className="mt-1 shrink-0 text-muted"
+          title={`Repeats — ${RECURRENCE_LABEL[recurrence]}`}
+        >
+          <RepeatIcon />
+        </span>
+      )}
+      {reminder && (
+        <span className="mt-1 shrink-0 text-muted" title="Slack reminder on">
+          <BellIcon />
+        </span>
+      )}
+    </div>
+  );
+}
+
 export default function TaskRow({
   task,
   today,
@@ -166,33 +238,14 @@ export default function TaskRow({
 
   const cells: Record<ColumnId, ReactNode> = {
     task: (
-      <div className="flex w-full min-w-0 items-center gap-1.5">
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          onBlur={commitTitle}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") e.currentTarget.blur();
-          }}
-          placeholder="Untitled task"
-          className={`min-w-0 flex-1 truncate rounded border-0 bg-transparent px-1 py-0.5 text-sm outline-none focus:bg-canvas ${
-            done ? "text-muted line-through" : "text-ink"
-          }`}
-        />
-        {recurrence && (
-          <span
-            className="shrink-0 text-muted"
-            title={`Repeats — ${RECURRENCE_LABEL[recurrence]}`}
-          >
-            <RepeatIcon />
-          </span>
-        )}
-        {reminder && (
-          <span className="shrink-0 text-muted" title="Slack reminder on">
-            <BellIcon />
-          </span>
-        )}
-      </div>
+      <TitleCell
+        title={title}
+        done={done}
+        recurrence={recurrence}
+        reminder={reminder}
+        onChange={setTitle}
+        onCommit={commitTitle}
+      />
     ),
     status: (
       <StatusSelect status={task.status} onChange={(s) => onPatch({ status: s })} />
