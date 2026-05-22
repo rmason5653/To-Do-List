@@ -462,9 +462,9 @@ export default function Dashboard({
       ) : (
         <div className="overflow-hidden rounded-xl border border-line bg-panel">
           <div className="overflow-x-auto">
-            <div className="min-w-[800px]">
+            <div className="sm:min-w-[800px]">
               <div
-                className="grid items-center gap-2 border-b border-line px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted"
+                className="hidden items-center gap-2 border-b border-line px-3 py-2 text-[10px] font-semibold uppercase tracking-wide text-muted sm:grid"
                 style={{ gridTemplateColumns: gridTemplate(columnOrder) }}
               >
                 <span />
