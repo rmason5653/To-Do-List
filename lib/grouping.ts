@@ -108,6 +108,23 @@ export function groupByPriority(tasks: Task[]): TaskGroup[] {
   ];
 }
 
+/** A flat, newest-first list — the most recently added task on top. */
+export function groupByRecent(tasks: Task[]): TaskGroup[] {
+  const active: Task[] = [];
+  const done: Task[] = [];
+  for (const t of tasks) {
+    if (isDone(t)) done.push(t);
+    else active.push(t);
+  }
+  active.sort((a, b) => b.created_at.localeCompare(a.created_at));
+  done.sort(byRecent);
+
+  return [
+    { id: "active", title: "All tasks — newest first", tasks: active },
+    { id: "done", title: "Recently done", tasks: done },
+  ];
+}
+
 /** Human-friendly relative label for a due date. */
 export function dueLabel(due: string, today: string): string {
   if (due === today) return "Today";
