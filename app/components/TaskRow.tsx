@@ -111,6 +111,19 @@ function BellIcon() {
   );
 }
 
+function MoreIcon() {
+  return (
+    <svg viewBox="0 0 16 16" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+      <circle cx="3" cy="8" r="1.5" />
+      <circle cx="8" cy="8" r="1.5" />
+      <circle cx="13" cy="8" r="1.5" />
+    </svg>
+  );
+}
+
+const DASHED_CHIP =
+  "rounded-full border border-dashed border-line px-2 py-0.5 text-[11px] text-muted transition hover:text-ink";
+
 export default function TaskRow({
   task,
   today,
@@ -130,7 +143,7 @@ export default function TaskRow({
   onPatch: (patch: TaskPatch) => void;
   onDelete: () => void;
 }) {
-  const [expanded, setExpanded] = useState(false);
+  const [expandMode, setExpandMode] = useState<"notes" | "more" | null>(null);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
 
@@ -142,19 +155,30 @@ export default function TaskRow({
   const member = task.assignee ? team.find((m) => m.id === task.assignee) : undefined;
   const hasNotes = !!task.description && task.description.trim() !== "";
 
+  function commitTitle() {
+    const next = title.trim();
+    if (!next) {
+      setTitle(task.title);
+    } else if (next !== task.title) {
+      onPatch({ title: next });
+    }
+  }
+
   const cells: Record<ColumnId, ReactNode> = {
     task: (
-      <button
-        onClick={() => setExpanded((v) => !v)}
-        className="flex w-full min-w-0 items-center gap-1.5 text-left"
-      >
-        <span
-          className={`min-w-0 truncate text-sm ${
+      <div className="flex w-full min-w-0 items-center gap-1.5">
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          onBlur={commitTitle}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") e.currentTarget.blur();
+          }}
+          placeholder="Untitled task"
+          className={`min-w-0 flex-1 truncate rounded border-0 bg-transparent px-1 py-0.5 text-sm outline-none focus:bg-canvas ${
             done ? "text-muted line-through" : "text-ink"
           }`}
-        >
-          {task.title || "Untitled task"}
-        </span>
+        />
         {recurrence && (
           <span
             className="shrink-0 text-muted"
@@ -168,7 +192,7 @@ export default function TaskRow({
             <BellIcon />
           </span>
         )}
-      </button>
+      </div>
     ),
     status: (
       <StatusSelect status={task.status} onChange={(s) => onPatch({ status: s })} />
@@ -181,38 +205,64 @@ export default function TaskRow({
     ),
     notes: (
       <button
-        onClick={() => setExpanded(true)}
+        onClick={() => setExpandMode((m) => (m === "notes" ? null : "notes"))}
         title={hasNotes ? "View / edit notes" : "Add notes"}
         className={`flex transition hover:text-mason-red ${
-          hasNotes ? "text-ink" : "text-line"
+          expandMode === "notes"
+            ? "text-mason-red"
+            : hasNotes
+              ? "text-ink"
+              : "text-line"
         }`}
       >
         <NotesIcon />
       </button>
     ),
-    assignee: member ? (
-      <AssigneeTag member={member} />
-    ) : task.assignee ? (
-      <span
-        title={task.assignee}
-        className="rounded-full border border-line bg-panel2 px-2 py-0.5 text-[11px] text-muted"
-      >
-        {memberInitials(task.assignee)}
-      </span>
-    ) : (
-      <span className="text-xs text-muted">—</span>
+    assignee: (
+      <div className="relative inline-flex">
+        {member ? (
+          <AssigneeTag member={member} />
+        ) : task.assignee ? (
+          <span
+            title={task.assignee}
+            className="rounded-full border border-line bg-panel2 px-2 py-0.5 text-[11px] text-muted"
+          >
+            {memberInitials(task.assignee)}
+          </span>
+        ) : (
+          <span className={DASHED_CHIP}>+ Assign</span>
+        )}
+        <AssigneePicker
+          team={team}
+          value={task.assignee}
+          onChange={(id) => onPatch({ assignee: id })}
+          className="absolute inset-0 cursor-pointer opacity-0"
+        />
+      </div>
     ),
-    due: task.due_date ? (
-      <span
-        className={`flex items-center gap-1 text-[11px] font-medium ${
-          overdue ? "text-mason-red" : "text-muted"
-        }`}
-      >
-        <ClockIcon />
-        {dueLabel(task.due_date, today)}
-      </span>
-    ) : (
-      <span className="text-xs text-muted">—</span>
+    due: (
+      <div className="relative inline-flex">
+        {task.due_date ? (
+          <span
+            className={`flex items-center gap-1 text-[11px] font-medium ${
+              overdue ? "text-mason-red" : "text-muted"
+            }`}
+          >
+            <ClockIcon />
+            {dueLabel(task.due_date, today)}
+          </span>
+        ) : (
+          <span className={DASHED_CHIP}>+ Date</span>
+        )}
+        <input
+          type="date"
+          value={task.due_date ?? ""}
+          onChange={(e) => onPatch({ due_date: e.target.value || null })}
+          onClick={(e) => e.currentTarget.showPicker?.()}
+          aria-label="Due date"
+          className="absolute inset-0 cursor-pointer opacity-0"
+        />
+      </div>
     ),
   };
 
@@ -234,6 +284,18 @@ export default function TaskRow({
     </button>
   );
 
+  const moreButton = (
+    <button
+      onClick={() => setExpandMode((m) => (m === "more" ? null : "more"))}
+      title="More settings"
+      className={`flex transition hover:text-ink ${
+        expandMode === "more" ? "text-ink" : "text-muted"
+      }`}
+    >
+      <MoreIcon />
+    </button>
+  );
+
   return (
     <div className="border-b border-line last:border-b-0">
       {/* Desktop: an aligned grid row */}
@@ -247,6 +309,7 @@ export default function TaskRow({
             {cells[id]}
           </div>
         ))}
+        {moreButton}
       </div>
 
       {/* Mobile: a stacked card */}
@@ -260,24 +323,15 @@ export default function TaskRow({
             {cells.assignee}
             {cells.due}
             {cells.notes}
+            {moreButton}
           </div>
         </div>
       </div>
 
-      {expanded && (
+      {expandMode === "notes" && (
         <div className="border-t border-line bg-panel2 p-3">
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={() => {
-              if (title.trim() && title.trim() !== task.title) {
-                onPatch({ title: title.trim() });
-              }
-            }}
-            placeholder="Task title"
-            className="field w-full"
-          />
           <textarea
+            autoFocus
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             onBlur={() => {
@@ -285,62 +339,16 @@ export default function TaskRow({
                 onPatch({ description: description || null });
               }
             }}
-            placeholder="Notes / details"
+            placeholder="Notes / details…"
             rows={3}
-            className="field mt-2 w-full resize-y"
+            className="field w-full resize-y"
           />
+        </div>
+      )}
 
-          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
-            <label className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
-                Status
-              </span>
-              <select
-                value={task.status}
-                onChange={(e) => onPatch({ status: e.target.value as Status })}
-                className="field"
-              >
-                {(["not_started", "in_progress", "done"] as Status[]).map((s) => (
-                  <option key={s} value={s}>
-                    {STATUS_LABEL[s]}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
-                Priority
-              </span>
-              <select
-                value={task.priority ?? ""}
-                onChange={(e) =>
-                  onPatch({
-                    priority: e.target.value === "" ? null : Number(e.target.value),
-                  })
-                }
-                className="field"
-              >
-                <option value="">None</option>
-                <option value="3">★★★ P3</option>
-                <option value="2">★★ P2</option>
-                <option value="1">★ P1</option>
-                <option value="0">P0</option>
-              </select>
-            </label>
-
-            <label className="flex flex-col gap-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
-                Due date
-              </span>
-              <input
-                type="date"
-                value={task.due_date ?? ""}
-                onChange={(e) => onPatch({ due_date: e.target.value || null })}
-                className="field"
-              />
-            </label>
-
+      {expandMode === "more" && (
+        <div className="border-t border-line bg-panel2 p-3">
+          <div className="flex flex-wrap items-end gap-2">
             <label className="flex flex-col gap-1">
               <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
                 List
@@ -355,20 +363,6 @@ export default function TaskRow({
                 <option value="ops">Ops</option>
                 <option value="personal">Personal</option>
               </select>
-            </label>
-          </div>
-
-          <div className="mt-2 flex flex-wrap items-end gap-2">
-            <label className="flex min-w-[10rem] flex-1 flex-col gap-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
-                Assignee
-              </span>
-              <AssigneePicker
-                team={team}
-                value={task.assignee}
-                onChange={(id) => onPatch({ assignee: id })}
-                className="field"
-              />
             </label>
             <label className="flex flex-col gap-1">
               <span className="text-[10px] font-semibold uppercase tracking-wide text-muted">
