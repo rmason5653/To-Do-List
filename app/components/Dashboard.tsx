@@ -371,7 +371,7 @@ export default function Dashboard({
   const syncTone = !sync ? "text-muted" : sync.ok ? "text-emerald-400" : "text-mason-red";
 
   return (
-    <main className="w-full px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+    <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-extrabold tracking-tight text-ink">
