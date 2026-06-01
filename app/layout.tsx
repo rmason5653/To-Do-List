@@ -4,6 +4,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Punch List — Mason Homes",
   description: "Daily ops and personal task hub, synced with Slack.",
+  icons: {
+    icon: "/icon.png",
+    apple: "/icon.png",
+  },
 };
 
 export const viewport: Viewport = {
