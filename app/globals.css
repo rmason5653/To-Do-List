@@ -2,8 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mason v4.0 — midnight is the anchor. Dark by default; the brand's home. */
 :root {
-  color-scheme: light;
+  color-scheme: dark;
+  --color-midnight: #0b0b0d;
+  --color-red: #e20602;
+  --color-gold: #f5b800;
+  --color-bone: #f5f2ec;
+  --color-steel: #707176;
 }
 
 html,
@@ -12,8 +18,8 @@ body {
 }
 
 body {
-  background: #f3f4f6;
-  color: #15172b;
+  background: var(--color-midnight);
+  color: var(--color-bone);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -22,12 +28,55 @@ body {
   box-sizing: border-box;
 }
 
-/* Subtle scrollbars */
+/* Data and numeric cells use tabular figures so counts never jitter. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* v4 interaction state — focus-visible is required everywhere:
+   2px red outline, 2px offset. Global default so nothing slips through. */
+:focus-visible {
+  outline: 2px solid var(--color-red);
+  outline-offset: 2px;
+}
+/* Don't double up when a control sets its own focus-visible ring. */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Dark, restrained scrollbars. */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
+::-webkit-scrollbar-track {
+  background: #121215;
+}
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: #2a2a31;
   border-radius: 999px;
+  border: 2px solid #121215;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #34343c;
+}
+
+/* Native form controls render legibly on midnight (date pickers, selects). */
+input,
+select,
+textarea {
+  color-scheme: dark;
+}
+
+/* v4 motion: respect reduced-motion — kill all transforms and transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

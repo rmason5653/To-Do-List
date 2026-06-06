@@ -1,5 +1,33 @@
 import type { Metadata, Viewport } from "next";
+import { Inter, Montserrat } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
+
+// Inter — all body, UI text, and data.
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+// Montserrat — headings, nav, buttons, card titles, big numbers.
+const montserrat = Montserrat({
+  subsets: ["latin"],
+  weight: ["500", "700", "800", "900"],
+  variable: "--font-montserrat",
+  display: "swap",
+});
+
+// American Captain — display punch only (splash / empty / milestone).
+// Capped at 5 uses across the app; bundled from the Mason brand kit.
+const americanCaptain = localFont({
+  src: [
+    { path: "./fonts/American_Captain.otf", weight: "900", style: "normal" },
+  ],
+  variable: "--font-american-captain",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Ops To-Do",
@@ -9,7 +37,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  themeColor: "#15172b",
+  themeColor: "#0B0B0D",
 };
 
 export default function RootLayout({
@@ -18,7 +46,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${inter.variable} ${montserrat.variable} ${americanCaptain.variable}`}
+    >
       <body className="font-sans">{children}</body>
     </html>
   );

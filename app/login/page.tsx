@@ -34,13 +34,16 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="flex min-h-dvh items-center justify-center px-4">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm rounded-2xl bg-white p-8 shadow-sm ring-1 ring-black/5"
+        className="w-full max-w-sm rounded-modal border border-line bg-surface-2 p-8 shadow-e2"
       >
-        <h1 className="text-xl font-semibold text-slate-900">Ops To-Do</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        {/* Splash moment — display punch (American Captain). */}
+        <h1 className="font-punch text-4xl uppercase leading-none tracking-[0.02em] text-bone">
+          Ops To-Do
+        </h1>
+        <p className="mt-3 text-sm text-ink-tertiary">
           Enter your access password to continue.
         </p>
         <input
@@ -49,16 +52,25 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
-          className="mt-5 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+          aria-label="Access password"
+          className="mt-6 w-full rounded-control border border-line-strong bg-surface-3 px-3 py-2.5 text-sm text-ink-primary placeholder:text-ink-muted outline-none focus:border-red"
         />
-        {error && <p className="mt-2 text-sm text-rose-600">{error}</p>}
+        {error && (
+          <p className="mt-2 text-sm text-red" role="alert">
+            {error}
+          </p>
+        )}
         <button
           type="submit"
           disabled={busy}
-          className="mt-5 w-full rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-60"
+          className="mt-6 w-full rounded-control bg-red px-3 py-2.5 font-display text-sm font-bold text-bone transition duration-150 ease-out hover:bg-red-hover active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {busy ? "Checking…" : "Unlock"}
         </button>
+        {/* The one sanctioned italic. */}
+        <p className="mt-6 text-center text-xs italic text-steel">
+          Built loud. Built heavy. Built to last.
+        </p>
       </form>
     </main>
   );
