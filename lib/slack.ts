@@ -195,15 +195,33 @@ function cellMap(item: any): Map<string, any> {
   return map;
 }
 
+/**
+ * Walk a Block Kit rich_text value and pull out its text, preserving line
+ * breaks. Slack returns multi-line text as one `rich_text` block whose
+ * `rich_text_section`s are the individual lines, so sections are joined with
+ * "\n" (a blank line between paragraphs survives as an empty section). Falls
+ * back gracefully on any shape, so single-line values are unchanged.
+ */
+function richTextToString(node: any): string {
+  if (node == null) return "";
+  if (typeof node === "string") return node;
+  if (Array.isArray(node)) return node.map(richTextToString).join("");
+  if (typeof node.text === "string") return node.text; // leaf text element
+  if (Array.isArray(node.elements)) {
+    // Sections of a rich_text block are separate lines; inline runs are not.
+    const sep = node.type === "rich_text" ? "\n" : "";
+    return node.elements.map(richTextToString).join(sep);
+  }
+  return "";
+}
+
 function cellText(cell: any): string {
   if (cell == null) return "";
   if (typeof cell.text === "string") return cell.text;
   if (typeof cell.value === "string") return cell.value;
   if (typeof cell.string === "string") return cell.string;
-  if (Array.isArray(cell.rich_text)) {
-    return cell.rich_text.map((r: any) => r.text ?? "").join("");
-  }
   if (typeof cell.rich_text === "string") return cell.rich_text;
+  if (Array.isArray(cell.rich_text)) return richTextToString(cell.rich_text);
   return "";
 }
 
