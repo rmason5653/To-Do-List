@@ -2,24 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Mason Homes theme — dark by default, light via the `.light` class. */
+/* Mason v4.0 — midnight is the anchor (dark default); `.light` flips to bone.
+   Tokens map to the v4 surface ramp / text ramp; red + gold stay constant. */
 :root {
-  --canvas: #0e0e10;
-  --panel: #18181b;
-  --panel-2: #1f1f23;
-  --line: #2a2a2f;
-  --ink: #f5f5f7;
-  --muted: #8a8a92;
+  --canvas: #0b0b0d; /* surface-0 — page */
+  --panel: #16161a; /* surface-2 — cards */
+  --panel-2: #1c1c21; /* surface-3 — inputs, wells, hover rows */
+  --line: #2a2a31; /* steel-derived hairline (also faint icon color) */
+  --ink: #f5f2ec; /* bone — primary text */
+  --muted: #9b9c9f; /* ink-tertiary — readable secondary text */
   color-scheme: dark;
 }
 
 .light {
-  --canvas: #f5f5f7;
+  --canvas: #f5f2ec; /* bone */
   --panel: #ffffff;
-  --panel-2: #f4f4f5;
-  --line: #e4e4e7;
-  --ink: #18181b;
-  --muted: #6b6b72;
+  --panel-2: #ece9e2;
+  --line: #d9d5cd;
+  --ink: #0b0b0d; /* midnight */
+  --muted: #5a5a5e;
   color-scheme: light;
 }
 
@@ -39,10 +40,25 @@ body {
   box-sizing: border-box;
 }
 
+/* Numeric/data cells use tabular figures so counts never jitter. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
 @layer components {
   .field {
     @apply rounded-lg border border-line bg-panel2 px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-mason-red;
   }
+}
+
+/* v4 interaction state — focus-visible everywhere: 2px red, 2px offset. */
+:focus-visible {
+  outline: 2px solid #e20602;
+  outline-offset: 2px;
+}
+:focus:not(:focus-visible) {
+  outline: none;
 }
 
 ::-webkit-scrollbar {
@@ -52,4 +68,16 @@ body {
 ::-webkit-scrollbar-thumb {
   background: var(--line);
   border-radius: 999px;
+}
+
+/* v4 motion: respect reduced-motion — kill transforms and transitions. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

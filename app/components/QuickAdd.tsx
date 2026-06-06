@@ -44,7 +44,7 @@ export default function QuickAdd({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-panel p-2">
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-line bg-panel p-2 shadow-e1">
       <input
         value={title}
         onChange={(e) => setTitle(e.target.value)}
@@ -59,8 +59,8 @@ export default function QuickAdd({
           <button
             key={c}
             onClick={() => setCategory(c)}
-            className={`rounded-md px-3 py-1.5 capitalize transition ${
-              category === c ? "bg-mason-red text-white" : "text-muted hover:text-ink"
+            className={`rounded-md px-3 py-1.5 font-display capitalize transition ${
+              category === c ? "bg-mason-red text-bone" : "text-muted hover:text-ink"
             }`}
           >
             {c}
@@ -85,7 +85,7 @@ export default function QuickAdd({
       <button
         onClick={submit}
         disabled={busy || !title.trim()}
-        className="rounded-lg bg-mason-red px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+        className="rounded-lg bg-mason-red px-4 py-2 font-display text-sm font-bold text-bone transition hover:bg-mason-red-hover hover:opacity-100 disabled:opacity-50"
       >
         Add
       </button>
