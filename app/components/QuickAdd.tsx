@@ -34,7 +34,7 @@ export default function QuickAdd({
   }
 
   return (
-    <div className="rounded-xl bg-white p-2 ring-1 ring-black/5">
+    <div className="rounded-card border border-line bg-surface-2 p-2 shadow-e1">
       <div className="flex flex-wrap items-center gap-2">
         <input
           value={title}
@@ -43,33 +43,38 @@ export default function QuickAdd({
             if (e.key === "Enter") submit();
           }}
           placeholder="Add a task and press Enter…"
-          className="min-w-[12rem] flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-indigo-400"
+          className="min-w-[12rem] flex-1 rounded-control border border-line-strong bg-surface-3 px-3 py-2 text-sm text-ink-primary placeholder:text-ink-muted outline-none focus:border-red"
         />
-        <div className="flex rounded-lg bg-slate-100 p-0.5 text-xs font-medium">
+
+        <div className="flex rounded-control bg-surface-1 p-0.5 text-xs font-medium">
           {(["ops", "personal"] as Category[]).map((c) => (
             <button
               key={c}
               onClick={() => setCategory(c)}
-              className={`rounded-md px-3 py-1.5 capitalize transition ${
+              aria-pressed={category === c}
+              className={`rounded-[4px] px-3 py-1.5 capitalize transition duration-150 ease-out ${
                 category === c
-                  ? "bg-white text-slate-800 shadow-sm"
-                  : "text-slate-500"
+                  ? "bg-surface-4 text-ink-primary shadow-e1"
+                  : "text-ink-tertiary hover:text-ink-secondary"
               }`}
             >
               {c}
             </button>
           ))}
         </div>
+
         <input
           type="date"
           value={due}
           onChange={(e) => setDue(e.target.value)}
-          className="rounded-lg border border-slate-200 px-2 py-2 text-sm text-slate-600 outline-none focus:border-indigo-400"
+          className="rounded-control border border-line-strong bg-surface-3 px-2 py-2 text-sm text-ink-secondary outline-none focus:border-red"
         />
+
+        {/* Primary CTA — red, bone text, Montserrat. */}
         <button
           onClick={submit}
           disabled={busy || !title.trim()}
-          className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:opacity-50"
+          className="rounded-control bg-red px-4 py-2 font-display text-sm font-bold text-bone transition duration-150 ease-out hover:bg-red-hover active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Add
         </button>
