@@ -35,10 +35,27 @@ function mergeTask(t: Task, patch: TaskPatch): Task {
   return next;
 }
 
-function StatTile({ label, value, tone }: { label: string; value: number; tone: string }) {
+function StatTile({
+  label,
+  value,
+  tone,
+  alarm,
+}: {
+  label: string;
+  value: number;
+  tone: string;
+  alarm?: boolean;
+}) {
+  // Overdue reads like an alarm only when it is actually firing.
+  const shell =
+    alarm && value > 0
+      ? "border-mason-red/40 bg-mason-red/10"
+      : "border-line bg-panel";
   return (
-    <div className="rounded-xl border border-line bg-panel p-3">
-      <div className={`text-2xl font-bold ${tone}`}>{value}</div>
+    <div className={`rounded-xl border p-3 shadow-e1 ${shell}`}>
+      <div className={`tnum font-display text-2xl font-extrabold tracking-tight ${tone}`}>
+        {value}
+      </div>
       <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
         {label}
       </div>
@@ -61,8 +78,8 @@ function Segmented<T extends string>({
         <button
           key={o.id}
           onClick={() => onChange(o.id)}
-          className={`rounded-md px-3 py-1.5 capitalize transition ${
-            value === o.id ? "bg-mason-red text-white" : "text-muted hover:text-ink"
+          className={`rounded-md px-3 py-1.5 font-display capitalize transition ${
+            value === o.id ? "bg-mason-red text-bone" : "text-muted hover:text-ink"
           }`}
         >
           {o.label}
@@ -368,13 +385,13 @@ export default function Dashboard({
     );
   }
 
-  const syncTone = !sync ? "text-muted" : sync.ok ? "text-emerald-400" : "text-mason-red";
+  const syncTone = !sync ? "text-muted" : sync.ok ? "text-mason-green" : "text-mason-red";
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-ink">
+          <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">
             PUNCH <span className="text-mason-red">LIST</span>
           </h1>
           <p className="text-xs font-medium uppercase tracking-wide text-muted">
@@ -388,13 +405,13 @@ export default function Dashboard({
           <button
             onClick={triggerSync}
             disabled={syncing}
-            className="rounded-lg border border-mason-red px-3 py-1.5 text-xs font-bold text-mason-red transition hover:bg-mason-red hover:text-white disabled:opacity-50"
+            className="rounded-lg border border-mason-red px-3 py-1.5 font-display text-xs font-bold text-mason-red transition hover:bg-mason-red hover:text-bone disabled:opacity-50"
           >
             Sync now
           </button>
           <button
             onClick={toggleTheme}
-            className="rounded-lg border border-line px-2.5 py-1.5 text-xs font-semibold text-muted transition hover:text-ink"
+            className="rounded-lg border border-line px-2.5 py-1.5 font-display text-xs font-semibold text-muted transition hover:text-ink"
             title="Toggle theme"
           >
             {theme === "dark" ? "Light" : "Dark"}
@@ -403,9 +420,9 @@ export default function Dashboard({
       </header>
 
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatTile label="Overdue" value={stats.overdue} tone="text-mason-red" />
-        <StatTile label="Due today" value={stats.dueToday} tone="text-mason-yellow" />
-        <StatTile label="Completed today" value={stats.doneToday} tone="text-emerald-400" />
+        <StatTile label="Overdue" value={stats.overdue} tone="text-mason-red" alarm />
+        <StatTile label="Due today" value={stats.dueToday} tone="text-mason-gold" />
+        <StatTile label="Completed today" value={stats.doneToday} tone="text-mason-green" />
         <StatTile label="Open total" value={stats.open} tone="text-ink" />
       </div>
 
@@ -453,16 +470,20 @@ export default function Dashboard({
       </div>
 
       {tasks.length === 0 ? (
-        <div className="rounded-xl border border-line bg-panel p-8 text-center">
-          <p className="text-sm text-muted">
-            No tasks yet. Add one above
+        <div className="rounded-xl border border-line bg-panel p-12 text-center shadow-e1">
+          {/* Display punch — sanctioned empty-state moment (American Captain). */}
+          <p className="font-punch text-5xl uppercase tracking-[0.02em] text-ink">
+            Nothing queued
+          </p>
+          <p className="mt-3 text-sm text-muted">
+            Add a task above
             {sync?.slackConfigured
-              ? ' or hit "Sync now" to import your Slack Ops List.'
+              ? " or pull your Slack Ops List with “Sync now.”"
               : "."}
           </p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-xl border border-line bg-panel">
+        <div className="overflow-hidden rounded-xl border border-line bg-panel shadow-e1">
           <div className="overflow-x-auto">
             <div className="sm:min-w-[840px]">
               <div

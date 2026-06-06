@@ -34,15 +34,16 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <main className="flex min-h-dvh items-center justify-center px-4">
       <form
         onSubmit={submit}
-        className="w-full max-w-sm rounded-2xl border border-line bg-panel p-8"
+        className="w-full max-w-sm rounded-2xl border border-line bg-panel p-8 shadow-e2"
       >
-        <h1 className="text-2xl font-extrabold tracking-tight text-ink">
-          PUNCH <span className="text-mason-red">LIST</span>
+        {/* Splash moment — display punch (American Captain). */}
+        <h1 className="font-punch text-4xl uppercase leading-none tracking-[0.02em] text-ink">
+          Punch <span className="text-mason-red">List</span>
         </h1>
-        <p className="mt-1 text-xs font-medium uppercase tracking-wide text-muted">
+        <p className="mt-2 text-xs font-medium uppercase tracking-wide text-muted">
           Mason Homes
         </p>
         <p className="mt-4 text-sm text-muted">
@@ -60,10 +61,14 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={busy}
-          className="mt-5 w-full rounded-lg bg-mason-red px-3 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-60"
+          className="mt-5 w-full rounded-lg bg-mason-red px-3 py-2 font-display text-sm font-bold text-bone transition hover:bg-mason-red-hover disabled:opacity-60"
         >
           {busy ? "Checking…" : "Unlock"}
         </button>
+        {/* The one sanctioned italic. */}
+        <p className="mt-6 text-center text-xs italic text-muted">
+          Built loud. Built heavy. Built to last.
+        </p>
       </form>
     </main>
   );

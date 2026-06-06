@@ -24,7 +24,7 @@ export function Avatar({ member }: { member: TeamMember }) {
     );
   }
   return (
-    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-mason-red text-[8px] font-bold text-white">
+    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-mason-red text-[8px] font-bold text-bone">
       {memberInitials(member.name)}
     </span>
   );

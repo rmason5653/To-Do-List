@@ -16,8 +16,8 @@ const STATUS_LABEL: Record<Status, string> = {
 
 const STATUS_STYLE: Record<Status, string> = {
   not_started: "border-line bg-panel2 text-muted",
-  in_progress: "border-mason-yellow/30 bg-mason-yellow/10 text-mason-yellow",
-  done: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400",
+  in_progress: "border-mason-gold/30 bg-mason-gold/10 text-mason-gold",
+  done: "border-mason-green/40 bg-mason-green/15 text-mason-green",
 };
 
 /** Status shown as a pill that is itself a dropdown — click to change. */
@@ -325,8 +325,8 @@ export default function TaskRow({
       onClick={() => onPatch({ completed: !done })}
       className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
         done
-          ? "border-emerald-500 bg-emerald-500 text-white"
-          : "border-line hover:border-emerald-500"
+          ? "border-mason-green bg-mason-green text-bone"
+          : "border-line hover:border-mason-green"
       }`}
     >
       {done && (
