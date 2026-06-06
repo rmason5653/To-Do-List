@@ -4,29 +4,24 @@ import { useEffect, useState } from "react";
 import { dueLabel } from "@/lib/grouping";
 import type { Status, Task, TaskInput } from "@/lib/types";
 
-// Priority is stored as a number (higher = more urgent). We present it as words
-// + a color rank so it stays glanceable and avoids the inverted "P0 vs P3"
-// confusion. Storage and sort order are untouched.
-const PRIORITY: Record<number, { label: string; dot: string; rail: string }> = {
-  3: { label: "Urgent", dot: "bg-red", rail: "bg-red" },
-  2: { label: "High", dot: "bg-gold", rail: "bg-gold" },
-  1: { label: "Medium", dot: "bg-steel", rail: "bg-steel/60" },
-  0: { label: "Low", dot: "bg-ink-faint", rail: "bg-ink-faint" },
-};
+// Priority is a 1–3 star rating that lives in Slack (more stars = more urgent).
+// We render it as stars to mirror Slack exactly; the stored number and the
+// two-way sync are never touched.
+const MAX_STARS = 3;
+
+function priorityRail(value: number): string {
+  return value >= 3 ? "bg-red" : value === 2 ? "bg-gold" : "bg-steel/60";
+}
+
+function starColor(value: number): string {
+  return value >= 3 ? "text-red" : value === 2 ? "text-gold" : "text-ink-secondary";
+}
 
 const STATUS_LABEL: Record<Status, string> = {
   not_started: "Not started",
   in_progress: "In progress",
   done: "Done",
 };
-
-const PRIORITY_OPTIONS: { value: string; label: string }[] = [
-  { value: "", label: "No priority" },
-  { value: "3", label: "Urgent" },
-  { value: "2", label: "High" },
-  { value: "1", label: "Medium" },
-  { value: "0", label: "Low" },
-];
 
 function initials(value: string): string {
   const name = value.includes("@") ? value.split("@")[0] : value;
@@ -66,6 +61,77 @@ function Chip({
   );
 }
 
+function Star({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden className={className}>
+      <path d="M10 1.6l2.6 5.27 5.82.85-4.21 4.1.99 5.79L10 14.88l-5.2 2.73.99-5.79L1.58 7.72l5.82-.85L10 1.6z" />
+    </svg>
+  );
+}
+
+// Read-only star meter shown on the card — count = the Slack star rating.
+function StarMeter({ value }: { value: number }) {
+  const v = Math.max(0, Math.min(MAX_STARS, value));
+  const color = starColor(v);
+  return (
+    <span
+      className="inline-flex items-center gap-0.5"
+      aria-label={`Priority ${v} of ${MAX_STARS} stars`}
+      title={`Priority: ${v}/${MAX_STARS} stars`}
+    >
+      {Array.from({ length: MAX_STARS }).map((_, i) => (
+        <Star
+          key={i}
+          className={`h-3.5 w-3.5 ${i < v ? color : "text-ink-faint"}`}
+        />
+      ))}
+    </span>
+  );
+}
+
+// Interactive star picker in the editor. Writes the same 1–3 number back via
+// onPatch, which the existing sync pushes to Slack unchanged.
+function StarPicker({
+  value,
+  onChange,
+}: {
+  value: number | null;
+  onChange: (v: number | null) => void;
+}) {
+  const v = value ?? 0;
+  return (
+    <div className="flex items-center gap-2" role="group" aria-label="Priority">
+      <span className="flex items-center gap-0.5">
+        {[1, 2, 3].map((n) => (
+          <button
+            key={n}
+            type="button"
+            aria-label={`Set priority to ${n} star${n > 1 ? "s" : ""}`}
+            aria-pressed={v === n}
+            onClick={() => onChange(n === v ? null : n)}
+            className="rounded-sm p-0.5 transition duration-150 ease-out hover:scale-110"
+          >
+            <Star
+              className={`h-5 w-5 ${
+                n <= v ? starColor(v) : "text-ink-faint"
+              }`}
+            />
+          </button>
+        ))}
+      </span>
+      {v > 0 && (
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="text-[11px] font-medium uppercase tracking-[0.06em] text-steel transition hover:text-ink-secondary"
+        >
+          Clear
+        </button>
+      )}
+    </div>
+  );
+}
+
 export default function TaskCard({
   task,
   today,
@@ -90,8 +156,10 @@ export default function TaskCard({
 
   const done = task.completed || task.status === "done";
   const overdue = !done && task.due_date && task.due_date < today;
-  const priority =
-    task.priority != null ? PRIORITY[task.priority] : undefined;
+  const stars =
+    task.priority != null && task.priority > 0
+      ? Math.min(MAX_STARS, task.priority)
+      : 0;
 
   return (
     <div
@@ -100,10 +168,10 @@ export default function TaskCard({
       }`}
     >
       {/* Priority rail — glanceable urgency down the left edge. */}
-      {priority && !done && (
+      {stars > 0 && !done && (
         <span
           aria-hidden
-          className={`absolute inset-y-0 left-0 w-1 ${priority.rail}`}
+          className={`absolute inset-y-0 left-0 w-1 ${priorityRail(stars)}`}
         />
       )}
 
@@ -140,7 +208,7 @@ export default function TaskCard({
           </button>
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
-            {priority && <Chip dot={priority.dot}>{priority.label}</Chip>}
+            {stars > 0 && <StarMeter value={stars} />}
             {task.category === "personal" && <Chip>Personal</Chip>}
             {!done && task.status === "in_progress" && (
               <Chip dot="bg-gold">In progress</Chip>
@@ -211,25 +279,16 @@ export default function TaskCard({
               </select>
             </label>
 
-            <label className="flex flex-col gap-1.5">
+            {/* Star rating mirrors the Slack 1–3 star column (display + edit). */}
+            <div className="flex flex-col gap-1.5">
               <span className={fieldLabelClass}>Priority</span>
-              <select
-                value={task.priority ?? ""}
-                onChange={(e) =>
-                  onPatch({
-                    priority:
-                      e.target.value === "" ? null : Number(e.target.value),
-                  })
-                }
-                className={selectClass}
-              >
-                {PRIORITY_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>
-                    {o.label}
-                  </option>
-                ))}
-              </select>
-            </label>
+              <div className="flex min-h-[42px] items-center">
+                <StarPicker
+                  value={task.priority}
+                  onChange={(v) => onPatch({ priority: v })}
+                />
+              </div>
+            </div>
 
             <label className="flex flex-col gap-1.5">
               <span className={fieldLabelClass}>Due date</span>
