@@ -169,7 +169,8 @@ function TitleCell({
         onChange={(e) => onChange(e.target.value)}
         onBlur={onCommit}
         onKeyDown={(e) => {
-          if (e.key === "Enter") {
+          // Plain Enter inserts a line break; Cmd/Ctrl+Enter saves and exits.
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
             e.preventDefault();
             e.currentTarget.blur();
           }
