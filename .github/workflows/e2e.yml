@@ -1,0 +1,20 @@
+name: e2e smoke
+
+# Guardrail for the direct-to-main ship workflow: every push runs a headless
+# browser check that the app boots and the task-title paragraph break works.
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e
