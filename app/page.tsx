@@ -78,7 +78,7 @@ export default async function HomePage() {
           Mason Homes
         </p>
         <h1 className="mt-1 font-punch text-6xl uppercase leading-none tracking-[0.02em] text-bone sm:text-7xl">
-          Inventory
+          Par
         </h1>
         <p className="mt-3 max-w-xl text-sm text-ink-tertiary">
           Par vs actual across every unit and central. Consumables draw down,

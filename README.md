@@ -1,4 +1,6 @@
-# Mason Homes Inventory
+# Par
+
+_Mason Homes inventory tracker._
 
 Tracks inventory across every Mason Homes unit and the central storage reserve,
 and logs every movement from central. Two problems, one app: it **prevents
@@ -70,7 +72,6 @@ See [`.env.example`](.env.example).
 | --- | --- | --- |
 | `SUPABASE_URL` | yes | Supabase project URL |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | Supabase service role key |
-| `APP_PASSWORD` | for a public URL | Shared password gate for the team |
 
 ## Local development
 

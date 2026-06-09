@@ -15,8 +15,6 @@ const LINKS = [
 
 export default function NavBar() {
   const pathname = usePathname();
-  // The login screen is its own full-bleed splash.
-  if (pathname === "/login") return null;
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/" || pathname.startsWith("/unit");
@@ -28,10 +26,10 @@ export default function NavBar() {
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex shrink-0 items-baseline gap-1.5">
           <span className="font-display text-base font-extrabold tracking-[-0.01em] text-bone">
-            Mason
+            Par
           </span>
           <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
-            Inventory
+            Mason Homes
           </span>
         </Link>
 
