@@ -1,11 +1,44 @@
 import { getSupabase } from "./supabase";
 import type {
   CentralReserveItem,
+  ConsumableItem,
   ConsumablePar,
   LinenPar,
   PullLogEntry,
+  Settings,
   Unit,
 } from "./types";
+
+export async function getSettings(): Promise<Settings> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("settings")
+    .select("default_turnover_frequency, buffer_turnovers, central_buffer")
+    .eq("id", 1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  const row = data as Settings | null;
+  return {
+    default_turnover_frequency: row?.default_turnover_frequency ?? 3,
+    buffer_turnovers: row?.buffer_turnovers ?? 1,
+    central_buffer: Number(row?.central_buffer ?? 2),
+  };
+}
+
+/** Distinct consumable items with their (global) leave-behind. */
+export async function listConsumableItems(): Promise<ConsumableItem[]> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("consumable_par")
+    .select("item_name, sort, leave_behind")
+    .order("sort", { ascending: true });
+  if (error) throw new Error(error.message);
+  const seen = new Map<string, ConsumableItem>();
+  for (const r of (data ?? []) as ConsumableItem[]) {
+    if (!seen.has(r.item_name)) seen.set(r.item_name, r);
+  }
+  return [...seen.values()];
+}
 
 // ---------------------------------------------------------------------------
 // Raw reads

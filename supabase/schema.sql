@@ -21,8 +21,20 @@ create table if not exists units (
   parking_status       text not null default 'na',     -- ok | missing | na
   parking_confirmed_at timestamptz,
   last_cleaned_at      timestamptz,
+  turnover_frequency   int,                            -- turnovers/week; null = global default
   created_at           timestamptz not null default now()
 );
+
+-- Global inputs that drive the calculated par math (single row).
+create table if not exists settings (
+  id                         int primary key default 1,
+  default_turnover_frequency int     not null default 3,
+  buffer_turnovers           int     not null default 1,
+  central_buffer             numeric not null default 2,
+  updated_at                 timestamptz not null default now(),
+  constraint settings_singleton check (id = 1)
+);
+insert into settings (id) values (1) on conflict (id) do nothing;
 
 -- CONSUMABLE PAR: per unit, per item. current_actual is the cleaner's signal.
 -- par = leave_behind * 4; reorder_point = one leave_behind.
@@ -102,6 +114,7 @@ alter table linen_par         enable row level security;
 alter table central_reserve   enable row level security;
 alter table central_pull_log  enable row level security;
 alter table clean_log         enable row level security;
+alter table settings          enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- FUNCTIONS (atomic inventory movements)
@@ -191,6 +204,34 @@ begin
   end loop;
 
   return v_count;
+end;
+$$;
+
+-- Recompute calculated par from the inputs (consumables only; linens stored).
+create or replace function recalc_par() returns void
+language plpgsql
+set search_path = public
+as $$
+declare
+  s record;
+begin
+  select * into s from settings where id = 1;
+  update consumable_par cp
+     set closet_par    = cp.leave_behind * (coalesce(u.turnover_frequency, s.default_turnover_frequency) + s.buffer_turnovers),
+         reorder_point = cp.leave_behind * s.buffer_turnovers,
+         updated_at    = now()
+    from units u where u.unit_id = cp.unit_id;
+  update central_reserve cr
+     set par_level     = round(sub.weekly_total * s.central_buffer)::int,
+         reorder_point = sub.weekly_total,
+         updated_at    = now()
+    from (
+      select cp.item_name,
+             sum(cp.leave_behind * coalesce(u.turnover_frequency, s.default_turnover_frequency))::int as weekly_total
+      from consumable_par cp join units u on u.unit_id = cp.unit_id
+      group by cp.item_name
+    ) sub
+   where cr.category = 'consumable' and cr.item_name = sub.item_name;
 end;
 $$;
 
@@ -334,4 +375,7 @@ begin
     ('hand_towel',          'linen',     11, 20,   6,  20),
     ('makeup_towel',        'linen',     12, 20,   6,  20),
     ('kitchen_towel',       'linen',     13, 15,   5,  15);
+
+  -- Compute calculated consumable par + central targets from the inputs.
+  perform recalc_par();
 end $$;

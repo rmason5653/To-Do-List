@@ -104,6 +104,9 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
           </div>
           <div className="tnum text-[11px] text-ink-muted">
             par {item.par_level} · reorder {item.reorder_point}
+            {item.category === "consumable" && (
+              <span className="ml-1 text-ink-faint">· calculated</span>
+            )}
           </div>
         </div>
 
@@ -132,18 +135,20 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
           >
             Receive
           </button>
-          <button
-            type="button"
-            onClick={() => {
-              setMode("targets");
-              setParVal(String(item.par_level));
-              setReorderVal(String(item.reorder_point));
-              setError("");
-            }}
-            className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-tertiary transition hover:border-red hover:text-ink-primary"
-          >
-            Edit
-          </button>
+          {item.category === "linen" && (
+            <button
+              type="button"
+              onClick={() => {
+                setMode("targets");
+                setParVal(String(item.par_level));
+                setReorderVal(String(item.reorder_point));
+                setError("");
+              }}
+              className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-tertiary transition hover:border-red hover:text-ink-primary"
+            >
+              Edit
+            </button>
+          )}
         </div>
       </div>
 

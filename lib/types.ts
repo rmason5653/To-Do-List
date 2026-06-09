@@ -22,6 +22,21 @@ export interface Unit {
   parking_status: ParkingStatus;
   parking_confirmed_at: string | null;
   last_cleaned_at: string | null;
+  turnover_frequency: number | null; // turnovers/week; null = use global default
+}
+
+/** Global inputs that drive the calculated par math. */
+export interface Settings {
+  default_turnover_frequency: number;
+  buffer_turnovers: number;
+  central_buffer: number;
+}
+
+/** A consumable item's global leave-behind (drives its calculated par). */
+export interface ConsumableItem {
+  item_name: string;
+  sort: number;
+  leave_behind: number;
 }
 
 export interface ConsumablePar {
