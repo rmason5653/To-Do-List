@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { listCentralReserve, listUnits } from "@/lib/inventory";
+import { isAdmin } from "@/lib/auth-context";
 import { REASONS_BY_CATEGORY } from "@/lib/constants";
 import type { Category, PullReason } from "@/lib/types";
 
@@ -27,6 +28,9 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
+  // Free-form pulls change central totals — managers only.
+  if (!(await isAdmin()))
+    return NextResponse.json({ error: "Admins only." }, { status: 403 });
   const body = await req.json().catch(() => ({}));
   const staff = String(body.staff_name ?? "").trim();
   const item = String(body.item_name ?? "").trim();

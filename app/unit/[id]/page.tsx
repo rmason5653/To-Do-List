@@ -4,6 +4,7 @@ import { getUnit, listConsumables, listLinens } from "@/lib/inventory";
 import { Container, SetupNotice } from "@/app/components/ui";
 import PullDialog from "@/app/components/PullDialog";
 import CleanFlow from "./CleanFlow";
+import { isAdmin } from "@/lib/auth-context";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ export default async function UnitPage({
       listConsumables(id),
       listLinens(id),
     ]);
+    const admin = await isAdmin();
 
     return (
       <Container>
@@ -41,11 +43,13 @@ export default async function UnitPage({
               {unit.name}
             </h1>
           </div>
-          <PullDialog
-            label="Pull from central"
-            variant="ghost"
-            prefill={{ unit_id: unit.unit_id }}
-          />
+          {admin && (
+            <PullDialog
+              label="Pull from central"
+              variant="ghost"
+              prefill={{ unit_id: unit.unit_id }}
+            />
+          )}
         </div>
 
         <div className="mt-6">

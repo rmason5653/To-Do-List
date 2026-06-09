@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import PullDialog from "./PullDialog";
@@ -20,6 +21,8 @@ const LINKS = [
 
 export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
+  const [open, setOpen] = useState(false);
+
   // The login screen is its own full-bleed splash.
   if (pathname === "/login") return null;
 
@@ -32,8 +35,12 @@ export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface-4/85 backdrop-blur-[8px]">
-      <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="flex shrink-0 items-baseline gap-1.5">
+      <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
+        <Link
+          href="/"
+          onClick={() => setOpen(false)}
+          className="flex shrink-0 items-baseline gap-1.5"
+        >
           <span className="font-display text-base font-extrabold tracking-[-0.01em] text-ink-primary">
             Par
           </span>
@@ -42,7 +49,8 @@ export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
           </span>
         </Link>
 
-        <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
+        {/* Desktop links */}
+        <nav className="hidden flex-1 items-center gap-1 overflow-x-auto md:flex">
           {links.map((l) => (
             <Link
               key={l.href}
@@ -58,18 +66,74 @@ export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
           ))}
         </nav>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
           <ThemeToggle />
-          <PullDialog label="Log pull" />
+          {isAdmin && (
+            <div className="hidden md:block">
+              <PullDialog label="Log pull" />
+            </div>
+          )}
           <a
             href="/api/logout"
-            className="shrink-0 rounded-control px-2 py-1.5 text-xs font-medium text-ink-tertiary transition hover:text-ink-primary"
+            className="hidden shrink-0 rounded-control px-2 py-1.5 text-xs font-medium text-ink-tertiary transition hover:text-ink-primary md:inline"
             title="Log out"
           >
             Log out
           </a>
+
+          {/* Mobile menu toggle */}
+          <button
+            type="button"
+            onClick={() => setOpen((o) => !o)}
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            className="flex h-9 w-9 items-center justify-center rounded-control border border-line-strong bg-surface-3 text-ink-secondary transition hover:text-ink-primary md:hidden"
+          >
+            {open ? (
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M5 5l10 10M15 5L5 15" />
+              </svg>
+            ) : (
+              <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M3 6h14M3 10h14M3 14h14" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
+
+      {/* Mobile dropdown */}
+      {open && (
+        <div className="border-t border-line bg-surface-4/95 backdrop-blur-[8px] md:hidden">
+          <nav className="mx-auto w-full max-w-6xl px-4 py-2 sm:px-6">
+            {links.map((l) => (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className={`block rounded-control px-3 py-2.5 text-sm font-medium transition ${
+                  isActive(l.href)
+                    ? "bg-surface-2 text-ink-primary"
+                    : "text-ink-secondary hover:text-ink-primary"
+                }`}
+              >
+                {l.label}
+              </Link>
+            ))}
+            {isAdmin && (
+              <div className="px-1 py-2" onClick={() => setOpen(false)}>
+                <PullDialog label="Log pull" />
+              </div>
+            )}
+            <a
+              href="/api/logout"
+              className="block rounded-control px-3 py-2.5 text-sm font-medium text-ink-tertiary hover:text-ink-primary"
+            >
+              Log out
+            </a>
+          </nav>
+        </div>
+      )}
     </header>
   );
 }

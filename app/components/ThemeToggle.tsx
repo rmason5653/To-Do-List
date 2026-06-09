@@ -2,29 +2,43 @@
 
 import { useEffect, useState } from "react";
 
-// Dark is the brand's home (default). Light mode is opt-in and persisted.
-// A matching inline script in the layout applies the saved theme before
-// paint so there's no flash.
+// Dark is the brand's home (default). The chosen theme is stored in a cookie
+// the server reads (see layout) so it renders correctly on first paint and
+// survives the app being closed/reopened — localStorage gets evicted in the
+// iOS home-screen app, cookies don't.
+
+function readThemeCookie(): "dark" | "light" | null {
+  const m = document.cookie.match(/(?:^|;\s*)mason_theme=(dark|light)/);
+  return m ? (m[1] as "dark" | "light") : null;
+}
+
+function applyTheme(theme: "dark" | "light") {
+  // 1 year; refreshed each visit (re-set on mount) to outlast ITP caps.
+  document.cookie = `mason_theme=${theme}; path=/; max-age=31536000; samesite=lax`;
+  try {
+    localStorage.setItem("mason_theme", theme);
+  } catch {
+    /* ignore */
+  }
+  document.documentElement.setAttribute("data-theme", theme);
+}
+
 export default function ThemeToggle() {
   const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
     const saved =
-      (localStorage.getItem("mason_theme") as "dark" | "light" | null) ?? "dark";
+      readThemeCookie() ??
+      (localStorage.getItem("mason_theme") as "dark" | "light" | null) ??
+      "dark";
     setTheme(saved);
+    applyTheme(saved); // re-write the cookie so it keeps persisting
   }, []);
 
   function toggle() {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
-    try {
-      localStorage.setItem("mason_theme", next);
-    } catch {
-      /* ignore */
-    }
-    const el = document.documentElement;
-    if (next === "light") el.setAttribute("data-theme", "light");
-    else el.removeAttribute("data-theme");
+    applyTheme(next);
   }
 
   return (

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import localFont from "next/font/local";
+import { cookies } from "next/headers";
 import NavBar from "@/app/components/NavBar";
 import { getViewer } from "@/lib/auth-context";
 import "./globals.css";
@@ -49,19 +50,17 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   const isAdmin = (await getViewer())?.role === "admin";
+  // Theme persists in a cookie the server reads, so the right theme renders on
+  // the first byte (no flash) and survives the app being closed/reopened.
+  const theme =
+    (await cookies()).get("mason_theme")?.value === "light" ? "light" : "dark";
   return (
     <html
       lang="en"
+      data-theme={theme}
       className={`${inter.variable} ${montserrat.variable} ${americanCaptain.variable}`}
     >
       <body className="font-sans">
-        {/* Apply saved theme before paint (no flash). Dark is the default. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              "(function(){try{if(localStorage.getItem('mason_theme')==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();",
-          }}
-        />
         <NavBar isAdmin={isAdmin} />
         {children}
       </body>
