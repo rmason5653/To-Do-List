@@ -61,6 +61,7 @@ create table if not exists central_reserve (
   sort             int  not null default 0,
   quantity_on_hand int  not null default 0,
   reorder_point    int  not null default 0,  -- when to buy more bulk
+  par_level        int  not null default 0,  -- target bulk level; buy up to this
   updated_at       timestamptz not null default now(),
   unique (item_name, category)
 );
@@ -318,18 +319,18 @@ begin
 
   -- Central reserve. Starting bulk levels — edit these to your real counts.
   -- Consumable reorder ~ one turnover of leave-behind across all 10 units.
-  insert into central_reserve (item_name, category, sort, quantity_on_hand, reorder_point) values
-    ('Kitchen trash bags',  'consumable', 1, 90,  30),
-    ('Paper towel',         'consumable', 2, 60,  20),
-    ('Dishwasher pods',     'consumable', 3, 90,  30),
-    ('Laundry pods',        'consumable', 4, 150, 50),
-    ('Bathroom trash bags', 'consumable', 5, 90,  30),
-    ('Toilet paper',        'consumable', 6, 90,  30),
-    ('Coffee pods',         'consumable', 7, 150, 50),
-    ('Creamer',             'consumable', 8, 150, 50),
-    ('bath_towel',          'linen',      9, 12,  4),
-    ('washcloth',           'linen',     10, 12,  4),
-    ('hand_towel',          'linen',     11,  6,  2),
-    ('makeup_towel',        'linen',     12,  6,  2),
-    ('kitchen_towel',       'linen',     13,  6,  2);
+  insert into central_reserve (item_name, category, sort, quantity_on_hand, reorder_point, par_level) values
+    ('Kitchen trash bags',  'consumable', 1, 90,  30, 90),
+    ('Paper towel',         'consumable', 2, 60,  20, 60),
+    ('Dishwasher pods',     'consumable', 3, 90,  30, 90),
+    ('Laundry pods',        'consumable', 4, 150, 50, 150),
+    ('Bathroom trash bags', 'consumable', 5, 90,  30, 90),
+    ('Toilet paper',        'consumable', 6, 90,  30, 90),
+    ('Coffee pods',         'consumable', 7, 150, 50, 150),
+    ('Creamer',             'consumable', 8, 150, 50, 150),
+    ('bath_towel',          'linen',      9, 12,  4, 12),
+    ('washcloth',           'linen',     10, 12,  4, 12),
+    ('hand_towel',          'linen',     11,  6,  2, 6),
+    ('makeup_towel',        'linen',     12,  6,  2, 6),
+    ('kitchen_towel',       'linen',     13,  6,  2, 6);
 end $$;

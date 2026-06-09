@@ -16,17 +16,20 @@ export default async function CentralPage() {
   }
 
   const low = items.filter((i) => i.quantity_on_hand <= i.reorder_point).length;
+  const toPar = items.reduce(
+    (s, i) => s + Math.max(0, i.par_level - i.quantity_on_hand),
+    0,
+  );
 
   return (
     <Container>
       <PageHeader eyebrow="View 2" title="Central reserve">
         {!loadError && (
           <p className="text-sm text-ink-tertiary">
-            {low > 0 ? (
-              <span className="text-gold">{low} to buy</span>
-            ) : (
-              "All bulk stock healthy"
-            )}
+            {low > 0 && <span className="text-gold">{low} below reorder</span>}
+            {low > 0 && toPar > 0 && " · "}
+            {toPar > 0 && <span className="text-ink-secondary">{toPar} to buy to par</span>}
+            {low === 0 && toPar === 0 && "All bulk stock at par"}
           </p>
         )}
       </PageHeader>

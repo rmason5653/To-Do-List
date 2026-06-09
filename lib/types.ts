@@ -51,6 +51,7 @@ export interface CentralReserveItem {
   sort: number;
   quantity_on_hand: number;
   reorder_point: number;
+  par_level: number; // target bulk level; buy up to this
 }
 
 export interface PullLogEntry {
