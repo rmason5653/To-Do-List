@@ -95,7 +95,7 @@ export default function CleanFlow({
 
   const section = "rounded-card border border-line bg-surface-2 p-5 shadow-e1";
   const stepBtn =
-    "h-9 w-9 rounded-control border border-line-strong bg-surface-3 text-lg font-bold text-ink-secondary transition hover:border-red hover:text-bone active:brightness-95 disabled:opacity-40";
+    "h-9 w-9 rounded-control border border-line-strong bg-surface-3 text-lg font-bold text-ink-secondary transition hover:border-red hover:text-ink-primary active:brightness-95 disabled:opacity-40";
 
   return (
     <div className="space-y-4 pb-28">
@@ -116,8 +116,8 @@ export default function CleanFlow({
                 aria-pressed={parking === "ok"}
                 className={`rounded-control border px-4 py-3 font-display text-sm font-bold transition ${
                   parking === "ok"
-                    ? "border-[rgba(31,138,76,.5)] bg-green-subtle text-[#5FCB8A]"
-                    : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-bone"
+                    ? "border-[rgba(31,138,76,.5)] bg-green-subtle text-state-ok"
+                    : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-ink-primary"
                 }`}
               >
                 Present
@@ -128,8 +128,8 @@ export default function CleanFlow({
                 aria-pressed={parking === "missing"}
                 className={`rounded-control border px-4 py-3 font-display text-sm font-bold transition ${
                   parking === "missing"
-                    ? "border-[rgba(226,6,2,.5)] bg-red-subtle text-[#FF6B68]"
-                    : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-bone"
+                    ? "border-[rgba(226,6,2,.5)] bg-red-subtle text-state-bad"
+                    : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-ink-primary"
                 }`}
               >
                 Missing
@@ -170,8 +170,8 @@ export default function CleanFlow({
                   aria-pressed={flagged}
                   className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.04em] transition ${
                     flagged
-                      ? "border-[rgba(245,184,0,.4)] bg-gold-subtle text-gold"
-                      : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-bone"
+                      ? "border-[rgba(245,184,0,.4)] bg-gold-subtle text-state-warn"
+                      : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-ink-primary"
                   }`}
                 >
                   {flagged ? "Needs restock" : "OK"}
@@ -197,8 +197,8 @@ export default function CleanFlow({
             aria-pressed={linensOk}
             className={`rounded-control border px-4 py-3 font-display text-sm font-bold transition ${
               linensOk
-                ? "border-[rgba(31,138,76,.5)] bg-green-subtle text-[#5FCB8A]"
-                : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-bone"
+                ? "border-[rgba(31,138,76,.5)] bg-green-subtle text-state-ok"
+                : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-ink-primary"
             }`}
           >
             All match par
@@ -209,8 +209,8 @@ export default function CleanFlow({
             aria-pressed={!linensOk}
             className={`rounded-control border px-4 py-3 font-display text-sm font-bold transition ${
               !linensOk
-                ? "border-[rgba(226,6,2,.5)] bg-red-subtle text-[#FF6B68]"
-                : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-bone"
+                ? "border-[rgba(226,6,2,.5)] bg-red-subtle text-state-bad"
+                : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-ink-primary"
             }`}
           >
             Flag an issue
@@ -245,7 +245,7 @@ export default function CleanFlow({
                     </button>
                     <span
                       className={`tnum w-7 text-center text-sm font-bold ${
-                        short ? "text-[#FF6B68]" : "text-ink-primary"
+                        short ? "text-state-bad" : "text-ink-primary"
                       }`}
                     >
                       {actual}
@@ -282,7 +282,7 @@ export default function CleanFlow({
             className="w-32 shrink-0 rounded-control border border-line-strong bg-surface-3 px-3 py-2.5 text-sm text-ink-primary outline-none focus:border-red sm:w-40"
           />
           {error && (
-            <p className="flex-1 truncate text-xs text-[#FF6B68]" role="alert">
+            <p className="flex-1 truncate text-xs text-state-bad" role="alert">
               {error}
             </p>
           )}

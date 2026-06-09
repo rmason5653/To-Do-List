@@ -33,7 +33,7 @@ function Card({
           {kicker}
         </p>
       )}
-      <h2 className="mt-0.5 font-display text-lg font-bold text-bone">{title}</h2>
+      <h2 className="mt-0.5 font-display text-lg font-bold text-ink-primary">{title}</h2>
       <div className="mt-3">{children}</div>
     </section>
   );
@@ -54,7 +54,7 @@ export default function GuidePage() {
       <PageHeader eyebrow="How to use Par" title="Cleaner guide">
         <Link
           href="/"
-          className="rounded-control border border-line-strong bg-surface-3 px-3 py-2 text-sm font-semibold text-ink-secondary transition hover:border-red hover:text-bone"
+          className="rounded-control border border-line-strong bg-surface-3 px-3 py-2 text-sm font-semibold text-ink-secondary transition hover:border-red hover:text-ink-primary"
         >
           ← Back to units
         </Link>
@@ -65,7 +65,7 @@ export default function GuidePage() {
         <Card kicker="Start here" title="Two kinds of inventory, two rules">
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-control bg-surface-1 p-4">
-              <p className="font-display text-sm font-bold text-gold">Consumables</p>
+              <p className="font-display text-sm font-bold text-state-warn">Consumables</p>
               <p className="mt-1 text-xs text-ink-muted">
                 Toilet paper, paper towels, trash bags, pods, coffee, creamer.
               </p>
@@ -76,7 +76,7 @@ export default function GuidePage() {
               </p>
             </div>
             <div className="rounded-control bg-surface-1 p-4">
-              <p className="font-display text-sm font-bold text-[#5FCB8A]">Linens</p>
+              <p className="font-display text-sm font-bold text-state-ok">Linens</p>
               <p className="mt-1 text-xs text-ink-muted">
                 Bath towels, washcloths, hand / makeup / kitchen towels.
               </p>
@@ -87,7 +87,7 @@ export default function GuidePage() {
               </p>
             </div>
           </div>
-          <p className="mt-3 rounded-control border border-[rgba(245,184,0,.3)] bg-gold-subtle px-3 py-2 text-sm text-gold">
+          <p className="mt-3 rounded-control border border-[rgba(245,184,0,.3)] bg-gold-subtle px-3 py-2 text-sm text-state-warn">
             Golden rule: anything you take out of central, log it in the app.
             That keeps every count honest.
           </p>
@@ -190,7 +190,7 @@ export default function GuidePage() {
               central.
             </Step>
           </ol>
-          <p className="mt-3 rounded-control border border-[rgba(226,6,2,.3)] bg-red-subtle px-3 py-2 text-xs text-[#FF6B68]">
+          <p className="mt-3 rounded-control border border-[rgba(226,6,2,.3)] bg-red-subtle px-3 py-2 text-xs text-state-bad">
             Don&apos;t double up: on the weekly run use <B>Refill to par</B> (it
             logs the pull for you). Use <B>Log pull</B> only for one-off and
             linen pulls — not both for the same item.
@@ -203,21 +203,21 @@ export default function GuidePage() {
             <li className="flex items-center gap-3">
               <span className="inline-block h-3 w-3 rounded-full bg-gold" />
               <span className="text-ink-secondary">
-                <b className="text-gold">Gold</b> — needs attention / restock
+                <b className="text-state-warn">Gold</b> — needs attention / restock
                 soon.
               </span>
             </li>
             <li className="flex items-center gap-3">
               <span className="inline-block h-3 w-3 rounded-full bg-red" />
               <span className="text-ink-secondary">
-                <b className="text-[#FF6B68]">Red</b> — a problem: missing towel,
+                <b className="text-state-bad">Red</b> — a problem: missing towel,
                 missing parking pass, or central can&apos;t cover the run.
               </span>
             </li>
             <li className="flex items-center gap-3">
               <span className="inline-block h-3 w-3 rounded-full bg-green" />
               <span className="text-ink-secondary">
-                <b className="text-[#5FCB8A]">Green</b> — good / at par.
+                <b className="text-state-ok">Green</b> — good / at par.
               </span>
             </li>
           </ul>

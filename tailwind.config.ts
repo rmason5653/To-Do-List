@@ -16,25 +16,32 @@ const config: Config = {
         punch: ["var(--font-american-captain)", "Arial Black", "Impact", "sans-serif"],
       },
       colors: {
-        // Surface ramp — derived from midnight only.
+        // Surface ramp — CSS-var driven (RGB channels) so it themes (dark /
+        // light) and still supports opacity modifiers like bg-surface-4/85.
         surface: {
-          0: "#0B0B0D", // page
-          1: "#121215", // section wells
-          2: "#16161A", // cards
-          3: "#1C1C21", // raised cards, inputs, hover rows
-          4: "#232329", // popovers, sticky headers
+          0: "rgb(var(--surface-0) / <alpha-value>)",
+          1: "rgb(var(--surface-1) / <alpha-value>)",
+          2: "rgb(var(--surface-2) / <alpha-value>)",
+          3: "rgb(var(--surface-3) / <alpha-value>)",
+          4: "rgb(var(--surface-4) / <alpha-value>)",
         },
         // Hard-locked anchors.
         midnight: "#0B0B0D",
         bone: "#F5F2EC",
         steel: "#707176",
-        // Text ramp (bone-derived).
+        // Text ramp — themed (bone on midnight / midnight on bone).
         ink: {
-          primary: "#F5F2EC",
-          secondary: "#C9C6BF",
-          tertiary: "#9B9C9F",
-          muted: "#707176",
-          faint: "#4D4D52",
+          primary: "var(--ink-1)",
+          secondary: "var(--ink-2)",
+          tertiary: "var(--ink-3)",
+          muted: "var(--ink-4)",
+          faint: "var(--ink-5)",
+        },
+        // Directional/state accent text — themed for contrast in both modes.
+        state: {
+          bad: "var(--state-bad)",
+          ok: "var(--state-ok)",
+          warn: "var(--state-warn)",
         },
         // Red anchor + ramp (conviction / correction / destructive / down).
         red: {
@@ -57,8 +64,8 @@ const config: Config = {
       borderColor: {
         // Steel-derived hairlines. Named to avoid clashing with the
         // border-width utilities (border-2 / border-4).
-        line: "rgba(112,113,118,.14)",
-        "line-strong": "rgba(112,113,118,.28)",
+        line: "var(--line-1)",
+        "line-strong": "var(--line-2)",
       },
       backgroundColor: {
         // Accent subtle fills.

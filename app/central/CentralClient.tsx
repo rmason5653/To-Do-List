@@ -108,11 +108,11 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
         </div>
 
         <div className="w-20 text-right">
-          <div className="tnum font-display text-2xl font-extrabold tracking-[-0.03em] text-bone">
+          <div className="tnum font-display text-2xl font-extrabold tracking-[-0.03em] text-ink-primary">
             {item.quantity_on_hand}
           </div>
           {toPar > 0 && (
-            <div className="tnum text-[11px] font-semibold text-gold">buy {toPar}</div>
+            <div className="tnum text-[11px] font-semibold text-state-warn">buy {toPar}</div>
           )}
         </div>
 
@@ -128,7 +128,7 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
               setReceiveVal("");
               setError("");
             }}
-            className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-secondary transition hover:border-red hover:text-bone"
+            className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-secondary transition hover:border-red hover:text-ink-primary"
           >
             Receive
           </button>
@@ -140,7 +140,7 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
               setReorderVal(String(item.reorder_point));
               setError("");
             }}
-            className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-tertiary transition hover:border-red hover:text-bone"
+            className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-tertiary transition hover:border-red hover:text-ink-primary"
           >
             Edit
           </button>
@@ -174,12 +174,12 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
           <button
             type="button"
             onClick={() => setMode("none")}
-            className="px-2 py-1.5 text-xs text-ink-tertiary hover:text-bone"
+            className="px-2 py-1.5 text-xs text-ink-tertiary hover:text-ink-primary"
           >
             Cancel
           </button>
           {error && (
-            <span className="text-xs text-[#FF6B68]" role="alert">
+            <span className="text-xs text-state-bad" role="alert">
               {error}
             </span>
           )}
@@ -226,12 +226,12 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
           <button
             type="button"
             onClick={() => setMode("none")}
-            className="px-2 py-1.5 text-xs text-ink-tertiary hover:text-bone"
+            className="px-2 py-1.5 text-xs text-ink-tertiary hover:text-ink-primary"
           >
             Cancel
           </button>
           {error && (
-            <span className="text-xs text-[#FF6B68]" role="alert">
+            <span className="text-xs text-state-bad" role="alert">
               {error}
             </span>
           )}

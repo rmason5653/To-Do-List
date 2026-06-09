@@ -53,6 +53,13 @@ export default function RootLayout({
       className={`${inter.variable} ${montserrat.variable} ${americanCaptain.variable}`}
     >
       <body className="font-sans">
+        {/* Apply saved theme before paint (no flash). Dark is the default. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{if(localStorage.getItem('mason_theme')==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();",
+          }}
+        />
         <NavBar />
         {children}
       </body>

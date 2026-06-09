@@ -8,9 +8,9 @@ export type Tone = "ok" | "warn" | "bad" | "neutral";
 const PILL_TONE: Record<Tone, string> = {
   // ok = at par (Mason Green), warn = needs attention/restock (gold),
   // bad = loss / missing (red), neutral = no-direction meta (steel).
-  ok: "bg-green-subtle text-[#5FCB8A] border border-[rgba(31,138,76,.35)]",
-  warn: "bg-gold-subtle text-gold border border-[rgba(245,184,0,.30)]",
-  bad: "bg-red-subtle text-[#FF6B68] border border-[rgba(226,6,2,.35)]",
+  ok: "bg-green-subtle text-state-ok border border-[rgba(31,138,76,.35)]",
+  warn: "bg-gold-subtle text-state-warn border border-[rgba(245,184,0,.30)]",
+  bad: "bg-red-subtle text-state-bad border border-[rgba(226,6,2,.35)]",
   neutral: "bg-surface-3 text-ink-tertiary border border-line",
 };
 
@@ -31,10 +31,10 @@ export function Pill({
 }
 
 const STAT_TONE: Record<Tone, string> = {
-  ok: "text-[#5FCB8A]",
-  warn: "text-gold",
-  bad: "text-[#FF6B68]",
-  neutral: "text-bone",
+  ok: "text-state-ok",
+  warn: "text-state-warn",
+  bad: "text-state-bad",
+  neutral: "text-ink-primary",
 };
 
 /** A KPI block. Links somewhere when href is given. */
@@ -122,7 +122,7 @@ export function PageHeader({
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
           {eyebrow}
         </p>
-        <h1 className="mt-1 font-display text-3xl font-extrabold tracking-[-0.02em] text-bone">
+        <h1 className="mt-1 font-display text-3xl font-extrabold tracking-[-0.02em] text-ink-primary">
           {title}
         </h1>
       </div>
@@ -150,7 +150,7 @@ export function EmptyState({
   return (
     <div className="rounded-card border border-line bg-surface-2 p-12 text-center shadow-e1">
       {/* Milestone moment — display punch (American Captain), used sparingly. */}
-      <p className="font-punch text-4xl uppercase tracking-[0.02em] text-[#5FCB8A]">
+      <p className="font-punch text-4xl uppercase tracking-[0.02em] text-state-ok">
         {punch}
       </p>
       <p className="mt-2 text-sm text-ink-tertiary">{line}</p>
@@ -162,7 +162,7 @@ export function EmptyState({
 export function SetupNotice({ message }: { message: string }) {
   return (
     <div className="rounded-card border border-[rgba(226,6,2,.35)] bg-red-subtle p-5 text-sm text-ink-secondary">
-      <p className="font-display font-bold text-bone">Can&apos;t reach the database</p>
+      <p className="font-display font-bold text-ink-primary">Can&apos;t reach the database</p>
       <p className="mt-1">{message}</p>
       <p className="mt-3 text-ink-tertiary">
         Set <code className="text-ink-secondary">SUPABASE_URL</code> and{" "}

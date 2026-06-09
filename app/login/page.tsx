@@ -43,7 +43,7 @@ export default function LoginPage() {
         <p className="font-display text-xs font-bold uppercase tracking-[0.18em] text-ink-muted">
           Mason Homes
         </p>
-        <h1 className="mt-1 font-punch text-5xl uppercase leading-none tracking-[0.02em] text-bone">
+        <h1 className="mt-1 font-punch text-5xl uppercase leading-none tracking-[0.02em] text-ink-primary">
           Par
         </h1>
         <p className="mt-3 text-sm text-ink-tertiary">

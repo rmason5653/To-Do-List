@@ -89,7 +89,7 @@ function UnitCard({ u }: { u: UnitSummary }) {
     >
       <div className="flex items-start justify-between gap-2">
         <div>
-          <div className="font-display text-base font-bold text-bone">
+          <div className="font-display text-base font-bold text-ink-primary">
             {u.name}
           </div>
           <div className="text-xs text-ink-muted">

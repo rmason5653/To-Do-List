@@ -42,7 +42,7 @@ export default function ParkingClient({ units }: { units: ParkingUnit[] }) {
   return (
     <section>
       {error && (
-        <p className="mb-3 text-sm text-[#FF6B68]" role="alert">
+        <p className="mb-3 text-sm text-state-bad" role="alert">
           {error}
         </p>
       )}
@@ -75,7 +75,7 @@ export default function ParkingClient({ units }: { units: ParkingUnit[] }) {
                   type="button"
                   onClick={() => setStatus(u.unit_id, "ok")}
                   disabled={busyId === u.unit_id}
-                  className="rounded-control border border-line-strong bg-surface-3 px-3 py-1.5 text-xs font-semibold text-ink-secondary transition hover:border-[rgba(31,138,76,.5)] hover:text-[#5FCB8A] disabled:opacity-50"
+                  className="rounded-control border border-line-strong bg-surface-3 px-3 py-1.5 text-xs font-semibold text-ink-secondary transition hover:border-[rgba(31,138,76,.5)] hover:text-state-ok disabled:opacity-50"
                 >
                   Present
                 </button>
@@ -83,7 +83,7 @@ export default function ParkingClient({ units }: { units: ParkingUnit[] }) {
                   type="button"
                   onClick={() => setStatus(u.unit_id, "missing")}
                   disabled={busyId === u.unit_id}
-                  className="rounded-control border border-line-strong bg-surface-3 px-3 py-1.5 text-xs font-semibold text-ink-tertiary transition hover:border-red hover:text-[#FF6B68] disabled:opacity-50"
+                  className="rounded-control border border-line-strong bg-surface-3 px-3 py-1.5 text-xs font-semibold text-ink-tertiary transition hover:border-red hover:text-state-bad disabled:opacity-50"
                 >
                   Missing
                 </button>

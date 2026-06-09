@@ -33,7 +33,7 @@ export default async function LinensPage() {
         {!loadError && (
           <p className="text-sm text-ink-tertiary">
             {shortUnits > 0 ? (
-              <span className="text-[#FF6B68]">{shortUnits} units below par</span>
+              <span className="text-state-bad">{shortUnits} units below par</span>
             ) : (
               "Every unit at par"
             )}
@@ -55,7 +55,7 @@ export default async function LinensPage() {
                 }`}
               >
                 <div className="flex items-center justify-between gap-3">
-                  <div className="font-display text-base font-bold text-bone">
+                  <div className="font-display text-base font-bold text-ink-primary">
                     {unit.name}
                   </div>
                   {isShort ? (
@@ -78,7 +78,7 @@ export default async function LinensPage() {
                           <div className="flex items-center gap-3">
                             <span
                               className={`tnum text-xs ${
-                                isRowShort ? "text-[#FF6B68]" : "text-ink-tertiary"
+                                isRowShort ? "text-state-bad" : "text-ink-tertiary"
                               }`}
                             >
                               {l.current_actual} / {l.par_count}

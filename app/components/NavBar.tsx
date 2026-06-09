@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import PullDialog from "./PullDialog";
+import ThemeToggle from "./ThemeToggle";
 
 const LINKS = [
   { href: "/", label: "Home" },
@@ -28,7 +29,7 @@ export default function NavBar() {
     <header className="sticky top-0 z-40 border-b border-line bg-surface-4/85 backdrop-blur-[8px]">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-4 px-4 sm:px-6 lg:px-8">
         <Link href="/" className="flex shrink-0 items-baseline gap-1.5">
-          <span className="font-display text-base font-extrabold tracking-[-0.01em] text-bone">
+          <span className="font-display text-base font-extrabold tracking-[-0.01em] text-ink-primary">
             Par
           </span>
           <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-muted">
@@ -43,7 +44,7 @@ export default function NavBar() {
               href={l.href}
               className={`shrink-0 rounded-control px-3 py-1.5 text-sm font-medium transition duration-150 ease-out ${
                 isActive(l.href)
-                  ? "bg-surface-2 text-bone"
+                  ? "bg-surface-2 text-ink-primary"
                   : "text-ink-tertiary hover:text-ink-secondary"
               }`}
             >
@@ -52,7 +53,8 @@ export default function NavBar() {
           ))}
         </nav>
 
-        <div className="shrink-0">
+        <div className="flex shrink-0 items-center gap-2">
+          <ThemeToggle />
           <PullDialog label="Log pull" />
         </div>
       </div>

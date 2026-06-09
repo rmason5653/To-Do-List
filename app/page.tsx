@@ -99,7 +99,7 @@ export default async function HomePage() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
           Mason Homes
         </p>
-        <h1 className="mt-1 font-punch text-6xl uppercase leading-none tracking-[0.02em] text-bone sm:text-7xl">
+        <h1 className="mt-1 font-punch text-6xl uppercase leading-none tracking-[0.02em] text-ink-primary sm:text-7xl">
           Par
         </h1>
         <p className="mt-3 max-w-xl text-sm text-ink-tertiary">
@@ -113,9 +113,9 @@ export default async function HomePage() {
         className="mb-8 flex items-center justify-between gap-3 rounded-card border border-line bg-surface-2 px-4 py-3 shadow-e1 transition duration-150 ease-out hover:border-line-strong hover:bg-surface-3"
       >
         <span className="text-sm text-ink-secondary">
-          <b className="text-bone">New to Par?</b> A 2-minute walkthrough for cleaners.
+          <b className="text-ink-primary">New to Par?</b> A 2-minute walkthrough for cleaners.
         </span>
-        <span className="shrink-0 font-display text-sm font-bold text-gold">
+        <span className="shrink-0 font-display text-sm font-bold text-state-warn">
           How to use →
         </span>
       </Link>
@@ -159,7 +159,7 @@ export default async function HomePage() {
       </div>
 
       {/* Units */}
-      <h2 className="mb-4 mt-10 font-display text-lg font-bold text-bone">
+      <h2 className="mb-4 mt-10 font-display text-lg font-bold text-ink-primary">
         Units
         <span className="ml-2 text-sm font-medium text-ink-muted">
           {units.length}
@@ -175,7 +175,7 @@ export default async function HomePage() {
       )}
       {recentCleans.length > 0 && (
         <section className="mt-10">
-          <h2 className="mb-4 font-display text-lg font-bold text-bone">
+          <h2 className="mb-4 font-display text-lg font-bold text-ink-primary">
             Recent cleans
           </h2>
           <div className="overflow-hidden rounded-card border border-line bg-surface-2 shadow-e1">

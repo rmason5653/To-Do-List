@@ -27,7 +27,7 @@ export default async function UnitPage({
       <Container>
         <Link
           href="/"
-          className="text-sm text-ink-tertiary transition hover:text-bone"
+          className="text-sm text-ink-tertiary transition hover:text-ink-primary"
         >
           ← All units
         </Link>
@@ -37,7 +37,7 @@ export default async function UnitPage({
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
               {unit.property_name}
             </p>
-            <h1 className="mt-1 font-display text-3xl font-extrabold tracking-[-0.02em] text-bone">
+            <h1 className="mt-1 font-display text-3xl font-extrabold tracking-[-0.02em] text-ink-primary">
               {unit.name}
             </h1>
           </div>

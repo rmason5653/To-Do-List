@@ -126,7 +126,7 @@ export default function RestockClient({
             : `Refill all ${runs.length} to par`}
         </button>
         {error && (
-          <p className="w-full text-xs text-[#FF6B68]" role="alert">
+          <p className="w-full text-xs text-state-bad" role="alert">
             {error}
           </p>
         )}
@@ -154,11 +154,11 @@ export default function RestockClient({
               >
                 <span className="text-ink-secondary">{p.item_name}</span>
                 <span className="tnum flex items-center gap-2">
-                  <span className="font-display text-base font-bold text-bone">
+                  <span className="font-display text-base font-bold text-ink-primary">
                     {p.needed}
                   </span>
                   {p.short ? (
-                    <span className="rounded-full border border-[rgba(226,6,2,.35)] bg-red-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-[#FF6B68]">
+                    <span className="rounded-full border border-[rgba(226,6,2,.35)] bg-red-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-state-bad">
                       central short {p.needed - p.on_hand}
                     </span>
                   ) : (
@@ -171,7 +171,7 @@ export default function RestockClient({
             ))}
           </ul>
           {pickList.some((p) => p.short) && (
-            <p className="mt-3 text-xs text-[#FF6B68]">
+            <p className="mt-3 text-xs text-state-bad">
               Central can&apos;t fully cover the bold items — buy more bulk before the run.
             </p>
           )}
@@ -189,7 +189,7 @@ export default function RestockClient({
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="font-display text-base font-bold text-bone">
+                  <div className="font-display text-base font-bold text-ink-primary">
                     {run.unit_name}
                   </div>
                   <div className="tnum text-[11px] text-ink-muted">
@@ -214,7 +214,7 @@ export default function RestockClient({
                   >
                     <span className="text-ink-secondary">{i.item_name}</span>
                     <span className="tnum text-ink-tertiary">
-                      <span className="font-bold text-gold">+{i.needed}</span>
+                      <span className="font-bold text-state-warn">+{i.needed}</span>
                       <span className="ml-2 text-ink-muted">
                         {i.current_actual} → {i.closet_par}
                       </span>

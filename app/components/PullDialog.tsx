@@ -145,8 +145,8 @@ export default function PullDialog({
     variant === "primary"
       ? "rounded-control bg-red px-4 py-2 font-display text-sm font-bold text-bone transition duration-150 ease-out hover:bg-red-hover active:brightness-95"
       : variant === "small"
-        ? "rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-secondary transition duration-150 ease-out hover:border-red hover:text-bone"
-        : "rounded-control border border-line-strong bg-surface-3 px-4 py-2 font-display text-sm font-bold text-ink-primary transition duration-150 ease-out hover:border-red hover:text-bone";
+        ? "rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-secondary transition duration-150 ease-out hover:border-red hover:text-ink-primary"
+        : "rounded-control border border-line-strong bg-surface-3 px-4 py-2 font-display text-sm font-bold text-ink-primary transition duration-150 ease-out hover:border-red hover:text-ink-primary";
 
   const field =
     "mt-1 w-full rounded-control border border-line-strong bg-surface-3 px-3 py-2.5 text-sm text-ink-primary outline-none focus:border-red";
@@ -174,14 +174,14 @@ export default function PullDialog({
             className="w-full max-w-md rounded-modal border border-line-strong bg-surface-2 p-6 shadow-e3"
           >
             <div className="flex items-center justify-between">
-              <h2 className="font-display text-lg font-bold text-bone">
+              <h2 className="font-display text-lg font-bold text-ink-primary">
                 Log a pull from central
               </h2>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close"
-                className="rounded-control px-2 py-1 text-ink-tertiary hover:text-bone"
+                className="rounded-control px-2 py-1 text-ink-tertiary hover:text-ink-primary"
               >
                 ✕
               </button>
@@ -282,7 +282,7 @@ export default function PullDialog({
                 </div>
 
                 {error && (
-                  <p className="text-sm text-[#FF6B68]" role="alert">
+                  <p className="text-sm text-state-bad" role="alert">
                     {error}
                   </p>
                 )}

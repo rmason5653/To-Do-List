@@ -26,7 +26,7 @@ export default async function CentralPage() {
       <PageHeader eyebrow="View 2" title="Central reserve">
         {!loadError && (
           <p className="text-sm text-ink-tertiary">
-            {low > 0 && <span className="text-gold">{low} below reorder</span>}
+            {low > 0 && <span className="text-state-warn">{low} below reorder</span>}
             {low > 0 && toPar > 0 && " · "}
             {toPar > 0 && <span className="text-ink-secondary">{toPar} to buy to par</span>}
             {low === 0 && toPar === 0 && "All bulk stock at par"}

@@ -25,7 +25,7 @@ export default async function ParkingPage() {
         {!loadError && (
           <p className="text-sm text-ink-tertiary">
             {missing > 0 ? (
-              <span className="text-[#FF6B68]">{missing} missing</span>
+              <span className="text-state-bad">{missing} missing</span>
             ) : (
               "All accounted for"
             )}
