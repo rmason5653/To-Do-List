@@ -61,6 +61,13 @@ export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
         <div className="flex shrink-0 items-center gap-2">
           <ThemeToggle />
           <PullDialog label="Log pull" />
+          <a
+            href="/api/logout"
+            className="shrink-0 rounded-control px-2 py-1.5 text-xs font-medium text-ink-tertiary transition hover:text-ink-primary"
+            title="Log out"
+          >
+            Log out
+          </a>
         </div>
       </div>
     </header>
