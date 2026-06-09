@@ -202,18 +202,71 @@ begin
     return;
   end if;
 
-  -- Units (property reference + parking pass tables).
+  -- Units — every active listing by internal name (from the listings export).
   insert into units (name, property_name, sort, parking_pass_label, has_parking_pass, parking_status) values
-    ('616 58th St S (house)', '616 58th St S', 1, 'None',     false, 'na'),
-    ('Artisan (all units)',   'Artisan',       2, 'None',     false, 'na'),
-    ('Art House (all units)', 'Art House',      3, 'None',     false, 'na'),
-    ('Clairview (all units)', 'Clairview',      4, '2 passes', true,  'ok'),
-    ('Highland (all units)',  'Highland',       5, '1 pass',   true,  'ok'),
-    ('Forest Park (all units)','Forest Park',   6, '1 pass',   true,  'ok'),
-    ('Frank (all units)',     'Frank',          7, 'Card',     true,  'ok'),
-    ('Riviera 105',           'Riviera',        8, '2 passes', true,  'ok'),
-    ('Riviera 203',           'Riviera',        9, '1 pass',   true,  'ok'),
-    ('Riviera 208',           'Riviera',       10, '1 pass',   true,  'ok');
+    ('616 58th St S', '616 58th St S', 1, 'None', false, 'na'),
+    ('Art House 101', 'Art House', 2, 'None', false, 'na'),
+    ('Art House 102', 'Art House', 3, 'None', false, 'na'),
+    ('Artisan 303', 'Artisan', 4, 'None', false, 'na'),
+    ('Artisan 321', 'Artisan', 5, 'None', false, 'na'),
+    ('Artisan 408', 'Artisan', 6, 'None', false, 'na'),
+    ('Artisan 429', 'Artisan', 7, 'None', false, 'na'),
+    ('Citizen 201', 'Citizen', 8, 'None', false, 'na'),
+    ('Citizen 202', 'Citizen', 9, 'None', false, 'na'),
+    ('Citizen 203', 'Citizen', 10, 'None', false, 'na'),
+    ('Citizen 204', 'Citizen', 11, 'None', false, 'na'),
+    ('Citizen 205', 'Citizen', 12, 'None', false, 'na'),
+    ('Citizen 206', 'Citizen', 13, 'None', false, 'na'),
+    ('Citizen 207', 'Citizen', 14, 'None', false, 'na'),
+    ('Citizen 208', 'Citizen', 15, 'None', false, 'na'),
+    ('Citizen 209', 'Citizen', 16, 'None', false, 'na'),
+    ('Citizen 210', 'Citizen', 17, 'None', false, 'na'),
+    ('Citizen 211', 'Citizen', 18, 'None', false, 'na'),
+    ('Citizen 212', 'Citizen', 19, 'None', false, 'na'),
+    ('Citizen 213', 'Citizen', 20, 'None', false, 'na'),
+    ('Citizen 214', 'Citizen', 21, 'None', false, 'na'),
+    ('Citizen 215', 'Citizen', 22, 'None', false, 'na'),
+    ('Citizen 216', 'Citizen', 23, 'None', false, 'na'),
+    ('Citizen 217', 'Citizen', 24, 'None', false, 'na'),
+    ('Citizen 218', 'Citizen', 25, 'None', false, 'na'),
+    ('Citizen 219', 'Citizen', 26, 'None', false, 'na'),
+    ('Citizen 220', 'Citizen', 27, 'None', false, 'na'),
+    ('Citizen 221', 'Citizen', 28, 'None', false, 'na'),
+    ('Citizen 222', 'Citizen', 29, 'None', false, 'na'),
+    ('Citizen 223', 'Citizen', 30, 'None', false, 'na'),
+    ('Citizen 224', 'Citizen', 31, 'None', false, 'na'),
+    ('Citizen 225', 'Citizen', 32, 'None', false, 'na'),
+    ('Citizen 226', 'Citizen', 33, 'None', false, 'na'),
+    ('Citizen 227', 'Citizen', 34, 'None', false, 'na'),
+    ('Citizen 228', 'Citizen', 35, 'None', false, 'na'),
+    ('Citizen 301', 'Citizen', 36, 'None', false, 'na'),
+    ('Citizen 302', 'Citizen', 37, 'None', false, 'na'),
+    ('Citizen 303', 'Citizen', 38, 'None', false, 'na'),
+    ('Citizen 304', 'Citizen', 39, 'None', false, 'na'),
+    ('Citizen 305', 'Citizen', 40, 'None', false, 'na'),
+    ('Citizen 306', 'Citizen', 41, 'None', false, 'na'),
+    ('Citizen 307', 'Citizen', 42, 'None', false, 'na'),
+    ('Citizen 308', 'Citizen', 43, 'None', false, 'na'),
+    ('Citizen 309', 'Citizen', 44, 'None', false, 'na'),
+    ('Citizen 310', 'Citizen', 45, 'None', false, 'na'),
+    ('Citizen 311', 'Citizen', 46, 'None', false, 'na'),
+    ('Clairview 5', 'Clairview', 47, '2 passes', true, 'ok'),
+    ('Clairview 7', 'Clairview', 48, '2 passes', true, 'ok'),
+    ('Forest Park 6', 'Forest Park', 49, '1 pass', true, 'ok'),
+    ('Forest Park 12', 'Forest Park', 50, '1 pass', true, 'ok'),
+    ('Highland 1209 H', 'Highland', 51, '1 pass', true, 'ok'),
+    ('Highland 1209 I', 'Highland', 52, '1 pass', true, 'ok'),
+    ('Highland 1213 H', 'Highland', 53, '1 pass', true, 'ok'),
+    ('Highland 1213 I', 'Highland', 54, '1 pass', true, 'ok'),
+    ('Highland 1213 J', 'Highland', 55, '1 pass', true, 'ok'),
+    ('Highland 1217 B', 'Highland', 56, '1 pass', true, 'ok'),
+    ('Highland 1217 C', 'Highland', 57, '1 pass', true, 'ok'),
+    ('Highland 1217 J', 'Highland', 58, '1 pass', true, 'ok'),
+    ('Highland 1221 J', 'Highland', 59, '1 pass', true, 'ok'),
+    ('Lenox Park 9205', 'Lenox Park', 60, 'None', false, 'na'),
+    ('Riviera 105', 'Riviera', 61, '2 passes', true, 'ok'),
+    ('Riviera 203', 'Riviera', 62, '1 pass', true, 'ok'),
+    ('Riviera 208', 'Riviera', 63, '1 pass', true, 'ok');
 
   -- Consumable par — same tier for every unit. current_actual starts at par.
   insert into consumable_par (unit_id, item_name, sort, leave_behind, closet_par, reorder_point, current_actual)
@@ -230,34 +283,38 @@ begin
     ('Creamer',              8, 5, 20, 5)
   ) as c(item_name, sort, leave_behind, closet_par, reorder_point);
 
-  -- Linen par — varies by property. current_actual starts matching par.
-  -- Profile A (4/4/1/1/1): Artisan, Highland, Forest Park, Frank, Riviera 203, Riviera 208
+  -- Linen par — per unit. Spec profiles where the building is known; new
+  -- buildings (Citizen, Lenox Park) default to 4/4/1/1/1, tunable later.
   insert into linen_par (unit_id, linen_type, sort, par_count, current_actual)
-  select u.unit_id, l.linen_type, l.sort, l.par, l.par
+  select u.unit_id, t.linen_type, t.sort,
+    case t.linen_type when 'bath_towel' then p.bath when 'washcloth' then p.wash
+      when 'hand_towel' then p.hand when 'makeup_towel' then p.mk else p.kit end,
+    case t.linen_type when 'bath_towel' then p.bath when 'washcloth' then p.wash
+      when 'hand_towel' then p.hand when 'makeup_towel' then p.mk else p.kit end
   from units u
-  cross join (values
-    ('bath_towel',1,4),('washcloth',2,4),('hand_towel',3,1),('makeup_towel',4,1),('kitchen_towel',5,1)
-  ) as l(linen_type, sort, par)
-  where u.name in ('Artisan (all units)','Highland (all units)','Forest Park (all units)',
-                   'Frank (all units)','Riviera 203','Riviera 208');
-
-  -- Profile B (5/5/2/2/1): Art House, Clairview, Riviera 105
-  insert into linen_par (unit_id, linen_type, sort, par_count, current_actual)
-  select u.unit_id, l.linen_type, l.sort, l.par, l.par
-  from units u
-  cross join (values
-    ('bath_towel',1,5),('washcloth',2,5),('hand_towel',3,2),('makeup_towel',4,2),('kitchen_towel',5,1)
-  ) as l(linen_type, sort, par)
-  where u.name in ('Art House (all units)','Clairview (all units)','Riviera 105');
-
-  -- 616 house (7/7/1/1/1)
-  insert into linen_par (unit_id, linen_type, sort, par_count, current_actual)
-  select u.unit_id, l.linen_type, l.sort, l.par, l.par
-  from units u
-  cross join (values
-    ('bath_towel',1,7),('washcloth',2,7),('hand_towel',3,1),('makeup_towel',4,1),('kitchen_towel',5,1)
-  ) as l(linen_type, sort, par)
-  where u.name = '616 58th St S (house)';
+  join (values
+    ('616 58th St S',7,7,1,1,1),
+    ('Art House 101',5,5,2,2,1),('Art House 102',5,5,2,2,1),
+    ('Artisan 303',4,4,1,1,1),('Artisan 321',4,4,1,1,1),('Artisan 408',4,4,1,1,1),('Artisan 429',4,4,1,1,1),
+    ('Citizen 201',4,4,1,1,1),('Citizen 202',4,4,1,1,1),('Citizen 203',4,4,1,1,1),('Citizen 204',4,4,1,1,1),
+    ('Citizen 205',4,4,1,1,1),('Citizen 206',4,4,1,1,1),('Citizen 207',4,4,1,1,1),('Citizen 208',4,4,1,1,1),
+    ('Citizen 209',4,4,1,1,1),('Citizen 210',4,4,1,1,1),('Citizen 211',4,4,1,1,1),('Citizen 212',4,4,1,1,1),
+    ('Citizen 213',4,4,1,1,1),('Citizen 214',4,4,1,1,1),('Citizen 215',4,4,1,1,1),('Citizen 216',4,4,1,1,1),
+    ('Citizen 217',4,4,1,1,1),('Citizen 218',4,4,1,1,1),('Citizen 219',4,4,1,1,1),('Citizen 220',4,4,1,1,1),
+    ('Citizen 221',4,4,1,1,1),('Citizen 222',4,4,1,1,1),('Citizen 223',4,4,1,1,1),('Citizen 224',4,4,1,1,1),
+    ('Citizen 225',4,4,1,1,1),('Citizen 226',4,4,1,1,1),('Citizen 227',4,4,1,1,1),('Citizen 228',4,4,1,1,1),
+    ('Citizen 301',4,4,1,1,1),('Citizen 302',4,4,1,1,1),('Citizen 303',4,4,1,1,1),('Citizen 304',4,4,1,1,1),
+    ('Citizen 305',4,4,1,1,1),('Citizen 306',4,4,1,1,1),('Citizen 307',4,4,1,1,1),('Citizen 308',4,4,1,1,1),
+    ('Citizen 309',4,4,1,1,1),('Citizen 310',4,4,1,1,1),('Citizen 311',4,4,1,1,1),
+    ('Clairview 5',5,5,2,2,1),('Clairview 7',5,5,2,2,1),
+    ('Forest Park 6',4,4,1,1,1),('Forest Park 12',4,4,1,1,1),
+    ('Highland 1209 H',4,4,1,1,1),('Highland 1209 I',4,4,1,1,1),('Highland 1213 H',4,4,1,1,1),
+    ('Highland 1213 I',4,4,1,1,1),('Highland 1213 J',4,4,1,1,1),('Highland 1217 B',4,4,1,1,1),
+    ('Highland 1217 C',4,4,1,1,1),('Highland 1217 J',4,4,1,1,1),('Highland 1221 J',4,4,1,1,1),
+    ('Lenox Park 9205',4,4,1,1,1),
+    ('Riviera 105',5,5,2,2,1),('Riviera 203',4,4,1,1,1),('Riviera 208',4,4,1,1,1)
+  ) as p(name,bath,wash,hand,mk,kit) on p.name = u.name
+  cross join (values ('bath_towel',1),('washcloth',2),('hand_towel',3),('makeup_towel',4),('kitchen_towel',5)) as t(linen_type,sort);
 
   -- Central reserve. Starting bulk levels — edit these to your real counts.
   -- Consumable reorder ~ one turnover of leave-behind across all 10 units.

@@ -11,11 +11,11 @@ import {
 import type { ConsumablePar, LinenPar, Unit } from "@/lib/types";
 import {
   Container,
-  Pill,
   SetupNotice,
   StatCard,
   formatWhen,
 } from "@/app/components/ui";
+import UnitPicker, { type UnitSummary } from "@/app/components/UnitPicker";
 
 export const dynamic = "force-dynamic";
 
@@ -78,6 +78,19 @@ export default async function HomePage() {
   }
 
   const roll = rollup(units, cons, linens);
+  const summaries: UnitSummary[] = units.map((u) => {
+    const r = roll.get(u.unit_id) ?? { consLow: 0, linenShort: 0 };
+    return {
+      unit_id: u.unit_id,
+      name: u.name,
+      property_name: u.property_name,
+      parking_pass_label: u.parking_pass_label,
+      parking_status: u.parking_status,
+      last_cleaned_at: u.last_cleaned_at,
+      consLow: r.consLow,
+      linenShort: r.linenShort,
+    };
+  });
 
   return (
     <Container>
@@ -158,55 +171,7 @@ export default async function HomePage() {
           No units yet. Run <code>supabase/schema.sql</code> to seed the portfolio.
         </p>
       ) : (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {units.map((u) => {
-            const r = roll.get(u.unit_id) ?? { consLow: 0, linenShort: 0 };
-            const allGood =
-              r.consLow === 0 &&
-              r.linenShort === 0 &&
-              u.parking_status !== "missing";
-            return (
-              <Link
-                key={u.unit_id}
-                href={`/unit/${u.unit_id}`}
-                className="group rounded-card border border-line bg-surface-2 p-4 shadow-e1 transition duration-150 ease-out hover:-translate-y-px hover:border-line-strong hover:bg-surface-3 hover:shadow-e2"
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="font-display text-base font-bold text-bone">
-                      {u.name}
-                    </div>
-                    <div className="text-xs text-ink-muted">
-                      {u.parking_pass_label === "None"
-                        ? "No parking pass"
-                        : `Parking: ${u.parking_pass_label}`}
-                    </div>
-                  </div>
-                  <span className="text-ink-faint transition group-hover:text-ink-tertiary">
-                    →
-                  </span>
-                </div>
-
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {allGood && <Pill tone="ok">All good</Pill>}
-                  {r.consLow > 0 && (
-                    <Pill tone="warn">{r.consLow} to restock</Pill>
-                  )}
-                  {r.linenShort > 0 && (
-                    <Pill tone="bad">{r.linenShort} linen short</Pill>
-                  )}
-                  {u.parking_status === "missing" && (
-                    <Pill tone="bad">Pass missing</Pill>
-                  )}
-                </div>
-
-                <div className="mt-3 text-[11px] text-ink-faint">
-                  Last cleaned {formatWhen(u.last_cleaned_at)}
-                </div>
-              </Link>
-            );
-          })}
-        </div>
+        <UnitPicker units={summaries} />
       )}
       {recentCleans.length > 0 && (
         <section className="mt-10">
