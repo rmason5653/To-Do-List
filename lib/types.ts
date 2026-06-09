@@ -1,42 +1,66 @@
-export type Status = "not_started" | "in_progress" | "done";
-export type Category = "ops" | "personal";
+// Mason Homes Inventory Tracker — data model.
+// Mirrors the five tables in the spec: units, consumable par, linen par,
+// central reserve, central pull log (plus a lightweight clean log).
 
-export interface Task {
+export type Category = "consumable" | "linen";
+
+/** 'na' = the unit has no parking pass, so there is nothing to confirm. */
+export type ParkingStatus = "ok" | "missing" | "na";
+
+export type PullReason =
+  | "weekly_restock"
+  | "damage_replacement"
+  | "stain_out";
+
+export interface Unit {
+  unit_id: string;
+  name: string; // full display, e.g. "Riviera 105"
+  property_name: string; // group key, e.g. "Riviera"
+  sort: number;
+  parking_pass_label: string; // "None" | "1 pass" | "2 passes" | "Card"
+  has_parking_pass: boolean;
+  parking_status: ParkingStatus;
+  parking_confirmed_at: string | null;
+  last_cleaned_at: string | null;
+}
+
+export interface ConsumablePar {
   id: string;
-  title: string;
-  description: string | null;
-  status: Status;
-  priority: number | null;
-  assignee: string | null;
-  due_date: string | null; // YYYY-MM-DD
-  completed: boolean;
+  unit_id: string;
+  item_name: string;
+  sort: number;
+  leave_behind: number;
+  closet_par: number;
+  reorder_point: number;
+  current_actual: number;
+}
+
+export interface LinenPar {
+  id: string;
+  unit_id: string;
+  linen_type: string; // bath_towel | washcloth | hand_towel | makeup_towel | kitchen_towel
+  sort: number;
+  par_count: number;
+  current_actual: number;
+}
+
+export interface CentralReserveItem {
+  id: string;
+  item_name: string;
   category: Category;
-  slack_item_id: string | null;
-  position: number;
-  created_at: string;
-  updated_at: string;
-  last_synced_at: string | null;
+  sort: number;
+  quantity_on_hand: number;
+  reorder_point: number;
 }
 
-export interface TaskInput {
-  title: string;
-  description?: string | null;
-  status?: Status;
-  priority?: number | null;
-  assignee?: string | null;
-  due_date?: string | null;
-  completed?: boolean;
-  category?: Category;
-  slack_item_id?: string | null;
-  position?: number;
-  last_synced_at?: string | null;
-}
-
-export interface SyncStatus {
-  ok: boolean;
-  ranAt: string | null;
-  message: string;
-  pulled: number;
-  pushed: number;
-  slackConfigured: boolean;
+export interface PullLogEntry {
+  id: string;
+  pulled_at: string;
+  staff_name: string;
+  item_name: string;
+  category: Category;
+  quantity: number;
+  destination_unit_id: string | null;
+  destination_name: string | null;
+  reason: PullReason;
 }

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import localFont from "next/font/local";
+import NavBar from "@/app/components/NavBar";
 import "./globals.css";
 
 // Inter — all body, UI text, and data.
@@ -30,8 +31,9 @@ const americanCaptain = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Ops To-Do",
-  description: "Daily ops and personal task hub, synced with Slack.",
+  title: "Mason Homes Inventory",
+  description:
+    "Par vs actual across every unit and central. Every central pull logged.",
 };
 
 export const viewport: Viewport = {
@@ -50,7 +52,10 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${montserrat.variable} ${americanCaptain.variable}`}
     >
-      <body className="font-sans">{children}</body>
+      <body className="font-sans">
+        <NavBar />
+        {children}
+      </body>
     </html>
   );
 }

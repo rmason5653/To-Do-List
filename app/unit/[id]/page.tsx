@@ -1,0 +1,63 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getUnit, listConsumables, listLinens } from "@/lib/inventory";
+import { Container, SetupNotice } from "@/app/components/ui";
+import PullDialog from "@/app/components/PullDialog";
+import CleanFlow from "./CleanFlow";
+
+export const dynamic = "force-dynamic";
+
+export default async function UnitPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+
+  try {
+    const unit = await getUnit(id);
+    if (!unit) notFound();
+
+    const [consumables, linens] = await Promise.all([
+      listConsumables(id),
+      listLinens(id),
+    ]);
+
+    return (
+      <Container>
+        <Link
+          href="/"
+          className="text-sm text-ink-tertiary transition hover:text-bone"
+        >
+          ← All units
+        </Link>
+
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
+              {unit.property_name}
+            </p>
+            <h1 className="mt-1 font-display text-3xl font-extrabold tracking-[-0.02em] text-bone">
+              {unit.name}
+            </h1>
+          </div>
+          <PullDialog
+            label="Pull from central"
+            variant="ghost"
+            prefill={{ unit_id: unit.unit_id }}
+          />
+        </div>
+
+        <div className="mt-6">
+          <CleanFlow unit={unit} consumables={consumables} linens={linens} />
+        </div>
+      </Container>
+    );
+  } catch (err) {
+    return (
+      <Container>
+        <SetupNotice message={(err as Error).message} />
+      </Container>
+    );
+  }
+}
