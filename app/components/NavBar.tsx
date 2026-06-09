@@ -15,6 +15,8 @@ const LINKS = [
 
 export default function NavBar() {
   const pathname = usePathname();
+  // The login screen is its own full-bleed splash.
+  if (pathname === "/login") return null;
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/" || pathname.startsWith("/unit");
