@@ -94,73 +94,33 @@ export default async function HomePage() {
 
   return (
     <Container>
-      {/* Hero — one of the few sanctioned American Captain moments. */}
-      <div className="mb-10">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
-          Mason Homes
-        </p>
-        <h1 className="mt-1 font-punch text-6xl uppercase leading-none tracking-[0.02em] text-ink-primary sm:text-7xl">
-          Par
-        </h1>
-        <p className="mt-3 max-w-xl text-sm text-ink-tertiary">
-          Par vs actual across every unit and central. Consumables draw down,
-          linens stay flat, every central pull is logged.
-        </p>
+      {/* Compact header — cleaner-first: the unit picker leads the page. */}
+      <div className="mb-6 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-muted">
+            Mason Homes
+          </p>
+          <h1 className="mt-0.5 font-punch text-4xl uppercase leading-none tracking-[0.02em] text-ink-primary">
+            Par
+          </h1>
+        </div>
+        <Link
+          href="/guide"
+          className="shrink-0 rounded-control border border-line-strong bg-surface-3 px-3 py-2 text-xs font-semibold text-state-warn transition hover:border-red hover:text-ink-primary"
+        >
+          How to use →
+        </Link>
       </div>
 
-      <Link
-        href="/guide"
-        className="mb-8 flex items-center justify-between gap-3 rounded-card border border-line bg-surface-2 px-4 py-3 shadow-e1 transition duration-150 ease-out hover:border-line-strong hover:bg-surface-3"
-      >
-        <span className="text-sm text-ink-secondary">
-          <b className="text-ink-primary">New to Par?</b> A 2-minute walkthrough for cleaners.
-        </span>
-        <span className="shrink-0 font-display text-sm font-bold text-state-warn">
-          How to use →
-        </span>
-      </Link>
-
       {loadError && (
-        <div className="mb-8">
+        <div className="mb-6">
           <SetupNotice message={loadError} />
         </div>
       )}
 
-      {/* KPIs */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-        <StatCard
-          label="Units to restock"
-          value={counts.unitsBelowReorder}
-          tone={counts.unitsBelowReorder > 0 ? "warn" : "ok"}
-          hint="Below reorder point"
-          href="/restock"
-        />
-        <StatCard
-          label="Central items low"
-          value={counts.centralLow}
-          tone={counts.centralLow > 0 ? "warn" : "ok"}
-          hint="Time to buy bulk"
-          href="/central"
-        />
-        <StatCard
-          label="Linen issues"
-          value={counts.linenShortUnits}
-          tone={counts.linenShortUnits > 0 ? "bad" : "ok"}
-          hint="Units below par"
-          href="/linens"
-        />
-        <StatCard
-          label="Parking missing"
-          value={counts.parkingMissing}
-          tone={counts.parkingMissing > 0 ? "bad" : "ok"}
-          hint="Passes unaccounted"
-          href="/parking"
-        />
-      </div>
-
-      {/* Units */}
-      <h2 className="mb-4 mt-10 font-display text-lg font-bold text-ink-primary">
-        Units
+      {/* Find your unit — the cleaner's first and primary action. */}
+      <h2 className="mb-3 font-display text-lg font-bold text-ink-primary">
+        Find your unit
         <span className="ml-2 text-sm font-medium text-ink-muted">
           {units.length}
         </span>
@@ -173,31 +133,69 @@ export default async function HomePage() {
       ) : (
         <UnitPicker units={summaries} />
       )}
-      {recentCleans.length > 0 && (
-        <section className="mt-10">
-          <h2 className="mb-4 font-display text-lg font-bold text-ink-primary">
-            Recent cleans
-          </h2>
-          <div className="overflow-hidden rounded-card border border-line bg-surface-2 shadow-e1">
-            {recentCleans.map((c, idx) => (
-              <div
-                key={`${c.unit_name}-${c.completed_at}-${idx}`}
-                className={`flex items-center justify-between gap-3 px-4 py-2.5 text-sm ${
-                  idx > 0 ? "border-t border-line" : ""
-                }`}
-              >
-                <span className="font-medium text-ink-primary">
-                  {c.unit_name ?? "—"}
-                </span>
-                <span className="flex items-center gap-3 text-xs text-ink-muted">
-                  {c.staff_name && <span>{c.staff_name}</span>}
-                  <span className="tnum">{formatWhen(c.completed_at)}</span>
-                </span>
-              </div>
-            ))}
+
+      {/* Portfolio status — manager view, below the cleaner's workflow. */}
+      <section className="mt-12 border-t border-line pt-8">
+        <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+          Portfolio status
+        </h2>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <StatCard
+            label="Units to restock"
+            value={counts.unitsBelowReorder}
+            tone={counts.unitsBelowReorder > 0 ? "warn" : "ok"}
+            hint="Below reorder point"
+            href="/restock"
+          />
+          <StatCard
+            label="Central items low"
+            value={counts.centralLow}
+            tone={counts.centralLow > 0 ? "warn" : "ok"}
+            hint="Time to buy bulk"
+            href="/central"
+          />
+          <StatCard
+            label="Linen issues"
+            value={counts.linenShortUnits}
+            tone={counts.linenShortUnits > 0 ? "bad" : "ok"}
+            hint="Units below par"
+            href="/linens"
+          />
+          <StatCard
+            label="Parking missing"
+            value={counts.parkingMissing}
+            tone={counts.parkingMissing > 0 ? "bad" : "ok"}
+            hint="Passes unaccounted"
+            href="/parking"
+          />
+        </div>
+
+        {recentCleans.length > 0 && (
+          <div className="mt-6">
+            <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+              Recent cleans
+            </h3>
+            <div className="overflow-hidden rounded-card border border-line bg-surface-2 shadow-e1">
+              {recentCleans.map((c, idx) => (
+                <div
+                  key={`${c.unit_name}-${c.completed_at}-${idx}`}
+                  className={`flex items-center justify-between gap-3 px-4 py-2.5 text-sm ${
+                    idx > 0 ? "border-t border-line" : ""
+                  }`}
+                >
+                  <span className="font-medium text-ink-primary">
+                    {c.unit_name ?? "—"}
+                  </span>
+                  <span className="flex items-center gap-3 text-xs text-ink-muted">
+                    {c.staff_name && <span>{c.staff_name}</span>}
+                    <span className="tnum">{formatWhen(c.completed_at)}</span>
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
-        </section>
-      )}
+        )}
+      </section>
     </Container>
   );
 }
