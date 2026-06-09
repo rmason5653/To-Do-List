@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Inter, Montserrat } from "next/font/google";
 import localFont from "next/font/local";
 import NavBar from "@/app/components/NavBar";
+import { getViewer } from "@/lib/auth-context";
 import "./globals.css";
 
 // Inter — all body, UI text, and data.
@@ -42,11 +43,12 @@ export const viewport: Viewport = {
   themeColor: "#0B0B0D",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const isAdmin = (await getViewer())?.role === "admin";
   return (
     <html
       lang="en"
@@ -60,7 +62,7 @@ export default function RootLayout({
               "(function(){try{if(localStorage.getItem('mason_theme')==='light'){document.documentElement.setAttribute('data-theme','light');}}catch(e){}})();",
           }}
         />
-        <NavBar />
+        <NavBar isAdmin={isAdmin} />
         {children}
       </body>
     </html>

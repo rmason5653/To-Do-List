@@ -36,6 +36,21 @@ create table if not exists settings (
 );
 insert into settings (id) values (1) on conflict (id) do nothing;
 
+-- Team accounts for invite-link login + roles (admin / cleaner).
+create table if not exists app_users (
+  id            uuid primary key default gen_random_uuid(),
+  name          text not null,
+  phone         text unique,
+  email         text,
+  role          text not null default 'cleaner' check (role in ('admin','cleaner')),
+  status        text not null default 'active'  check (status in ('active','disabled')),
+  invite_token  text unique not null default encode(gen_random_bytes(16), 'hex'),
+  onboarded     boolean not null default false,
+  created_at    timestamptz not null default now(),
+  last_login_at timestamptz
+);
+create index if not exists app_users_invite_idx on app_users (invite_token);
+
 -- CONSUMABLE PAR: per unit, per item. current_actual is the cleaner's signal.
 -- par = leave_behind * 4; reorder_point = one leave_behind.
 create table if not exists consumable_par (
@@ -115,6 +130,7 @@ alter table central_reserve   enable row level security;
 alter table central_pull_log  enable row level security;
 alter table clean_log         enable row level security;
 alter table settings          enable row level security;
+alter table app_users         enable row level security;
 
 -- ---------------------------------------------------------------------------
 -- FUNCTIONS (atomic inventory movements)

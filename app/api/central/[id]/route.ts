@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { isAdmin } from "@/lib/auth-context";
 
 export const dynamic = "force-dynamic";
 
@@ -9,6 +10,8 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  if (!(await isAdmin()))
+    return NextResponse.json({ error: "Admins only." }, { status: 403 });
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
 

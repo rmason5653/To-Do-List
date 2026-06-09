@@ -1,11 +1,14 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { isAdmin } from "@/lib/auth-context";
 
 export const dynamic = "force-dynamic";
 
 // Update the global par inputs (and optionally per-item leave-behind), then
 // recompute all calculated par from them.
 export async function PATCH(req: Request) {
+  if (!(await isAdmin()))
+    return NextResponse.json({ error: "Admins only." }, { status: 403 });
   const body = await req.json().catch(() => ({}));
 
   const patch: Record<string, unknown> = {};

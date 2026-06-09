@@ -5,21 +5,25 @@ import { usePathname } from "next/navigation";
 import PullDialog from "./PullDialog";
 import ThemeToggle from "./ThemeToggle";
 
+// admin: only managers/owner see it; cleaners get the focused set.
 const LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/restock", label: "Restock" },
-  { href: "/central", label: "Central" },
-  { href: "/linens", label: "Linens" },
-  { href: "/log", label: "Pull log" },
-  { href: "/parking", label: "Parking" },
-  { href: "/settings", label: "Settings" },
-  { href: "/guide", label: "Guide" },
+  { href: "/", label: "Home", admin: false },
+  { href: "/restock", label: "Restock", admin: false },
+  { href: "/central", label: "Central", admin: true },
+  { href: "/linens", label: "Linens", admin: true },
+  { href: "/log", label: "Pull log", admin: true },
+  { href: "/parking", label: "Parking", admin: true },
+  { href: "/team", label: "Team", admin: true },
+  { href: "/settings", label: "Settings", admin: true },
+  { href: "/guide", label: "Guide", admin: false },
 ];
 
-export default function NavBar() {
+export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   // The login screen is its own full-bleed splash.
   if (pathname === "/login") return null;
+
+  const links = LINKS.filter((l) => !l.admin || isAdmin);
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/" || pathname.startsWith("/unit");
@@ -39,7 +43,7 @@ export default function NavBar() {
         </Link>
 
         <nav className="flex flex-1 items-center gap-1 overflow-x-auto">
-          {LINKS.map((l) => (
+          {links.map((l) => (
             <Link
               key={l.href}
               href={l.href}

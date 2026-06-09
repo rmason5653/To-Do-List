@@ -44,6 +44,7 @@ export interface AppUser {
   id: string;
   name: string;
   phone: string | null;
+  email: string | null;
   role: "admin" | "cleaner";
   status: "active" | "disabled";
   invite_token: string;
