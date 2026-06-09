@@ -11,6 +11,7 @@ const LINKS = [
   { href: "/linens", label: "Linens" },
   { href: "/log", label: "Pull log" },
   { href: "/parking", label: "Parking" },
+  { href: "/guide", label: "Guide" },
 ];
 
 export default function NavBar() {

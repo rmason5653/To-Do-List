@@ -95,6 +95,18 @@ export default async function HomePage() {
         </p>
       </div>
 
+      <Link
+        href="/guide"
+        className="mb-8 flex items-center justify-between gap-3 rounded-card border border-line bg-surface-2 px-4 py-3 shadow-e1 transition duration-150 ease-out hover:border-line-strong hover:bg-surface-3"
+      >
+        <span className="text-sm text-ink-secondary">
+          <b className="text-bone">New to Par?</b> A 2-minute walkthrough for cleaners.
+        </span>
+        <span className="shrink-0 font-display text-sm font-bold text-gold">
+          How to use →
+        </span>
+      </Link>
+
       {loadError && (
         <div className="mb-8">
           <SetupNotice message={loadError} />
