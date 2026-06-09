@@ -4,7 +4,9 @@ import {
   listConsumables,
   listCentralReserve,
   listLinens,
+  listRecentCleans,
   listUnits,
+  type RecentClean,
 } from "@/lib/inventory";
 import type { ConsumablePar, LinenPar, Unit } from "@/lib/types";
 import {
@@ -55,6 +57,7 @@ export default async function HomePage() {
     parkingMissing: 0,
   };
   let loadError: string | null = null;
+  let recentCleans: RecentClean[] = [];
 
   try {
     [units, cons, linens] = await Promise.all([
@@ -66,6 +69,12 @@ export default async function HomePage() {
     counts = buildCounts(units, cons, linens, reserve);
   } catch (err) {
     loadError = (err as Error).message;
+  }
+
+  try {
+    recentCleans = await listRecentCleans();
+  } catch {
+    // Non-critical — the dashboard still renders without the clean feed.
   }
 
   const roll = rollup(units, cons, linens);
@@ -186,6 +195,31 @@ export default async function HomePage() {
             );
           })}
         </div>
+      )}
+      {recentCleans.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-4 font-display text-lg font-bold text-bone">
+            Recent cleans
+          </h2>
+          <div className="overflow-hidden rounded-card border border-line bg-surface-2 shadow-e1">
+            {recentCleans.map((c, idx) => (
+              <div
+                key={`${c.unit_name}-${c.completed_at}-${idx}`}
+                className={`flex items-center justify-between gap-3 px-4 py-2.5 text-sm ${
+                  idx > 0 ? "border-t border-line" : ""
+                }`}
+              >
+                <span className="font-medium text-ink-primary">
+                  {c.unit_name ?? "—"}
+                </span>
+                <span className="flex items-center gap-3 text-xs text-ink-muted">
+                  {c.staff_name && <span>{c.staff_name}</span>}
+                  <span className="tnum">{formatWhen(c.completed_at)}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
     </Container>
   );

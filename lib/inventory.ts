@@ -71,6 +71,42 @@ export async function listPullLog(limit = 200): Promise<PullLogEntry[]> {
   return (data ?? []) as PullLogEntry[];
 }
 
+export interface RecentClean {
+  completed_at: string;
+  staff_name: string | null;
+  unit_name: string | null;
+  parking_ok: boolean | null;
+  linens_ok: boolean | null;
+}
+
+/** Recently completed cleans, newest first, with the unit name embedded. */
+export async function listRecentCleans(limit = 8): Promise<RecentClean[]> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("clean_log")
+    .select("completed_at, staff_name, parking_ok, linens_ok, units(name)")
+    .order("completed_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(error.message);
+  return (data ?? []).map((r) => {
+    const row = r as {
+      completed_at: string;
+      staff_name: string | null;
+      parking_ok: boolean | null;
+      linens_ok: boolean | null;
+      units: { name: string } | { name: string }[] | null;
+    };
+    const unit = Array.isArray(row.units) ? row.units[0] : row.units;
+    return {
+      completed_at: row.completed_at,
+      staff_name: row.staff_name,
+      parking_ok: row.parking_ok,
+      linens_ok: row.linens_ok,
+      unit_name: unit?.name ?? null,
+    };
+  });
+}
+
 // ---------------------------------------------------------------------------
 // Derived views (computed from the raw reads)
 // ---------------------------------------------------------------------------
