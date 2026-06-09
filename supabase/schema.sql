@@ -317,20 +317,21 @@ begin
   ) as p(name,bath,wash,hand,mk,kit) on p.name = u.name
   cross join (values ('bath_towel',1),('washcloth',2),('hand_towel',3),('makeup_towel',4),('kitchen_towel',5)) as t(linen_type,sort);
 
-  -- Central reserve. Starting bulk levels — edit these to your real counts.
-  -- Consumable reorder ~ one turnover of leave-behind across all 10 units.
+  -- Central reserve. Bulk levels for a 63-unit portfolio: par ~ one week of
+  -- full restock (leave-behind x 3 turnovers x 63 units). Replace on-hand with
+  -- real counts on the Central screen.
   insert into central_reserve (item_name, category, sort, quantity_on_hand, reorder_point, par_level) values
-    ('Kitchen trash bags',  'consumable', 1, 90,  30, 90),
-    ('Paper towel',         'consumable', 2, 60,  20, 60),
-    ('Dishwasher pods',     'consumable', 3, 90,  30, 90),
-    ('Laundry pods',        'consumable', 4, 150, 50, 150),
-    ('Bathroom trash bags', 'consumable', 5, 90,  30, 90),
-    ('Toilet paper',        'consumable', 6, 90,  30, 90),
-    ('Coffee pods',         'consumable', 7, 150, 50, 150),
-    ('Creamer',             'consumable', 8, 150, 50, 150),
-    ('bath_towel',          'linen',      9, 12,  4, 12),
-    ('washcloth',           'linen',     10, 12,  4, 12),
-    ('hand_towel',          'linen',     11,  6,  2, 6),
-    ('makeup_towel',        'linen',     12,  6,  2, 6),
-    ('kitchen_towel',       'linen',     13,  6,  2, 6);
+    ('Kitchen trash bags',  'consumable', 1, 570, 190, 570),
+    ('Paper towel',         'consumable', 2, 380, 130, 380),
+    ('Dishwasher pods',     'consumable', 3, 570, 190, 570),
+    ('Laundry pods',        'consumable', 4, 950, 320, 950),
+    ('Bathroom trash bags', 'consumable', 5, 570, 190, 570),
+    ('Toilet paper',        'consumable', 6, 570, 190, 570),
+    ('Coffee pods',         'consumable', 7, 950, 320, 950),
+    ('Creamer',             'consumable', 8, 950, 320, 950),
+    ('bath_towel',          'linen',      9, 40,  12,  40),
+    ('washcloth',           'linen',     10, 40,  12,  40),
+    ('hand_towel',          'linen',     11, 20,   6,  20),
+    ('makeup_towel',        'linen',     12, 20,   6,  20),
+    ('kitchen_towel',       'linen',     13, 15,   5,  15);
 end $$;
