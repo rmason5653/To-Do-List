@@ -117,6 +117,7 @@ create or replace function log_pull(
   p_reason   text
 ) returns void
 language plpgsql
+set search_path = public
 as $$
 declare
   v_unit_name text;
@@ -152,6 +153,7 @@ create or replace function restock_unit(
   p_unit  uuid
 ) returns int
 language plpgsql
+set search_path = public
 as $$
 declare
   r           record;
