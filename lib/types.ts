@@ -39,6 +39,19 @@ export interface ConsumableItem {
   leave_behind: number;
 }
 
+/** A team member account (admin or cleaner), invited by login link. */
+export interface AppUser {
+  id: string;
+  name: string;
+  phone: string | null;
+  role: "admin" | "cleaner";
+  status: "active" | "disabled";
+  invite_token: string;
+  onboarded: boolean;
+  created_at: string;
+  last_login_at: string | null;
+}
+
 export interface ConsumablePar {
   id: string;
   unit_id: string;
