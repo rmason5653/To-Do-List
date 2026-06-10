@@ -85,7 +85,7 @@ export default function QuickAdd({
       <button
         onClick={submit}
         disabled={busy || !title.trim()}
-        className="rounded-lg bg-mason-red px-4 py-2 font-display text-sm font-bold text-bone transition hover:bg-mason-red-hover hover:opacity-100 disabled:opacity-50"
+        className="grow rounded-lg bg-mason-red px-4 py-2 font-display text-sm font-bold text-bone transition hover:bg-mason-red-hover hover:opacity-100 disabled:opacity-50 sm:grow-0"
       >
         Add
       </button>

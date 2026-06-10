@@ -52,6 +52,37 @@ body {
   }
 }
 
+/* Mobile: keep text inputs >= 16px so iOS Safari doesn't auto-zoom on focus. */
+@media (max-width: 639px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Snappier taps on touch devices (drop the 300ms delay). */
+button,
+a,
+input,
+select,
+textarea,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+/* Expand the tap area of small icon-only buttons on touch screens only, so the
+   dense desktop table keeps precise mouse targets. */
+.hit-area {
+  position: relative;
+}
+@media (max-width: 639px) {
+  .hit-area::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+  }
+}
+
 /* v4 interaction state — focus-visible everywhere: 2px red, 2px offset. */
 :focus-visible {
   outline: 2px solid #e20602;

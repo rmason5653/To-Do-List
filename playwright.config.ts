@@ -12,10 +12,20 @@ export default defineConfig({
   reporter: "list",
   use: {
     baseURL: "http://localhost:3000",
-    viewport: { width: 1280, height: 800 },
     trace: "retain-on-failure",
   },
-  projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
+  // Run every spec at both a desktop and a phone viewport so layout regressions
+  // (overflow, broken mobile card) are caught on either form factor.
+  projects: [
+    {
+      name: "desktop",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 1280, height: 800 } },
+    },
+    {
+      name: "mobile",
+      use: { ...devices["Desktop Chrome"], viewport: { width: 390, height: 844 } },
+    },
+  ],
   webServer: {
     command: "npm run dev",
     url: "http://localhost:3000/login",

@@ -261,7 +261,7 @@ export default function TaskRow({
       <button
         onClick={() => setExpandMode((m) => (m === "notes" ? null : "notes"))}
         title={hasNotes ? "View / edit notes" : "Add notes"}
-        className={`flex transition hover:text-mason-red ${
+        className={`hit-area flex transition hover:text-mason-red ${
           expandMode === "notes"
             ? "text-mason-red"
             : hasNotes
@@ -324,7 +324,7 @@ export default function TaskRow({
     <button
       aria-label={done ? "Mark not done" : "Mark done"}
       onClick={() => onPatch({ completed: !done })}
-      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
+      className={`hit-area flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
         done
           ? "border-mason-green bg-mason-green text-bone"
           : "border-line hover:border-mason-green"
@@ -342,7 +342,7 @@ export default function TaskRow({
     <button
       onClick={() => setExpandMode((m) => (m === "more" ? null : "more"))}
       title="More settings"
-      className={`flex transition hover:text-ink ${
+      className={`hit-area flex transition hover:text-ink ${
         expandMode === "more" ? "text-ink" : "text-muted"
       }`}
     >

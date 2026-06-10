@@ -25,7 +25,11 @@ export default function PriorityStars({
 }) {
   const level = priority ?? 0;
   return (
-    <span className="flex items-center gap-0.5" role="group" aria-label="Priority">
+    <span
+      className="flex items-center gap-1.5 sm:gap-0.5"
+      role="group"
+      aria-label="Priority"
+    >
       {[1, 2, 3].map((n) => {
         const on = priority != null && n <= priority;
         return (
@@ -36,10 +40,10 @@ export default function PriorityStars({
             aria-pressed={priority === n}
             onClick={() => onChange(priority === n ? null : n)}
             title={`Set priority ${n}`}
-            className="rounded-sm leading-none transition hover:scale-125"
+            className="rounded-sm p-1.5 leading-none transition hover:scale-125 sm:p-0.5"
           >
             <StarIcon
-              className={`h-4 w-4 ${on ? starColor(level) : "text-line hover:text-mason-gold"}`}
+              className={`h-5 w-5 sm:h-4 sm:w-4 ${on ? starColor(level) : "text-line hover:text-mason-gold"}`}
             />
           </button>
         );
