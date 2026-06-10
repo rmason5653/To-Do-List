@@ -157,7 +157,9 @@ export default function CleanFlow({
           Consumables
         </h2>
         <p className="mt-1 text-xs text-ink-muted">
-          After placing leave-behinds, tap anything now at or below reorder.
+          Put out the listed amount in the unit. Then tap{" "}
+          <b className="text-ink-secondary">Needs restock</b> on anything the
+          closet is down to its flag number or fewer.
         </p>
         <ul className="mt-3 divide-y divide-[rgba(112,113,118,.14)]">
           {consumables.map((c) => {
@@ -168,8 +170,9 @@ export default function CleanFlow({
                   <div className="text-sm font-medium text-ink-primary">
                     {c.item_name}
                   </div>
-                  <div className="tnum text-[11px] text-ink-muted">
-                    par {c.closet_par} · reorder {c.reorder_point} · leave {c.leave_behind}
+                  <div className="text-[11px] text-ink-muted">
+                    Put out <b className="text-ink-secondary">{c.leave_behind}</b>{" "}
+                    · flag if {c.reorder_point} or fewer left
                   </div>
                 </div>
                 <button
