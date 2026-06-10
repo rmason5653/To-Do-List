@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { linenLabel } from "@/lib/constants";
+import StaffSelect from "@/app/components/StaffSelect";
 import type { ConsumablePar, LinenPar, Unit } from "@/lib/types";
 
 const STAFF_KEY = "mason_inv_staff";
@@ -11,10 +12,14 @@ export default function CleanFlow({
   unit,
   consumables,
   linens,
+  staffNames,
+  viewerName,
 }: {
   unit: Unit;
   consumables: ConsumablePar[];
   linens: LinenPar[];
+  staffNames: string[];
+  viewerName: string;
 }) {
   const router = useRouter();
 
@@ -39,9 +44,12 @@ export default function CleanFlow({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
-  // Load remembered name on mount.
+  // Default to the remembered pick if it's still on the roster, otherwise the
+  // logged-in user. Runs once on mount (client-only localStorage read).
   useEffect(() => {
-    setStaff(localStorage.getItem(STAFF_KEY) ?? "");
+    const remembered = localStorage.getItem(STAFF_KEY) ?? "";
+    setStaff(staffNames.includes(remembered) ? remembered : viewerName || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function toggleLow(id: string) {
@@ -274,11 +282,10 @@ export default function CleanFlow({
       {/* Sticky complete bar */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface-4/90 backdrop-blur-[8px]">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
-          <input
+          <StaffSelect
             value={staff}
-            onChange={(e) => setStaff(e.target.value)}
-            placeholder="Your name"
-            aria-label="Your name"
+            onChange={setStaff}
+            names={staffNames}
             className="w-32 shrink-0 rounded-control border border-line-strong bg-surface-3 px-3 py-2.5 text-sm text-ink-primary outline-none focus:border-red sm:w-40"
           />
           {error && (

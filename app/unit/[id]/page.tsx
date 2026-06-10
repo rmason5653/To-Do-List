@@ -4,7 +4,8 @@ import { getUnit, listConsumables, listLinens } from "@/lib/inventory";
 import { Container, SetupNotice } from "@/app/components/ui";
 import PullDialog from "@/app/components/PullDialog";
 import CleanFlow from "./CleanFlow";
-import { isAdmin } from "@/lib/auth-context";
+import { getViewer } from "@/lib/auth-context";
+import { listActiveStaffNames } from "@/lib/users-db";
 
 export const dynamic = "force-dynamic";
 
@@ -19,11 +20,13 @@ export default async function UnitPage({
     const unit = await getUnit(id);
     if (!unit) notFound();
 
-    const [consumables, linens] = await Promise.all([
+    const [consumables, linens, staffNames, viewer] = await Promise.all([
       listConsumables(id),
       listLinens(id),
+      listActiveStaffNames(),
+      getViewer(),
     ]);
-    const admin = await isAdmin();
+    const admin = viewer?.role === "admin";
 
     return (
       <Container>
@@ -53,7 +56,13 @@ export default async function UnitPage({
         </div>
 
         <div className="mt-6">
-          <CleanFlow unit={unit} consumables={consumables} linens={linens} />
+          <CleanFlow
+            unit={unit}
+            consumables={consumables}
+            linens={linens}
+            staffNames={staffNames}
+            viewerName={viewer?.name ?? ""}
+          />
         </div>
       </Container>
     );

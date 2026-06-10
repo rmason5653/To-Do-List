@@ -15,6 +15,26 @@ export async function listUsers(): Promise<AppUser[]> {
   return (data ?? []) as AppUser[];
 }
 
+/**
+ * Names of active team members, for the "who did this" picker on the clean and
+ * restock flows. Returns [] if the table isn't set up yet so those flows still
+ * render (the picker just falls back to the logged-in user).
+ */
+export async function listActiveStaffNames(): Promise<string[]> {
+  try {
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from("app_users")
+      .select("name")
+      .eq("status", "active")
+      .order("name", { ascending: true });
+    if (error) return [];
+    return (data ?? []).map((r) => r.name as string);
+  } catch {
+    return [];
+  }
+}
+
 export async function createUser(
   name: string,
   phone: string | null,

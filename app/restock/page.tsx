@@ -10,6 +10,8 @@ import {
   PageHeader,
   SetupNotice,
 } from "@/app/components/ui";
+import { getViewer } from "@/lib/auth-context";
+import { listActiveStaffNames } from "@/lib/users-db";
 import RestockClient, {
   type PickItem,
   type RestockRun,
@@ -20,14 +22,20 @@ export const dynamic = "force-dynamic";
 export default async function RestockPage() {
   let runs: RestockRun[] = [];
   let pickList: PickItem[] = [];
+  let staffNames: string[] = [];
+  let viewerName = "";
   let loadError: string | null = null;
 
   try {
-    const [units, cons, reserve] = await Promise.all([
+    const [units, cons, reserve, names, viewer] = await Promise.all([
       listUnits(),
       listConsumables(),
       listCentralReserve(),
+      listActiveStaffNames(),
+      getViewer(),
     ]);
+    staffNames = names;
+    viewerName = viewer?.name ?? "";
 
     runs = buildRestockRun(units, cons).map((r) => ({
       unit_id: r.unit.unit_id,
@@ -79,7 +87,12 @@ export default async function RestockPage() {
       ) : runs.length === 0 ? (
         <EmptyState punch="All at par" line="No closet is below its reorder point. Nothing to restock." />
       ) : (
-        <RestockClient runs={runs} pickList={pickList} />
+        <RestockClient
+          runs={runs}
+          pickList={pickList}
+          staffNames={staffNames}
+          viewerName={viewerName}
+        />
       )}
     </Container>
   );

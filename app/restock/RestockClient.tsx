@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import StaffSelect from "@/app/components/StaffSelect";
 
 export interface RestockRun {
   unit_id: string;
@@ -27,9 +28,13 @@ const STAFF_KEY = "mason_inv_staff";
 export default function RestockClient({
   runs,
   pickList,
+  staffNames,
+  viewerName,
 }: {
   runs: RestockRun[];
   pickList: PickItem[];
+  staffNames: string[];
+  viewerName: string;
 }) {
   const router = useRouter();
   const [staff, setStaff] = useState("");
@@ -39,7 +44,9 @@ export default function RestockClient({
   const [error, setError] = useState("");
 
   useEffect(() => {
-    setStaff(localStorage.getItem(STAFF_KEY) ?? "");
+    const remembered = localStorage.getItem(STAFF_KEY) ?? "";
+    setStaff(staffNames.includes(remembered) ? remembered : viewerName || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function requireStaff(): boolean {
@@ -108,11 +115,10 @@ export default function RestockClient({
         <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">
           Restocking as
         </label>
-        <input
+        <StaffSelect
           value={staff}
-          onChange={(e) => setStaff(e.target.value)}
-          placeholder="Your name"
-          aria-label="Your name"
+          onChange={setStaff}
+          names={staffNames}
           className="w-40 rounded-control border border-line-strong bg-surface-3 px-3 py-2 text-sm text-ink-primary outline-none focus:border-red"
         />
         <button
