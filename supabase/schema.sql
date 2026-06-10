@@ -47,7 +47,8 @@ create table if not exists app_users (
   invite_token  text unique not null default encode(gen_random_bytes(16), 'hex'),
   onboarded     boolean not null default false,
   created_at    timestamptz not null default now(),
-  last_login_at timestamptz
+  last_login_at timestamptz,
+  password_hash text          -- scrypt hash; null until the user sets a password
 );
 create index if not exists app_users_invite_idx on app_users (invite_token);
 

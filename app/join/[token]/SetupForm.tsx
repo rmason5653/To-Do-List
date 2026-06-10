@@ -1,45 +1,40 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
 
-export default function LoginPage() {
+// Create-your-password screen, reached from a one-time invite link.
+export default function SetupForm({ token, name }: { token: string; name: string }) {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    const p = new URLSearchParams(window.location.search);
-    if (p.get("e") === "set")
-      setNotice("Your account is set up — log in with your email and password.");
-    if (p.get("e") === "invite")
-      setError("That link isn't valid anymore. Ask your manager for a new one.");
-  }, []);
+  const [error, setError] = useState("");
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (pw.length < 8) {
+      setError("Use at least 8 characters.");
+      return;
+    }
+    if (pw !== pw2) {
+      setError("Those passwords don't match.");
+      return;
+    }
     setBusy(true);
     setError("");
-    setNotice("");
     try {
-      const res = await fetch("/api/login", {
+      const res = await fetch("/api/setup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ token, password: pw }),
       });
-      if (res.ok) {
-        router.push("/");
-        router.refresh();
-      } else {
-        const data = await res.json().catch(() => ({}));
-        setError(data.error || "Wrong email or password.");
-      }
-    } catch {
-      setError("Something went wrong. Try again.");
-    } finally {
+      const d = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(d.error || "Could not set your password.");
+      router.push(d.firstTime ? "/guide" : "/");
+      router.refresh();
+    } catch (e) {
+      setError((e as Error).message);
       setBusy(false);
     }
   }
@@ -60,28 +55,27 @@ export default function LoginPage() {
           Par
         </h1>
         <p className="mt-3 text-sm text-ink-tertiary">
-          Log in with your email and password.
+          Welcome{name ? `, ${name}` : ""} — create a password to finish setting
+          up your account.
         </p>
-        {notice && <p className="mt-2 text-sm text-state-ok">{notice}</p>}
 
         <input
-          type="email"
+          type="password"
           autoFocus
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="Email"
-          aria-label="Email"
-          autoComplete="email"
-          inputMode="email"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+          placeholder="New password (8+ characters)"
+          aria-label="New password"
+          autoComplete="new-password"
           className={field}
         />
         <input
           type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Password"
-          aria-label="Password"
-          autoComplete="current-password"
+          value={pw2}
+          onChange={(e) => setPw2(e.target.value)}
+          placeholder="Confirm password"
+          aria-label="Confirm password"
+          autoComplete="new-password"
           className={field}
         />
         {error && (
@@ -94,11 +88,8 @@ export default function LoginPage() {
           disabled={busy}
           className="mt-6 w-full rounded-control bg-red px-3 py-2.5 font-display text-sm font-bold text-bone transition duration-150 ease-out hover:bg-red-hover active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {busy ? "Logging in…" : "Log in"}
+          {busy ? "Setting up…" : "Create account"}
         </button>
-        <p className="mt-4 text-center text-xs text-ink-muted">
-          Forgot it? Ask your manager to reset your password.
-        </p>
         <p className="mt-6 text-center text-xs italic text-steel">
           Built loud. Built heavy. Built to last.
         </p>

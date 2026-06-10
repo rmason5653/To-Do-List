@@ -4,6 +4,7 @@ import {
   deleteUser,
   getUserById,
   regenerateInvite,
+  resetUserPassword,
   updateUser,
 } from "@/lib/users-db";
 import { emailConfigured, sendInviteEmail } from "@/lib/email";
@@ -23,6 +24,11 @@ export async function PATCH(
     if (body.regenerate) {
       const token = await regenerateInvite(id);
       return NextResponse.json({ ok: true, invite_token: token });
+    }
+    if (body.reset_password) {
+      // Clear their password and issue a fresh setup link.
+      const token = await resetUserPassword(id);
+      return NextResponse.json({ ok: true, invite_token: token, reset: true });
     }
     if (body.send_email) {
       const u = await getUserById(id);

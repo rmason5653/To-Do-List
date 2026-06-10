@@ -51,6 +51,7 @@ export interface AppUser {
   onboarded: boolean;
   created_at: string;
   last_login_at: string | null;
+  password_set?: boolean; // true once the user has set a login password
 }
 
 export interface ConsumablePar {

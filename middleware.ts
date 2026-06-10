@@ -3,7 +3,7 @@ import { SESSION_COOKIE, verifySession } from "@/lib/users";
 
 // Open: the login screen, its endpoint, and the invite link (a new cleaner
 // has no session yet — the token in the URL is the credential).
-const OPEN_PATHS = ["/login", "/api/login", "/join"];
+const OPEN_PATHS = ["/login", "/api/login", "/api/setup", "/join"];
 
 // Admin-only areas.
 const ADMIN_PATHS = ["/settings", "/team"];

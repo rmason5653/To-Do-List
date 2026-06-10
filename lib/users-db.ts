@@ -4,15 +4,73 @@ import type { AppUser } from "./types";
 const COLUMNS =
   "id,name,phone,email,role,status,invite_token,onboarded,created_at,last_login_at";
 
+type AuthUser = AppUser & { password_hash: string | null };
+
+function randomToken(): string {
+  return Array.from(crypto.getRandomValues(new Uint8Array(16)))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
 export async function listUsers(): Promise<AppUser[]> {
   const sb = getSupabase();
   const { data, error } = await sb
     .from("app_users")
-    .select(COLUMNS)
+    .select(`${COLUMNS},password_hash`)
     .order("role", { ascending: true })
     .order("name", { ascending: true });
   if (error) throw new Error(error.message);
-  return (data ?? []) as AppUser[];
+  // Never ship the hash to the client — expose only whether a password is set.
+  return (data ?? []).map((r) => {
+    const { password_hash, ...rest } = r as AuthUser;
+    return { ...(rest as AppUser), password_set: !!password_hash };
+  });
+}
+
+/** Look up a user (with their password hash) by email, for login. */
+export async function getAuthUserByEmail(email: string): Promise<AuthUser | null> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("app_users")
+    .select(`${COLUMNS},password_hash`)
+    .ilike("email", email)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data as AuthUser) ?? null;
+}
+
+/** Look up a user (with their password hash) by setup-link token. */
+export async function getAuthUserByToken(token: string): Promise<AuthUser | null> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("app_users")
+    .select(`${COLUMNS},password_hash`)
+    .eq("invite_token", token)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return (data as AuthUser) ?? null;
+}
+
+/** Store a user's chosen password hash (first-time setup). */
+export async function setUserPassword(id: string, passwordHash: string): Promise<void> {
+  const sb = getSupabase();
+  const { error } = await sb
+    .from("app_users")
+    .update({ password_hash: passwordHash })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+}
+
+/** Clear the password and issue a fresh setup link (manager "Reset password"). */
+export async function resetUserPassword(id: string): Promise<string> {
+  const sb = getSupabase();
+  const token = randomToken();
+  const { error } = await sb
+    .from("app_users")
+    .update({ password_hash: null, invite_token: token })
+    .eq("id", id);
+  if (error) throw new Error(error.message);
+  return token;
 }
 
 /**

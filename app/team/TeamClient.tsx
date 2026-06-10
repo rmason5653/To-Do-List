@@ -27,7 +27,7 @@ export default function TeamClient({ users }: { users: AppUser[] }) {
     return `${origin}/join/${u.invite_token}`;
   }
   function inviteText(u: AppUser) {
-    return `You're set up on Mason Homes Par (our inventory app). Tap to log in on your phone: ${linkFor(u)}`;
+    return `You're set up on Mason Homes Par (our inventory app). Tap to create your password and log in: ${linkFor(u)}`;
   }
 
   async function add() {
@@ -166,11 +166,11 @@ export default function TeamClient({ users }: { users: AppUser[] }) {
   return (
     <div className="space-y-6">
       <p className="max-w-2xl text-sm text-ink-tertiary">
-        Add anyone on your team. They get a personal login link you send by text
-        or email — they tap it on their phone and they&apos;re in (cleaners get a
-        walkthrough first). <b className="text-ink-secondary">Admins</b> see
-        everything; <b className="text-ink-secondary">cleaners</b> get the focused
-        unit view.
+        Add anyone on your team. They get a one-time setup link you send by text
+        or email — they tap it, pick a password, and from then on log in with
+        their email and password on any device.{" "}
+        <b className="text-ink-secondary">Admins</b> see everything;{" "}
+        <b className="text-ink-secondary">cleaners</b> get the focused unit view.
       </p>
 
       {/* Add */}
@@ -304,7 +304,12 @@ export default function TeamClient({ users }: { users: AppUser[] }) {
                     </div>
                     <div className="text-xs text-ink-muted">
                       {[u.phone, u.email].filter(Boolean).join(" · ") || "no contact"}{" "}
-                      · {u.last_login_at ? "logged in" : "not logged in yet"}
+                      ·{" "}
+                      {u.password_set
+                        ? u.last_login_at
+                          ? "active"
+                          : "password set"
+                        : "setup pending"}
                     </div>
                   </div>
 
@@ -350,11 +355,18 @@ export default function TeamClient({ users }: { users: AppUser[] }) {
                     </button>
                     <button
                       type="button"
-                      onClick={() => patch(u.id, { regenerate: true })}
+                      onClick={() => {
+                        if (
+                          confirm(
+                            `Reset ${u.name}'s password? Their current password stops working and they set a new one from the fresh link.`,
+                          )
+                        )
+                          patch(u.id, { reset_password: true });
+                      }}
                       className={actionBtn}
-                      title="Make a new link and kill the old one"
+                      title="Clear their password and issue a new setup link"
                     >
-                      New link
+                      Reset password
                     </button>
                     <button
                       type="button"
