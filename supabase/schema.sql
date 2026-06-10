@@ -70,7 +70,7 @@ create table if not exists consumable_par (
 create table if not exists linen_par (
   id             uuid primary key default gen_random_uuid(),
   unit_id        uuid not null references units(unit_id) on delete cascade,
-  linen_type     text not null,  -- bath_towel | washcloth | hand_towel | makeup_towel | kitchen_towel
+  linen_type     text not null,  -- towels + sized bedding (see lib/constants LINEN_TYPES)
   sort           int  not null default 0,
   par_count      int  not null,
   current_actual int  not null,
@@ -390,7 +390,17 @@ begin
     ('washcloth',           'linen',     10, 40,  12,  40),
     ('hand_towel',          'linen',     11, 20,   6,  20),
     ('makeup_towel',        'linen',     12, 20,   6,  20),
-    ('kitchen_towel',       'linen',     13, 15,   5,  15);
+    ('kitchen_towel',       'linen',     13, 15,   5,  15),
+    -- Sized bedding. Start empty; managers set bulk levels and assign which
+    -- units carry King vs Queen in the linen editor.
+    ('fitted_sheet_queen',  'linen',     14,  0,   8,  24),
+    ('fitted_sheet_king',   'linen',     15,  0,   8,  24),
+    ('flat_sheet_queen',    'linen',     16,  0,   8,  24),
+    ('flat_sheet_king',     'linen',     17,  0,   8,  24),
+    ('quilt_queen',         'linen',     18,  0,   4,  12),
+    ('quilt_king',          'linen',     19,  0,   4,  12),
+    ('pillowcase_queen',    'linen',     20,  0,  16,  48),
+    ('pillowcase_king',     'linen',     21,  0,  16,  48);
 
   -- Compute calculated consumable par + central targets from the inputs.
   perform recalc_par();

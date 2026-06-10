@@ -4,6 +4,7 @@ import { getUnit, listConsumables, listLinens } from "@/lib/inventory";
 import { Container, SetupNotice } from "@/app/components/ui";
 import PullDialog from "@/app/components/PullDialog";
 import CleanFlow from "./CleanFlow";
+import LinenEditor from "./LinenEditor";
 import { getViewer } from "@/lib/auth-context";
 import { listActiveStaffNames } from "@/lib/users-db";
 
@@ -54,6 +55,12 @@ export default async function UnitPage({
             />
           )}
         </div>
+
+        {admin && (
+          <div className="mt-6">
+            <LinenEditor unitId={unit.unit_id} linens={linens} />
+          </div>
+        )}
 
         <div className="mt-6">
           <CleanFlow

@@ -4,15 +4,31 @@
 
 import type { Category, PullReason } from "./types";
 
-export const LINEN_TYPES: { key: string; label: string }[] = [
+// Towels carry no size. Sheets, quilts, and pillowcases come in King and Queen
+// — a unit only stocks the sizes its beds use, so these are added per unit in
+// the linen editor rather than seeded onto every unit.
+export type LinenSize = "King" | "Queen";
+
+export const LINEN_TYPES: { key: string; label: string; size?: LinenSize }[] = [
   { key: "bath_towel", label: "Bath towels" },
   { key: "washcloth", label: "Washcloths" },
   { key: "hand_towel", label: "Hand towels" },
   { key: "makeup_towel", label: "Makeup towels" },
   { key: "kitchen_towel", label: "Kitchen towels" },
+  { key: "fitted_sheet_queen", label: "Fitted sheets (Queen)", size: "Queen" },
+  { key: "fitted_sheet_king", label: "Fitted sheets (King)", size: "King" },
+  { key: "flat_sheet_queen", label: "Flat sheets (Queen)", size: "Queen" },
+  { key: "flat_sheet_king", label: "Flat sheets (King)", size: "King" },
+  { key: "quilt_queen", label: "Quilts (Queen)", size: "Queen" },
+  { key: "quilt_king", label: "Quilts (King)", size: "King" },
+  { key: "pillowcase_queen", label: "Pillowcases (Queen)", size: "Queen" },
+  { key: "pillowcase_king", label: "Pillowcases (King)", size: "King" },
 ];
 
 const LINEN_LABEL = new Map(LINEN_TYPES.map((l) => [l.key, l.label]));
+
+/** Sort index of a linen type by catalog order; unknown keys sort last. */
+export const LINEN_SORT = new Map(LINEN_TYPES.map((l, i) => [l.key, i + 1]));
 
 /** Human label for a linen type key; falls back to the raw key. */
 export function linenLabel(key: string): string {
