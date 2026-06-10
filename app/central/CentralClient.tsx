@@ -41,7 +41,9 @@ export default function CentralClient({ items }: { items: CentralReserveItem[] }
 
 function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"none" | "count" | "targets">("none");
+  // Consumables: "count" (on-hand only; par is calculated). Linens: "edit"
+  // (on-hand + par + reorder together, since linen targets are set by hand).
+  const [mode, setMode] = useState<"none" | "count" | "edit">("none");
   const [countVal, setCountVal] = useState(String(item.quantity_on_hand));
   const [parVal, setParVal] = useState(String(item.par_level));
   const [reorderVal, setReorderVal] = useState(String(item.reorder_point));
@@ -79,6 +81,14 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
     setError("");
   }
 
+  function startEdit() {
+    setMode("edit");
+    setCountVal(String(item.quantity_on_hand));
+    setParVal(String(item.par_level));
+    setReorderVal(String(item.reorder_point));
+    setError("");
+  }
+
   function bumpCount(delta: number) {
     setCountVal((v) => String(Math.max(0, (parseInt(v, 10) || 0) + delta)));
   }
@@ -92,18 +102,34 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
     void send({ count: n });
   }
 
-  function saveTargets() {
+  // Save only the linen fields that actually changed (keeps the audit clean).
+  function saveEdit() {
+    const c = parseInt(countVal, 10);
     const p = parseInt(parVal, 10);
     const r = parseInt(reorderVal, 10);
-    if (!Number.isInteger(p) || p < 0 || !Number.isInteger(r) || r < 0) {
-      setError("Par and reorder must be whole numbers.");
+    if ([c, p, r].some((n) => !Number.isInteger(n) || n < 0)) {
+      setError("On hand, par, and reorder must be whole numbers.");
       return;
     }
-    void send({ par_level: p, reorder_point: r });
+    const body: Record<string, number> = {};
+    if (c !== item.quantity_on_hand) body.count = c;
+    if (p !== item.par_level) body.par_level = p;
+    if (r !== item.reorder_point) body.reorder_point = r;
+    if (Object.keys(body).length === 0) {
+      setMode("none");
+      return;
+    }
+    void send(body);
   }
 
   const fieldCls =
     "tnum w-20 rounded-control border border-line-strong bg-surface-3 px-2.5 py-1.5 text-sm text-ink-primary outline-none focus:border-red";
+  const stepBtn =
+    "h-9 w-9 shrink-0 rounded-control border border-line-strong bg-surface-3 text-lg font-bold text-ink-secondary transition hover:border-red hover:text-ink-primary active:brightness-95";
+  const actionBtn =
+    "rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-secondary transition hover:border-red hover:text-ink-primary";
+  const labelCls =
+    "w-16 text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary";
 
   return (
     <div className={first ? "" : "border-t border-line"}>
@@ -143,24 +169,12 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
         </div>
 
         <div className="flex shrink-0 gap-1.5">
-          <button
-            type="button"
-            onClick={startCount}
-            className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-secondary transition hover:border-red hover:text-ink-primary"
-          >
-            Count
-          </button>
-          {item.category === "linen" && (
-            <button
-              type="button"
-              onClick={() => {
-                setMode("targets");
-                setParVal(String(item.par_level));
-                setReorderVal(String(item.reorder_point));
-                setError("");
-              }}
-              className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-tertiary transition hover:border-red hover:text-ink-primary"
-            >
+          {item.category === "consumable" ? (
+            <button type="button" onClick={startCount} className={actionBtn}>
+              Count
+            </button>
+          ) : (
+            <button type="button" onClick={startEdit} className={actionBtn}>
               Edit
             </button>
           )}
@@ -176,7 +190,7 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
             type="button"
             onClick={() => bumpCount(-1)}
             aria-label="Decrease by one"
-            className="h-9 w-9 rounded-control border border-line-strong bg-surface-3 text-lg font-bold text-ink-secondary transition hover:border-red hover:text-ink-primary active:brightness-95"
+            className={stepBtn}
           >
             −
           </button>
@@ -196,7 +210,7 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
             type="button"
             onClick={() => bumpCount(1)}
             aria-label="Increase by one"
-            className="h-9 w-9 rounded-control border border-line-strong bg-surface-3 text-lg font-bold text-ink-secondary transition hover:border-red hover:text-ink-primary active:brightness-95"
+            className={stepBtn}
           >
             +
           </button>
@@ -223,55 +237,88 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
         </div>
       )}
 
-      {mode === "targets" && (
-        <div className="flex flex-wrap items-center gap-2 border-t border-line bg-surface-1 px-4 py-2.5">
-          <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">
-            Par
-          </label>
-          <input
-            type="number"
-            autoFocus
-            value={parVal}
-            onChange={(e) => setParVal(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") saveTargets();
-              if (e.key === "Escape") setMode("none");
-            }}
-            className={fieldCls}
-          />
-          <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">
-            Reorder
-          </label>
-          <input
-            type="number"
-            value={reorderVal}
-            onChange={(e) => setReorderVal(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") saveTargets();
-              if (e.key === "Escape") setMode("none");
-            }}
-            className={fieldCls}
-          />
-          <button
-            type="button"
-            onClick={saveTargets}
-            disabled={busy}
-            className="rounded-control bg-red px-3 py-1.5 font-display text-xs font-bold text-bone transition hover:bg-red-hover active:brightness-95 disabled:opacity-50"
-          >
-            {busy ? "…" : "Save"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("none")}
-            className="px-2 py-1.5 text-xs text-ink-tertiary hover:text-ink-primary"
-          >
-            Cancel
-          </button>
-          {error && (
-            <span className="text-xs text-state-bad" role="alert">
-              {error}
-            </span>
-          )}
+      {/* Linens: count + targets in one place. */}
+      {mode === "edit" && (
+        <div className="space-y-2 border-t border-line bg-surface-1 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <label className={labelCls}>On hand</label>
+            <button
+              type="button"
+              onClick={() => bumpCount(-1)}
+              aria-label="Decrease by one"
+              className={stepBtn}
+            >
+              −
+            </button>
+            <input
+              type="number"
+              inputMode="numeric"
+              autoFocus
+              value={countVal}
+              onChange={(e) => setCountVal(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") saveEdit();
+                if (e.key === "Escape") setMode("none");
+              }}
+              className={`${fieldCls} text-center`}
+            />
+            <button
+              type="button"
+              onClick={() => bumpCount(1)}
+              aria-label="Increase by one"
+              className={stepBtn}
+            >
+              +
+            </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className={labelCls}>Par</label>
+            <input
+              type="number"
+              value={parVal}
+              onChange={(e) => setParVal(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") saveEdit();
+                if (e.key === "Escape") setMode("none");
+              }}
+              className={fieldCls}
+            />
+            <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">
+              Reorder
+            </label>
+            <input
+              type="number"
+              value={reorderVal}
+              onChange={(e) => setReorderVal(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") saveEdit();
+                if (e.key === "Escape") setMode("none");
+              }}
+              className={fieldCls}
+            />
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={saveEdit}
+              disabled={busy}
+              className="rounded-control bg-red px-4 py-1.5 font-display text-xs font-bold text-bone transition hover:bg-red-hover active:brightness-95 disabled:opacity-50"
+            >
+              {busy ? "Saving…" : "Save"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode("none")}
+              className="px-2 py-1.5 text-xs text-ink-tertiary hover:text-ink-primary"
+            >
+              Cancel
+            </button>
+            {error && (
+              <span className="text-xs text-state-bad" role="alert">
+                {error}
+              </span>
+            )}
+          </div>
         </div>
       )}
     </div>

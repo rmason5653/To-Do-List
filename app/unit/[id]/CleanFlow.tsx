@@ -275,8 +275,8 @@ export default function CleanFlow({
               );
             })}
             <p className="text-[11px] text-ink-muted">
-              A short count flags this unit for loss. Replace from central with a
-              logged pull.
+              A short count flags this unit for loss. Replace from the Stockroom
+              with a logged pull.
             </p>
           </ul>
         )}

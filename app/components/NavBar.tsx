@@ -11,7 +11,7 @@ import ThemeToggle from "./ThemeToggle";
 const LINKS = [
   { href: "/", label: "Home", admin: false, more: false },
   { href: "/restock", label: "Restock", admin: false, more: false },
-  { href: "/central", label: "Central", admin: true, more: false },
+  { href: "/central", label: "Stockroom", admin: true, more: false },
   { href: "/linens", label: "Linens", admin: true, more: false },
   { href: "/guide", label: "Guide", admin: false, more: false },
   { href: "/log", label: "Pull log", admin: true, more: true },

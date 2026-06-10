@@ -75,7 +75,7 @@ export default function GuidePage() {
               <p className="mt-2 text-sm text-ink-secondary">
                 Live in the unit&apos;s owner closet. They run <b>down</b> every
                 turnover. You <b>flag</b> the low ones — they get refilled from
-                central on the <b>weekly restock run</b>, not every clean.
+                the Stockroom on the <b>weekly restock run</b>, not every clean.
               </p>
             </div>
             <div className="rounded-control bg-surface-1 p-4">
@@ -85,13 +85,13 @@ export default function GuidePage() {
               </p>
               <p className="mt-2 text-sm text-ink-secondary">
                 Stay <b>at the unit</b>, washed on site. They should never run
-                low. Only pull from central when one is <b>damaged, stained, or
+                low. Only pull from the Stockroom when one is <b>damaged, stained, or
                 missing</b>.
               </p>
             </div>
           </div>
           <p className="mt-3 rounded-control border border-[rgba(245,184,0,.3)] bg-gold-subtle px-3 py-2 text-sm text-state-warn">
-            Golden rule: anything you take out of central, log it in the app.
+            Golden rule: anything you take out of the Stockroom, log it in the app.
             That keeps every count honest.
           </p>
         </Card>
@@ -122,7 +122,7 @@ export default function GuidePage() {
             </Step>
           </ol>
           <p className="mt-3 text-xs text-ink-muted">
-            You do <b>not</b> drive to central for one low item — flagging is
+            You do <b>not</b> drive to the Stockroom for one low item — flagging is
             enough.
           </p>
         </Card>
@@ -134,12 +134,12 @@ export default function GuidePage() {
               Tap <B>Restock</B> in the top menu.
             </Step>
             <Step n={2}>
-              The <B>Pull from central</B> list totals everything every unit
-              needs — one shopping list. A red <B>central short</B> flag means
+              The <B>Pull from Stockroom</B> list totals everything every unit
+              needs — one shopping list. A red <B>Stockroom short</B> flag means
               buy more of that item first.
             </Step>
             <Step n={3}>
-              Go to central <b>once</b>, grab everything on the list, load up.
+              Go to the Stockroom <b>once</b>, grab everything on the list, load up.
             </Step>
             <Step n={4}>
               Drive to each unit and refill its closet up to par.
@@ -150,7 +150,7 @@ export default function GuidePage() {
             </Step>
           </ol>
           <p className="mt-3 text-sm text-ink-secondary">
-            That one tap refills the unit, subtracts what you took from central,
+            That one tap refills the unit, subtracts what you took from the Stockroom,
             and logs the pull — automatically. You never type numbers.
           </p>
         </Card>
@@ -162,15 +162,15 @@ export default function GuidePage() {
               During the clean, under <b>Linens</b>, tap <B>Flag an issue</B> and
               lower the count for the bad towel. Complete the clean.
             </Step>
-            <Step n={2}>Go to central and grab a replacement.</Step>
+            <Step n={2}>Go to the Stockroom and grab a replacement.</Step>
             <Step n={3}>
-              Open the unit → tap <B>Pull from central</B> (top of the page).
+              Open the unit → tap <B>Pull from Stockroom</B> (top of the page).
               It&apos;s pre-filled to that unit. Pick the towel, quantity, reason{" "}
               <B>Damage replacement</B> or <B>Stain out</B> → <B>Log pull</B>.
             </Step>
             <Step n={4}>
               Take it back to the unit. The app sets that unit back to par and
-              subtracts 1 from central.
+              subtracts 1 from the Stockroom.
             </Step>
           </ol>
           <p className="mt-3 text-xs text-ink-muted">
@@ -180,17 +180,17 @@ export default function GuidePage() {
         </Card>
 
         {/* Urgent consumable */}
-        <Card kicker="When it can't wait" title="Refill a unit from central right now">
+        <Card kicker="When it can't wait" title="Refill a unit from the Stockroom right now">
           <ol className="space-y-3">
-            <Step n={1}>Go to central and grab the item(s).</Step>
+            <Step n={1}>Go to the Stockroom and grab the item(s).</Step>
             <Step n={2}>
-              Open the unit → <B>Pull from central</B> (or <B>Log pull</B> in the
+              Open the unit → <B>Pull from Stockroom</B> (or <B>Log pull</B> in the
               top bar). Pick the item, quantity, reason <B>Weekly restock</B> →{" "}
               <B>Log pull</B>.
             </Step>
             <Step n={3}>
               Take it back. The app refills the unit to par and draws down
-              central.
+              the Stockroom.
             </Step>
           </ol>
           <p className="mt-3 rounded-control border border-[rgba(226,6,2,.3)] bg-red-subtle px-3 py-2 text-xs text-state-bad">
@@ -214,7 +214,7 @@ export default function GuidePage() {
               <span className="inline-block h-3 w-3 rounded-full bg-red" />
               <span className="text-ink-secondary">
                 <b className="text-state-bad">Red</b> — a problem: missing towel,
-                missing parking pass, or central can&apos;t cover the run.
+                missing parking pass, or the Stockroom can&apos;t cover the run.
               </span>
             </li>
             <li className="flex items-center gap-3">

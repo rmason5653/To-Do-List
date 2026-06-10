@@ -196,7 +196,7 @@ export default function RestockClient({
         <div className="mb-3 rounded-card border border-line bg-surface-1 p-5 shadow-e1">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
-              Pull from central
+              Pull from the Stockroom
             </h2>
             <span className="tnum text-[11px] text-ink-muted">
               {grandTotal} units total
@@ -218,7 +218,7 @@ export default function RestockClient({
                   </span>
                   {p.short ? (
                     <span className="rounded-full border border-[rgba(226,6,2,.35)] bg-red-subtle px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.04em] text-state-bad">
-                      central short {p.needed - p.on_hand}
+                      Stockroom short {p.needed - p.on_hand}
                     </span>
                   ) : (
                     <span className="text-[11px] text-ink-muted">
@@ -231,7 +231,7 @@ export default function RestockClient({
           </ul>
           {pickList.some((p) => p.short) && (
             <p className="mt-3 text-xs text-state-bad">
-              Central can&apos;t fully cover the bold items — buy more bulk before the run.
+              The Stockroom can&apos;t fully cover the bold items — buy more bulk before the run.
             </p>
           )}
         </div>
@@ -312,7 +312,7 @@ export default function RestockClient({
                               {i.item_name}
                               {short && (
                                 <span className="rounded-full border border-[rgba(226,6,2,.35)] bg-red-subtle px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.04em] text-state-bad">
-                                  central short
+                                  Stockroom short
                                 </span>
                               )}
                             </span>

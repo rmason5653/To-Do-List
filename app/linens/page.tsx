@@ -44,7 +44,7 @@ export default async function LinensPage() {
       {loadError ? (
         <SetupNotice message={loadError} />
       ) : (
-        <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+        <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-2">
           {sorted.map(({ unit, linens, short }) => {
             const isShort = short.length > 0;
             return (

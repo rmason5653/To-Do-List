@@ -17,7 +17,7 @@ export default async function LogPage() {
 
   return (
     <Container>
-      <PageHeader eyebrow="View 4" title="Central pull log">
+      <PageHeader eyebrow="View 4" title="Stockroom pull log">
         {!loadError && (
           <p className="text-sm text-ink-tertiary">{entries.length} movements</p>
         )}

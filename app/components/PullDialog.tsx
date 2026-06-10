@@ -61,7 +61,7 @@ export default function PullDialog({
     setError("");
     try {
       const res = await fetch("/api/pull");
-      if (!res.ok) throw new Error("Could not load central items.");
+      if (!res.ok) throw new Error("Could not load Stockroom items.");
       const data: Options = await res.json();
       setOpts(data);
       // Seed defaults from prefill / first available option.
@@ -170,12 +170,12 @@ export default function PullDialog({
             ref={dialogRef}
             role="dialog"
             aria-modal="true"
-            aria-label="Log a pull from central"
+            aria-label="Log a pull from the Stockroom"
             className="w-full max-w-md rounded-modal border border-line-strong bg-surface-2 p-6 shadow-e3"
           >
             <div className="flex items-center justify-between">
               <h2 className="font-display text-lg font-bold text-ink-primary">
-                Log a pull from central
+                Log a pull from the Stockroom
               </h2>
               <button
                 type="button"
@@ -187,7 +187,7 @@ export default function PullDialog({
               </button>
             </div>
             <p className="mt-1 text-xs text-ink-muted">
-              Draws down central and resets the unit&apos;s item to par.
+              Draws down the Stockroom and resets the unit&apos;s item to par.
             </p>
 
             {!opts ? (

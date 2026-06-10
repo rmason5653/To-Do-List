@@ -49,7 +49,7 @@ export default async function UnitPage({
           </div>
           {admin && (
             <PullDialog
-              label="Pull from central"
+              label="Pull from Stockroom"
               variant="ghost"
               prefill={{ unit_id: unit.unit_id }}
             />

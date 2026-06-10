@@ -77,7 +77,7 @@ export default function SettingsClient({
     <div className="space-y-6">
       <p className="max-w-2xl text-sm text-ink-tertiary">
         Par is <b className="text-ink-secondary">calculated</b>, never typed.
-        These three inputs drive every closet par, reorder point, and central
+        These three inputs drive every closet par, reorder point, and Stockroom
         target — change one and the math re-runs across all 63 units. Linen par
         is the exception: set it per unit from the{" "}
         <b className="text-ink-secondary">Manage linen par</b> panel on each
@@ -95,7 +95,7 @@ export default function SettingsClient({
             <>
               How many guest turnovers a unit averages in a week — the main
               driver of how fast stock is used. <b className="text-ink-secondary">Raise it</b> and
-              every closet par and central target goes up.
+              every closet par and Stockroom target goes up.
             </>
           }
         />
@@ -113,7 +113,7 @@ export default function SettingsClient({
           }
         />
         <Knob
-          label="Central buffer"
+          label="Stockroom buffer"
           value={central}
           onChange={setCentral}
           field={numField}
@@ -121,7 +121,7 @@ export default function SettingsClient({
           desc={
             <>
               How many <b className="text-ink-secondary">weeks of total usage</b>{" "}
-              to hold in the central reserve. Raise it to keep more bulk stock
+              to hold in the Stockroom. Raise it to keep more bulk stock
               on hand before reordering.
             </>
           }
@@ -130,7 +130,7 @@ export default function SettingsClient({
 
       <p className="tnum max-w-2xl text-[11px] leading-relaxed text-ink-faint">
         closet par = leave-behind × (turnovers + buffer) &nbsp;·&nbsp; reorder =
-        leave-behind × buffer &nbsp;·&nbsp; central = weekly use × central buffer
+        leave-behind × buffer &nbsp;·&nbsp; stockroom = weekly use × stockroom buffer
       </p>
 
       {/* Leave-behind + live calculated par */}

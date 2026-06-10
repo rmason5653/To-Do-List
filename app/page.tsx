@@ -148,7 +148,7 @@ export default async function HomePage() {
             href="/restock"
           />
           <StatCard
-            label="Central items low"
+            label="Stockroom items low"
             value={counts.centralLow}
             tone={counts.centralLow > 0 ? "warn" : "ok"}
             hint="Time to buy bulk"

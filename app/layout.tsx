@@ -35,7 +35,7 @@ const americanCaptain = localFont({
 export const metadata: Metadata = {
   title: "Par — Mason Homes Inventory",
   description:
-    "Par vs actual across every unit and central. Every central pull logged.",
+    "Par vs actual across every unit and the Stockroom. Every Stockroom pull logged.",
 };
 
 export const viewport: Viewport = {
