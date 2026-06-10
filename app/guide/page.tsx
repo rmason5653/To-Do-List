@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { Container, PageHeader } from "@/app/components/ui";
 
-export const dynamic = "force-static";
+// Must be dynamic: the shared layout reads the login cookie to pick the nav
+// (admin vs cleaner) and theme. Prerendering this route statically would bake
+// in "no session" and demote a manager to the cleaner view.
+export const dynamic = "force-dynamic";
 
 // A standalone, no-login-needed walkthrough for cleaners. Mirrors the real
 // in-app labels so the steps match what they see.
