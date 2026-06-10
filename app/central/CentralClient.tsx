@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { linenLabel } from "@/lib/constants";
 import type { Category, CentralReserveItem } from "@/lib/types";
@@ -105,7 +106,16 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
           <div className="tnum text-[11px] text-ink-muted">
             par {item.par_level} · reorder {item.reorder_point}
             {item.category === "consumable" && (
-              <span className="ml-1 text-ink-faint">· calculated</span>
+              <>
+                {" · "}
+                <Link
+                  href="/settings"
+                  title="This target is calculated from leave-behind × turnovers. Change it in Settings."
+                  className="text-ink-faint underline decoration-dotted underline-offset-2 transition hover:text-ink-tertiary"
+                >
+                  calculated
+                </Link>
+              </>
             )}
           </div>
         </div>

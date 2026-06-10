@@ -1,37 +1,56 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import PullDialog from "./PullDialog";
 import ThemeToggle from "./ThemeToggle";
 
 // admin: only managers/owner see it; cleaners get the focused set.
+// more: kept off the main bar (under "More") so the daily-use tabs stay short.
 const LINKS = [
-  { href: "/", label: "Home", admin: false },
-  { href: "/restock", label: "Restock", admin: false },
-  { href: "/central", label: "Central", admin: true },
-  { href: "/linens", label: "Linens", admin: true },
-  { href: "/log", label: "Pull log", admin: true },
-  { href: "/parking", label: "Parking", admin: true },
-  { href: "/team", label: "Team", admin: true },
-  { href: "/settings", label: "Settings", admin: true },
-  { href: "/guide", label: "Guide", admin: false },
+  { href: "/", label: "Home", admin: false, more: false },
+  { href: "/restock", label: "Restock", admin: false, more: false },
+  { href: "/central", label: "Central", admin: true, more: false },
+  { href: "/linens", label: "Linens", admin: true, more: false },
+  { href: "/guide", label: "Guide", admin: false, more: false },
+  { href: "/log", label: "Pull log", admin: true, more: true },
+  { href: "/parking", label: "Parking", admin: true, more: true },
+  { href: "/team", label: "Team", admin: true, more: true },
+  { href: "/settings", label: "Settings", admin: true, more: true },
 ];
 
 export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef<HTMLDivElement>(null);
+
+  // Close the More dropdown on an outside click.
+  useEffect(() => {
+    if (!moreOpen) return;
+    function onDocClick(e: MouseEvent) {
+      if (moreRef.current && !moreRef.current.contains(e.target as Node)) {
+        setMoreOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [moreOpen]);
 
   // The login screen is its own full-bleed splash.
   if (pathname === "/login") return null;
 
   const links = LINKS.filter((l) => !l.admin || isAdmin);
+  const inlineLinks = links.filter((l) => !l.more);
+  const moreLinks = links.filter((l) => l.more);
 
   function isActive(href: string) {
     if (href === "/") return pathname === "/" || pathname.startsWith("/unit");
     return pathname === href || pathname.startsWith(`${href}/`);
   }
+
+  const moreActive = moreLinks.some((l) => isActive(l.href));
 
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-surface-4/85 backdrop-blur-[8px]">
@@ -51,7 +70,7 @@ export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
 
         {/* Desktop links */}
         <nav className="hidden flex-1 items-center gap-1 overflow-x-auto md:flex">
-          {links.map((l) => (
+          {inlineLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -64,6 +83,60 @@ export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
               {l.label}
             </Link>
           ))}
+
+          {moreLinks.length > 0 && (
+            <div className="relative shrink-0" ref={moreRef}>
+              <button
+                type="button"
+                onClick={() => setMoreOpen((o) => !o)}
+                aria-expanded={moreOpen}
+                aria-haspopup="menu"
+                className={`flex items-center gap-1 rounded-control px-3 py-1.5 text-sm font-medium transition duration-150 ease-out ${
+                  moreActive || moreOpen
+                    ? "bg-surface-2 text-ink-primary"
+                    : "text-ink-tertiary hover:text-ink-secondary"
+                }`}
+              >
+                More
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                  className={`transition-transform duration-150 ${moreOpen ? "rotate-180" : ""}`}
+                >
+                  <path d="M5 7.5l5 5 5-5" />
+                </svg>
+              </button>
+              {moreOpen && (
+                <div
+                  role="menu"
+                  className="absolute right-0 top-full mt-1 min-w-[10rem] rounded-card border border-line bg-surface-4/95 p-1 shadow-e1 backdrop-blur-[8px]"
+                >
+                  {moreLinks.map((l) => (
+                    <Link
+                      key={l.href}
+                      href={l.href}
+                      role="menuitem"
+                      onClick={() => setMoreOpen(false)}
+                      className={`block rounded-control px-3 py-2 text-sm font-medium transition ${
+                        isActive(l.href)
+                          ? "bg-surface-2 text-ink-primary"
+                          : "text-ink-secondary hover:bg-surface-3 hover:text-ink-primary"
+                      }`}
+                    >
+                      {l.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-2 md:ml-0">
