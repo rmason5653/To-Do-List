@@ -41,8 +41,9 @@ export default function CentralClient({ items }: { items: CentralReserveItem[] }
 
 function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
   const router = useRouter();
-  const [mode, setMode] = useState<"none" | "receive" | "targets">("none");
+  const [mode, setMode] = useState<"none" | "receive" | "count" | "targets">("none");
   const [receiveVal, setReceiveVal] = useState("");
+  const [countVal, setCountVal] = useState(String(item.quantity_on_hand));
   const [parVal, setParVal] = useState(String(item.par_level));
   const [reorderVal, setReorderVal] = useState(String(item.reorder_point));
   const [busy, setBusy] = useState(false);
@@ -83,6 +84,25 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
     void send({ add: n });
   }
 
+  function startCount() {
+    setMode("count");
+    setCountVal(String(item.quantity_on_hand));
+    setError("");
+  }
+
+  function bumpCount(delta: number) {
+    setCountVal((v) => String(Math.max(0, (parseInt(v, 10) || 0) + delta)));
+  }
+
+  function saveCount() {
+    const n = parseInt(countVal, 10);
+    if (!Number.isInteger(n) || n < 0) {
+      setError("Count must be zero or a positive whole number.");
+      return;
+    }
+    void send({ count: n });
+  }
+
   function saveTargets() {
     const p = parseInt(parVal, 10);
     const r = parseInt(reorderVal, 10);
@@ -121,9 +141,14 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
         </div>
 
         <div className="w-20 text-right">
-          <div className="tnum font-display text-2xl font-extrabold tracking-[-0.03em] text-ink-primary">
+          <button
+            type="button"
+            onClick={startCount}
+            title="Tap to set the counted amount"
+            className="tnum font-display text-2xl font-extrabold tracking-[-0.03em] text-ink-primary underline-offset-4 transition hover:underline"
+          >
             {item.quantity_on_hand}
-          </div>
+          </button>
           {toPar > 0 && (
             <div className="tnum text-[11px] font-semibold text-state-warn">buy {toPar}</div>
           )}
@@ -136,12 +161,19 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
         <div className="flex shrink-0 gap-1.5">
           <button
             type="button"
+            onClick={startCount}
+            className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-secondary transition hover:border-red hover:text-ink-primary"
+          >
+            Count
+          </button>
+          <button
+            type="button"
             onClick={() => {
               setMode("receive");
               setReceiveVal("");
               setError("");
             }}
-            className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-secondary transition hover:border-red hover:text-ink-primary"
+            className="rounded-control border border-line-strong bg-surface-3 px-2.5 py-1 text-xs font-semibold text-ink-tertiary transition hover:border-red hover:text-ink-primary"
           >
             Receive
           </button>
@@ -185,6 +217,62 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
             className="rounded-control bg-red px-3 py-1.5 font-display text-xs font-bold text-bone transition hover:bg-red-hover active:brightness-95 disabled:opacity-50"
           >
             {busy ? "…" : "Save"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode("none")}
+            className="px-2 py-1.5 text-xs text-ink-tertiary hover:text-ink-primary"
+          >
+            Cancel
+          </button>
+          {error && (
+            <span className="text-xs text-state-bad" role="alert">
+              {error}
+            </span>
+          )}
+        </div>
+      )}
+
+      {mode === "count" && (
+        <div className="flex flex-wrap items-center gap-2 border-t border-line bg-surface-1 px-4 py-2.5">
+          <label className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">
+            Counted on hand
+          </label>
+          <button
+            type="button"
+            onClick={() => bumpCount(-1)}
+            aria-label="Decrease by one"
+            className="h-9 w-9 rounded-control border border-line-strong bg-surface-3 text-lg font-bold text-ink-secondary transition hover:border-red hover:text-ink-primary active:brightness-95"
+          >
+            −
+          </button>
+          <input
+            type="number"
+            inputMode="numeric"
+            autoFocus
+            value={countVal}
+            onChange={(e) => setCountVal(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") saveCount();
+              if (e.key === "Escape") setMode("none");
+            }}
+            className={`${fieldCls} text-center`}
+          />
+          <button
+            type="button"
+            onClick={() => bumpCount(1)}
+            aria-label="Increase by one"
+            className="h-9 w-9 rounded-control border border-line-strong bg-surface-3 text-lg font-bold text-ink-secondary transition hover:border-red hover:text-ink-primary active:brightness-95"
+          >
+            +
+          </button>
+          <button
+            type="button"
+            onClick={saveCount}
+            disabled={busy}
+            className="rounded-control bg-red px-3 py-1.5 font-display text-xs font-bold text-bone transition hover:bg-red-hover active:brightness-95 disabled:opacity-50"
+          >
+            {busy ? "…" : "Save count"}
           </button>
           <button
             type="button"

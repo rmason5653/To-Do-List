@@ -4,8 +4,9 @@ import { isAdmin } from "@/lib/auth-context";
 
 export const dynamic = "force-dynamic";
 
-// Purchasing actions on a central reserve item: receive bulk stock (add) and/or
-// adjust the reorder point or par (target) level.
+// Stock actions on a central reserve item: receive a delivery (add), set the
+// counted on-hand amount (count, absolute), and/or adjust the reorder point or
+// par (target) level.
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
