@@ -15,6 +15,7 @@ const LINKS = [
   { href: "/linens", label: "Linens", admin: true, more: false },
   { href: "/guide", label: "Guide", admin: false, more: false },
   { href: "/log", label: "Pull log", admin: true, more: true },
+  { href: "/activity", label: "Activity", admin: true, more: true },
   { href: "/parking", label: "Parking", admin: true, more: true },
   { href: "/team", label: "Team", admin: true, more: true },
   { href: "/settings", label: "Settings", admin: true, more: true },

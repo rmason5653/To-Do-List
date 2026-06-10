@@ -95,3 +95,14 @@ export interface PullLogEntry {
   destination_name: string | null;
   reason: PullReason;
 }
+
+/** A logged manual stock change (count, target, or linen edit) — who/what/when. */
+export interface StockAuditEntry {
+  id: string;
+  at: string;
+  actor: string;
+  action: string;
+  item: string | null;
+  unit_name: string | null;
+  detail: string | null;
+}

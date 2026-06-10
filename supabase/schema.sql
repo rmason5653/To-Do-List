@@ -52,6 +52,19 @@ create table if not exists app_users (
 );
 create index if not exists app_users_invite_idx on app_users (invite_token);
 
+-- Audit trail of manual stock changes (central counts/targets, linen edits).
+create table if not exists stock_audit (
+  id        uuid primary key default gen_random_uuid(),
+  at        timestamptz not null default now(),
+  actor     text not null default 'Unknown',
+  action    text not null,
+  item      text,
+  unit_name text,
+  detail    text
+);
+create index if not exists stock_audit_at_idx on stock_audit (at desc);
+alter table stock_audit enable row level security;
+
 -- CONSUMABLE PAR: per unit, per item. current_actual is the cleaner's signal.
 -- par = leave_behind * 4; reorder_point = one leave_behind.
 create table if not exists consumable_par (

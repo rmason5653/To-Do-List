@@ -1,14 +1,18 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
-import { isAdmin } from "@/lib/auth-context";
-import { LINEN_SORT } from "@/lib/constants";
+import { getViewer } from "@/lib/auth-context";
+import { LINEN_SORT, linenLabel } from "@/lib/constants";
+import { getUnit } from "@/lib/inventory";
+import { logAudit } from "@/lib/audit";
 
 export const dynamic = "force-dynamic";
 
 // Managers set per-unit linen par counts and choose which sized bedding each
-// unit carries (King vs Queen). Cleaners never touch these numbers.
+// unit carries (King vs Queen). Cleaners never touch these numbers. Every
+// change is recorded to the audit log.
 export async function POST(req: Request) {
-  if (!(await isAdmin()))
+  const viewer = await getViewer();
+  if (viewer?.role !== "admin")
     return NextResponse.json({ error: "Admins only." }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
@@ -27,7 +31,7 @@ export async function POST(req: Request) {
     const sb = getSupabase();
     const { data: existing } = await sb
       .from("linen_par")
-      .select("id")
+      .select("id, par_count")
       .eq("unit_id", unitId)
       .eq("linen_type", linenType)
       .maybeSingle();
@@ -50,6 +54,16 @@ export async function POST(req: Request) {
       });
       if (error) throw new Error(error.message);
     }
+
+    const unit = await getUnit(unitId).catch(() => null);
+    await logAudit({
+      actor: viewer?.name ?? "Unknown",
+      action: existing ? "Linen par" : "Linen added",
+      item: linenLabel(linenType),
+      unit_name: unit?.name ?? null,
+      detail: existing ? `${existing.par_count} → ${par}` : `par ${par}`,
+    });
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
@@ -57,7 +71,8 @@ export async function POST(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  if (!(await isAdmin()))
+  const viewer = await getViewer();
+  if (viewer?.role !== "admin")
     return NextResponse.json({ error: "Admins only." }, { status: 403 });
 
   const body = await req.json().catch(() => ({}));
@@ -74,6 +89,15 @@ export async function DELETE(req: Request) {
       .eq("unit_id", unitId)
       .eq("linen_type", linenType);
     if (error) throw new Error(error.message);
+
+    const unit = await getUnit(unitId).catch(() => null);
+    await logAudit({
+      actor: viewer?.name ?? "Unknown",
+      action: "Linen removed",
+      item: linenLabel(linenType),
+      unit_name: unit?.name ?? null,
+    });
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });

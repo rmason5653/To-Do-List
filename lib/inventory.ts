@@ -6,6 +6,7 @@ import type {
   LinenPar,
   PullLogEntry,
   Settings,
+  StockAuditEntry,
   Unit,
 } from "./types";
 
@@ -102,6 +103,18 @@ export async function listPullLog(limit = 200): Promise<PullLogEntry[]> {
     .limit(limit);
   if (error) throw new Error(error.message);
   return (data ?? []) as PullLogEntry[];
+}
+
+/** Recent manual stock changes for the admin Activity view, newest first. */
+export async function listStockAudit(limit = 200): Promise<StockAuditEntry[]> {
+  const sb = getSupabase();
+  const { data, error } = await sb
+    .from("stock_audit")
+    .select("*")
+    .order("at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as StockAuditEntry[];
 }
 
 export interface RecentClean {
