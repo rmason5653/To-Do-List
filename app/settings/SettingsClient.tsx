@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import type { ConsumableItem, Settings } from "@/lib/types";
 
@@ -77,36 +77,61 @@ export default function SettingsClient({
     <div className="space-y-6">
       <p className="max-w-2xl text-sm text-ink-tertiary">
         Par is <b className="text-ink-secondary">calculated</b>, never typed.
-        Change an input here and every closet par, reorder point, and central
-        target recalculates across all 63 units. Linen par is set per unit on
-        the unit manager.
+        These three inputs drive every closet par, reorder point, and central
+        target — change one and the math re-runs across all 63 units. Linen par
+        is the exception: set it per unit from the{" "}
+        <b className="text-ink-secondary">Manage linen par</b> panel on each
+        unit&apos;s page.
       </p>
 
-      {/* Global knobs */}
+      {/* Global knobs — each explains what it means and what raising it does. */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Knob
           label="Turnovers / week"
-          hint="Default per unit"
           value={freq}
           onChange={setFreq}
           field={numField}
+          desc={
+            <>
+              How many guest turnovers a unit averages in a week — the main
+              driver of how fast stock is used. <b className="text-ink-secondary">Raise it</b> and
+              every closet par and central target goes up.
+            </>
+          }
         />
         <Knob
           label="Buffer turnovers"
-          hint="Safety cushion"
           value={buffer}
           onChange={setBuffer}
           field={numField}
+          desc={
+            <>
+              Extra turnovers of stock kept on hand as a cushion. It also sets
+              the <b className="text-ink-secondary">reorder point</b> — raise it
+              to restock earlier and carry more slack.
+            </>
+          }
         />
         <Knob
           label="Central buffer"
-          hint="Weeks held at central"
           value={central}
           onChange={setCentral}
           field={numField}
           step="0.5"
+          desc={
+            <>
+              How many <b className="text-ink-secondary">weeks of total usage</b>{" "}
+              to hold in the central reserve. Raise it to keep more bulk stock
+              on hand before reordering.
+            </>
+          }
         />
       </div>
+
+      <p className="tnum max-w-2xl text-[11px] leading-relaxed text-ink-faint">
+        closet par = leave-behind × (turnovers + buffer) &nbsp;·&nbsp; reorder =
+        leave-behind × buffer &nbsp;·&nbsp; central = weekly use × central buffer
+      </p>
 
       {/* Leave-behind + live calculated par */}
       <div className="overflow-hidden rounded-card border border-line bg-surface-2 shadow-e1">
@@ -167,14 +192,14 @@ export default function SettingsClient({
 
 function Knob({
   label,
-  hint,
+  desc,
   value,
   onChange,
   field,
   step,
 }: {
   label: string;
-  hint: string;
+  desc: ReactNode;
   value: string;
   onChange: (v: string) => void;
   field: string;
@@ -182,18 +207,20 @@ function Knob({
 }) {
   return (
     <div className="rounded-card border border-line bg-surface-2 p-4 shadow-e1">
-      <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">
-        {label}
+      <div className="flex items-center justify-between gap-2">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.06em] text-ink-tertiary">
+          {label}
+        </div>
+        <input
+          type="number"
+          min={0}
+          step={step}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`${field} w-16`}
+        />
       </div>
-      <input
-        type="number"
-        min={0}
-        step={step}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className={`${field} mt-2 w-24`}
-      />
-      <div className="mt-1 text-xs text-ink-muted">{hint}</div>
+      <p className="mt-2 text-xs leading-relaxed text-ink-muted">{desc}</p>
     </div>
   );
 }
