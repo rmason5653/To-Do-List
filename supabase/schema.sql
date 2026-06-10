@@ -400,7 +400,10 @@ begin
     ('quilt_queen',         'linen',     18,  0,   4,  12),
     ('quilt_king',          'linen',     19,  0,   4,  12),
     ('pillowcase_queen',    'linen',     20,  0,  16,  48),
-    ('pillowcase_king',     'linen',     21,  0,  16,  48);
+    ('pillowcase_king',     'linen',     21,  0,  16,  48),
+    ('fitted_sheet_twin',   'linen',     22,  0,   8,  24),
+    ('flat_sheet_twin',     'linen',     23,  0,   8,  24),
+    ('quilt_twin',          'linen',     24,  0,   4,  12);
 
   -- Compute calculated consumable par + central targets from the inputs.
   perform recalc_par();

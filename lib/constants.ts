@@ -7,7 +7,7 @@ import type { Category, PullReason } from "./types";
 // Towels carry no size. Sheets, quilts, and pillowcases come in King and Queen
 // — a unit only stocks the sizes its beds use, so these are added per unit in
 // the linen editor rather than seeded onto every unit.
-export type LinenSize = "King" | "Queen";
+export type LinenSize = "King" | "Queen" | "Twin";
 
 export const LINEN_TYPES: { key: string; label: string; size?: LinenSize }[] = [
   { key: "bath_towel", label: "Bath towels" },
@@ -23,6 +23,9 @@ export const LINEN_TYPES: { key: string; label: string; size?: LinenSize }[] = [
   { key: "quilt_king", label: "Quilts (King)", size: "King" },
   { key: "pillowcase_queen", label: "Pillowcases (Queen)", size: "Queen" },
   { key: "pillowcase_king", label: "Pillowcases (King)", size: "King" },
+  { key: "fitted_sheet_twin", label: "Fitted sheets (Twin)", size: "Twin" },
+  { key: "flat_sheet_twin", label: "Flat sheets (Twin)", size: "Twin" },
+  { key: "quilt_twin", label: "Quilts (Twin)", size: "Twin" },
 ];
 
 const LINEN_LABEL = new Map(LINEN_TYPES.map((l) => [l.key, l.label]));
