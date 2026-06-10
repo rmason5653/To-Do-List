@@ -45,3 +45,23 @@ export async function sendInviteEmail(
     throw new Error(`Email failed (${res.status}): ${detail.slice(0, 200)}`);
   }
 }
+
+/** Generic send (used for the inventory digest). No-ops if email isn't set up. */
+export async function sendEmail(
+  to: string | string[],
+  subject: string,
+  html: string,
+): Promise<void> {
+  const key = process.env.RESEND_API_KEY;
+  if (!key) return;
+  const from = process.env.EMAIL_FROM || "Mason Homes Par <onboarding@resend.dev>";
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from, to, subject, html }),
+  });
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`Email failed (${res.status}): ${detail.slice(0, 200)}`);
+  }
+}

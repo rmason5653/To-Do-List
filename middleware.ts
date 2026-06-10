@@ -3,10 +3,10 @@ import { SESSION_COOKIE, verifySession } from "@/lib/users";
 
 // Open: the login screen, its endpoint, and the invite link (a new cleaner
 // has no session yet — the token in the URL is the credential).
-const OPEN_PATHS = ["/login", "/api/login", "/api/setup", "/join"];
+const OPEN_PATHS = ["/login", "/api/login", "/api/setup", "/api/cron", "/join"];
 
 // Admin-only areas.
-const ADMIN_PATHS = ["/settings", "/team"];
+const ADMIN_PATHS = ["/settings", "/team", "/activity"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

@@ -16,6 +16,7 @@ import RestockClient, {
   type PickItem,
   type RestockRun,
 } from "./RestockClient";
+import DigestButton from "./DigestButton";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,7 @@ export default async function RestockPage() {
   let pickList: PickItem[] = [];
   let staffNames: string[] = [];
   let viewerName = "";
+  let admin = false;
   let loadError: string | null = null;
 
   try {
@@ -36,6 +38,7 @@ export default async function RestockPage() {
     ]);
     staffNames = names;
     viewerName = viewer?.name ?? "";
+    admin = viewer?.role === "admin";
 
     runs = buildRestockRun(units, cons).map((r) => ({
       unit_id: r.unit.unit_id,
@@ -75,11 +78,14 @@ export default async function RestockPage() {
   return (
     <Container>
       <PageHeader eyebrow="View 1" title="Restock run">
-        {runs.length > 0 && (
-          <p className="text-sm text-ink-tertiary">
-            {runs.length} {runs.length === 1 ? "unit" : "units"} below reorder
-          </p>
-        )}
+        <div className="flex flex-col items-start gap-2 sm:items-end">
+          {runs.length > 0 && (
+            <p className="text-sm text-ink-tertiary">
+              {runs.length} {runs.length === 1 ? "unit" : "units"} below reorder
+            </p>
+          )}
+          {admin && <DigestButton />}
+        </div>
       </PageHeader>
 
       {loadError ? (
