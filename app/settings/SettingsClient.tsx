@@ -133,33 +133,32 @@ export default function SettingsClient({
         leave-behind × buffer &nbsp;·&nbsp; stockroom = weekly use × stockroom buffer
       </p>
 
-      {/* Leave-behind + live calculated par */}
+      {/* Leave-behind + live calculated par. Compact columns on phones so the
+          row never overflows; roomier from sm up. */}
       <div className="overflow-hidden rounded-card border border-line bg-surface-2 shadow-e1">
-        <div className="grid grid-cols-[1fr_6rem_5rem_5rem] gap-3 border-b border-line px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.06em] text-ink-muted">
+        <div className="grid grid-cols-[1fr_3.5rem_2.75rem_3rem] gap-2 border-b border-line px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.06em] text-ink-muted sm:grid-cols-[1fr_6rem_5rem_5rem] sm:gap-3 sm:px-4">
           <span>Consumable</span>
-          <span className="text-right">Leave-behind</span>
+          <span className="text-right">Leave</span>
           <span className="text-right">Par</span>
           <span className="text-right">Reorder</span>
         </div>
         {preview.map((p, idx) => (
           <div
             key={p.item_name}
-            className={`grid grid-cols-[1fr_6rem_5rem_5rem] items-center gap-3 px-4 py-2.5 text-sm ${
+            className={`grid grid-cols-[1fr_3.5rem_2.75rem_3rem] items-center gap-2 px-3 py-2.5 text-sm sm:grid-cols-[1fr_6rem_5rem_5rem] sm:gap-3 sm:px-4 ${
               idx > 0 ? "border-t border-line" : ""
             }`}
           >
-            <span className="text-ink-primary">{p.item_name}</span>
-            <span className="flex justify-end">
-              <input
-                type="number"
-                min={0}
-                value={lb[p.item_name] ?? ""}
-                onChange={(e) =>
-                  setLb((prev) => ({ ...prev, [p.item_name]: e.target.value }))
-                }
-                className={numField}
-              />
-            </span>
+            <span className="min-w-0 break-words text-ink-primary">{p.item_name}</span>
+            <input
+              type="number"
+              min={0}
+              value={lb[p.item_name] ?? ""}
+              onChange={(e) =>
+                setLb((prev) => ({ ...prev, [p.item_name]: e.target.value }))
+              }
+              className="tnum w-full rounded-control border border-line-strong bg-surface-3 px-2 py-1.5 text-sm text-ink-primary outline-none focus:border-red"
+            />
             <span className="tnum text-right font-display font-bold text-ink-primary">
               {p.par}
             </span>
