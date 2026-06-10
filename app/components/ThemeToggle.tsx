@@ -49,18 +49,11 @@ export default function ThemeToggle() {
       title={theme === "dark" ? "Light mode" : "Dark mode"}
       className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control border border-line-strong bg-surface-3 text-ink-secondary transition duration-150 ease-out hover:border-red hover:text-ink-primary"
     >
-      {theme === "dark" ? (
-        // Sun — tap for light.
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M19 5l-1.5 1.5M6.5 17.5L5 19" />
-        </svg>
-      ) : (
-        // Moon — tap for dark.
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
-        </svg>
-      )}
+      {/* Light/dark contrast glyph — circle outline with one half filled. */}
+      <svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" strokeWidth="2" />
+        <path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor" />
+      </svg>
     </button>
   );
 }
