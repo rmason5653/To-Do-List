@@ -68,8 +68,9 @@ export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
           </span>
         </Link>
 
-        {/* Desktop links */}
-        <nav className="hidden flex-1 items-center gap-1 overflow-x-auto md:flex">
+        {/* Desktop links. No overflow clip here — it would hide the More menu,
+            which is absolutely positioned and drops below the bar. */}
+        <nav className="hidden flex-1 items-center gap-1 md:flex">
           {inlineLinks.map((l) => (
             <Link
               key={l.href}
@@ -116,7 +117,7 @@ export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
               {moreOpen && (
                 <div
                   role="menu"
-                  className="absolute right-0 top-full mt-1 min-w-[10rem] rounded-card border border-line bg-surface-4/95 p-1 shadow-e1 backdrop-blur-[8px]"
+                  className="absolute right-0 top-full z-50 mt-1 min-w-[10rem] rounded-card border border-line bg-surface-4/95 p-1 shadow-e1 backdrop-blur-[8px]"
                 >
                   {moreLinks.map((l) => (
                     <Link
