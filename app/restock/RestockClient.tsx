@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import StaffSelect from "@/app/components/StaffSelect";
 
@@ -39,6 +39,7 @@ export default function RestockClient({
   const router = useRouter();
   const [staff, setStaff] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [busyProperty, setBusyProperty] = useState<string | null>(null);
   const [allBusy, setAllBusy] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [error, setError] = useState("");
@@ -49,9 +50,35 @@ export default function RestockClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Items central can't fully cover — surfaced on each unit row so "Refill to
+  // par" doesn't silently claim stock the run didn't actually have.
+  const shortSet = useMemo(
+    () => new Set(pickList.filter((p) => p.short).map((p) => p.item_name)),
+    [pickList],
+  );
+
+  // A restock run is a driving route: do every low unit at one property before
+  // moving on. Group the cards the way the run is actually walked.
+  const groups = useMemo(() => {
+    const m = new Map<string, RestockRun[]>();
+    for (const r of runs) {
+      const arr = m.get(r.property_name) ?? [];
+      arr.push(r);
+      m.set(r.property_name, arr);
+    }
+    return [...m.entries()].map(([property, units]) => ({
+      property,
+      units,
+      total: units.reduce(
+        (s, u) => s + u.items.reduce((t, i) => t + i.needed, 0),
+        0,
+      ),
+    }));
+  }, [runs]);
+
   function requireStaff(): boolean {
     if (!staff.trim()) {
-      setError("Enter your name first so the pulls are logged to you.");
+      setError("Pick your name first so the pulls are logged to you.");
       return false;
     }
     localStorage.setItem(STAFF_KEY, staff.trim());
@@ -84,8 +111,34 @@ export default function RestockClient({
     }
   }
 
+  async function restockProperty(property: string, units: RestockRun[]) {
+    if (!requireStaff()) return;
+    setBusyProperty(property);
+    setError("");
+    let done = 0;
+    try {
+      for (const run of units) {
+        await restockUnit(run.unit_id);
+        done += 1;
+      }
+      router.refresh();
+    } catch (e) {
+      setError(`${(e as Error).message} (${done}/${units.length} done at ${property})`);
+    } finally {
+      setBusyProperty(null);
+    }
+  }
+
   async function restockAll() {
     if (!requireStaff()) return;
+    // Marks every unit done at once — guard it so an early tap can't claim a
+    // run that hasn't physically happened yet.
+    if (
+      !window.confirm(
+        `Mark all ${runs.length} units refilled to par? Only do this after you've physically restocked them.`,
+      )
+    )
+      return;
     setAllBusy(true);
     setError("");
     let done = 0;
@@ -105,7 +158,7 @@ export default function RestockClient({
     }
   }
 
-  const busy = allBusy || busyId !== null;
+  const busy = allBusy || busyId !== null || busyProperty !== null;
   const grandTotal = pickList.reduce((s, p) => s + p.needed, 0);
 
   return (
@@ -140,7 +193,7 @@ export default function RestockClient({
 
       {/* Central pick list — load the van once. */}
       {pickList.length > 0 && (
-        <div className="mb-5 rounded-card border border-line bg-surface-1 p-5 shadow-e1">
+        <div className="mb-3 rounded-card border border-line bg-surface-1 p-5 shadow-e1">
           <div className="flex items-baseline justify-between gap-3">
             <h2 className="font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
               Pull from central
@@ -150,7 +203,7 @@ export default function RestockClient({
             </span>
           </div>
           <p className="mt-1 text-xs text-ink-muted">
-            Everything this run needs, totalled across all units.
+            Load the van once — everything this run needs, totalled across all units.
           </p>
           <ul className="mt-3 grid grid-cols-1 gap-x-8 gap-y-1 sm:grid-cols-2">
             {pickList.map((p) => (
@@ -184,53 +237,101 @@ export default function RestockClient({
         </div>
       )}
 
-      {/* Per-unit cards. */}
-      <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
-        {runs.map((run) => {
-          const total = run.items.reduce((s, i) => s + i.needed, 0);
-          return (
-            <div
-              key={run.unit_id}
-              className="rounded-card border border-line bg-surface-2 p-5 shadow-e1"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <div className="font-display text-base font-bold text-ink-primary">
-                    {run.unit_name}
-                  </div>
-                  <div className="tnum text-[11px] text-ink-muted">
-                    {run.items.length} items · {total} units to pull
-                  </div>
-                </div>
+      {/* Linens ride a different track — replaced on loss/damage, not topped up
+          weekly — so they're not part of this consumables run. */}
+      <p className="mb-5 text-xs text-ink-muted">
+        Towels and bedding aren&apos;t in this run — they&apos;re replaced on
+        loss or damage from the{" "}
+        <a href="/linens" className="text-ink-tertiary underline underline-offset-2 hover:text-ink-secondary">
+          Linens
+        </a>{" "}
+        tab.
+      </p>
+
+      {/* Per-property sections — walk the run address by address. */}
+      <div className="space-y-6">
+        {groups.map((group) => (
+          <section key={group.property}>
+            <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
+              <h2 className="font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+                {group.property}
+                <span className="ml-2 tnum text-[11px] font-normal text-ink-muted">
+                  {group.units.length} {group.units.length === 1 ? "unit" : "units"} · {group.total} to pull
+                </span>
+              </h2>
+              {group.units.length > 1 && (
                 <button
                   type="button"
-                  onClick={() => complete(run)}
+                  onClick={() => restockProperty(group.property, group.units)}
                   disabled={busy}
-                  className="shrink-0 rounded-control bg-red px-3.5 py-2 font-display text-xs font-bold text-bone transition duration-150 ease-out hover:bg-red-hover active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-control border border-line-strong bg-surface-3 px-3 py-1.5 font-display text-xs font-bold text-ink-secondary transition duration-150 ease-out hover:border-red hover:text-ink-primary active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {busyId === run.unit_id ? "Restocking…" : "Refill to par"}
+                  {busyProperty === group.property
+                    ? "Refilling…"
+                    : `Refill all ${group.units.length} here`}
                 </button>
-              </div>
-
-              <ul className="mt-3 divide-y divide-[rgba(112,113,118,.14)]">
-                {run.items.map((i) => (
-                  <li
-                    key={i.item_name}
-                    className="flex items-center justify-between gap-3 py-2 text-sm"
-                  >
-                    <span className="text-ink-secondary">{i.item_name}</span>
-                    <span className="tnum text-ink-tertiary">
-                      <span className="font-bold text-state-warn">+{i.needed}</span>
-                      <span className="ml-2 text-ink-muted">
-                        {i.current_actual} → {i.closet_par}
-                      </span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              )}
             </div>
-          );
-        })}
+
+            <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+              {group.units.map((run) => {
+                const total = run.items.reduce((s, i) => s + i.needed, 0);
+                return (
+                  <div
+                    key={run.unit_id}
+                    className="rounded-card border border-line bg-surface-2 p-5 shadow-e1"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="font-display text-base font-bold text-ink-primary">
+                          {run.unit_name}
+                        </div>
+                        <div className="tnum text-[11px] text-ink-muted">
+                          {run.items.length} items · {total} units to pull
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => complete(run)}
+                        disabled={busy}
+                        className="shrink-0 rounded-control bg-red px-3.5 py-2 font-display text-xs font-bold text-bone transition duration-150 ease-out hover:bg-red-hover active:brightness-95 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        {busyId === run.unit_id ? "Restocking…" : "Refill to par"}
+                      </button>
+                    </div>
+
+                    <ul className="mt-3 divide-y divide-[rgba(112,113,118,.14)]">
+                      {run.items.map((i) => {
+                        const short = shortSet.has(i.item_name);
+                        return (
+                          <li
+                            key={i.item_name}
+                            className="flex items-center justify-between gap-3 py-2 text-sm"
+                          >
+                            <span className="flex items-center gap-2 text-ink-secondary">
+                              {i.item_name}
+                              {short && (
+                                <span className="rounded-full border border-[rgba(226,6,2,.35)] bg-red-subtle px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.04em] text-state-bad">
+                                  central short
+                                </span>
+                              )}
+                            </span>
+                            <span className="tnum text-ink-tertiary">
+                              <span className="font-bold text-state-warn">+{i.needed}</span>
+                              <span className="ml-2 text-ink-muted">
+                                {i.current_actual} → {i.closet_par}
+                              </span>
+                            </span>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        ))}
       </div>
     </div>
   );
