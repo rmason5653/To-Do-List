@@ -40,6 +40,7 @@ export async function PATCH(
     if (body.status === "active" || body.status === "disabled") patch.status = body.status;
     if (typeof body.name === "string") patch.name = body.name.trim();
     if (body.phone !== undefined) patch.phone = body.phone ? String(body.phone).trim() : null;
+    if (body.email !== undefined) patch.email = body.email ? String(body.email).trim() : null;
     if (Object.keys(patch).length > 0) await updateUser(id, patch);
     return NextResponse.json({ ok: true });
   } catch (err) {

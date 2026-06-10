@@ -16,6 +16,10 @@ export default function TeamClient({ users }: { users: AppUser[] }) {
   const [error, setError] = useState("");
   const [status, setStatus] = useState("");
   const [copied, setCopied] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editPhone, setEditPhone] = useState("");
+  const [editEmail, setEditEmail] = useState("");
 
   useEffect(() => setOrigin(window.location.origin), []);
 
@@ -96,6 +100,40 @@ export default function TeamClient({ users }: { users: AppUser[] }) {
       setError(d.error || "Update failed.");
       return;
     }
+    router.refresh();
+  }
+
+  function startEdit(u: AppUser) {
+    setEditingId(u.id);
+    setEditName(u.name);
+    setEditPhone(u.phone ?? "");
+    setEditEmail(u.email ?? "");
+    setError("");
+    setStatus("");
+  }
+
+  async function saveEdit(u: AppUser) {
+    if (!editName.trim()) {
+      setError("Name can't be empty.");
+      return;
+    }
+    const res = await fetch(`/api/users/${u.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: editName.trim(),
+        phone: editPhone.trim() || null,
+        email: editEmail.trim() || null,
+      }),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      setError(d.error || "Update failed.");
+      return;
+    }
+    setEditingId(null);
+    setError("");
+    setStatus(`Updated ${editName.trim()}.`);
     router.refresh();
   }
 
@@ -201,84 +239,139 @@ export default function TeamClient({ users }: { users: AppUser[] }) {
             key={u.id}
             className="rounded-card border border-line bg-surface-2 p-4 shadow-e1"
           >
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className="font-display text-base font-bold text-ink-primary">
-                    {u.name}
-                  </span>
-                  {u.role === "admin" ? (
-                    <Pill tone="warn">Admin</Pill>
-                  ) : (
-                    <Pill tone="neutral">Cleaner</Pill>
-                  )}
-                  {u.status === "disabled" && <Pill tone="bad">Disabled</Pill>}
-                </div>
-                <div className="text-xs text-ink-muted">
-                  {[u.phone, u.email].filter(Boolean).join(" · ") || "no contact"}{" "}
-                  · {u.last_login_at ? "logged in" : "not logged in yet"}
-                </div>
-              </div>
-
-              <div className="flex flex-wrap gap-1.5">
-                <button type="button" onClick={() => copy(u)} className={actionBtn}>
-                  {copied === u.id ? "Copied!" : "Copy link"}
-                </button>
-                {u.phone && (
-                  <a
-                    href={`sms:${u.phone}?&body=${encodeURIComponent(inviteText(u))}`}
+            {editingId === u.id ? (
+              /* Edit mode — change name, phone, email. */
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Name"
+                    className={`${field} min-w-[10rem] flex-1`}
+                  />
+                  <input
+                    value={editPhone}
+                    onChange={(e) => setEditPhone(e.target.value)}
+                    placeholder="Phone (optional)"
+                    inputMode="tel"
+                    className={`${field} min-w-[9rem] flex-1`}
+                  />
+                  <input
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    placeholder="Email (optional)"
+                    inputMode="email"
+                    className={`${field} min-w-[9rem] flex-1`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => saveEdit(u)}
+                    className="rounded-control bg-red px-4 py-2 font-display text-sm font-bold text-bone transition hover:bg-red-hover active:brightness-95"
+                  >
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingId(null);
+                      setError("");
+                    }}
                     className={actionBtn}
                   >
-                    Text
-                  </a>
-                )}
-                {u.email && (
-                  <button type="button" onClick={() => sendEmail(u)} className={actionBtn}>
-                    Email now
+                    Cancel
                   </button>
+                </div>
+                {error && (
+                  <p className="mt-2 text-sm text-state-bad" role="alert">
+                    {error}
+                  </p>
                 )}
-                <button
-                  type="button"
-                  onClick={() =>
-                    patch(u.id, { role: u.role === "admin" ? "cleaner" : "admin" })
-                  }
-                  className={actionBtn}
-                >
-                  Make {u.role === "admin" ? "cleaner" : "admin"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    patch(u.id, {
-                      status: u.status === "disabled" ? "active" : "disabled",
-                    })
-                  }
-                  className={actionBtn}
-                >
-                  {u.status === "disabled" ? "Enable" : "Disable"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => patch(u.id, { regenerate: true })}
-                  className={actionBtn}
-                  title="Make a new link and kill the old one"
-                >
-                  New link
-                </button>
-                <button
-                  type="button"
-                  onClick={() => remove(u)}
-                  className="rounded-control border border-[rgba(226,6,2,.35)] bg-red-subtle px-2.5 py-1 text-xs font-semibold text-state-bad transition hover:border-red"
-                >
-                  Remove
-                </button>
               </div>
-            </div>
+            ) : (
+              <>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-display text-base font-bold text-ink-primary">
+                        {u.name}
+                      </span>
+                      {u.role === "admin" ? (
+                        <Pill tone="warn">Admin</Pill>
+                      ) : (
+                        <Pill tone="neutral">Cleaner</Pill>
+                      )}
+                      {u.status === "disabled" && <Pill tone="bad">Disabled</Pill>}
+                    </div>
+                    <div className="text-xs text-ink-muted">
+                      {[u.phone, u.email].filter(Boolean).join(" · ") || "no contact"}{" "}
+                      · {u.last_login_at ? "logged in" : "not logged in yet"}
+                    </div>
+                  </div>
 
-            {/* The link itself, for long-press/copy on mobile. */}
-            <div className="mt-2 truncate rounded-control bg-surface-1 px-3 py-1.5 text-[11px] text-ink-muted">
-              {origin ? linkFor(u) : "…"}
-            </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <button type="button" onClick={() => startEdit(u)} className={actionBtn}>
+                      Edit
+                    </button>
+                    <button type="button" onClick={() => copy(u)} className={actionBtn}>
+                      {copied === u.id ? "Copied!" : "Copy link"}
+                    </button>
+                    {u.phone && (
+                      <a
+                        href={`sms:${u.phone}?&body=${encodeURIComponent(inviteText(u))}`}
+                        className={actionBtn}
+                      >
+                        Text
+                      </a>
+                    )}
+                    {u.email && (
+                      <button type="button" onClick={() => sendEmail(u)} className={actionBtn}>
+                        Email now
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        patch(u.id, { role: u.role === "admin" ? "cleaner" : "admin" })
+                      }
+                      className={actionBtn}
+                    >
+                      Make {u.role === "admin" ? "cleaner" : "admin"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        patch(u.id, {
+                          status: u.status === "disabled" ? "active" : "disabled",
+                        })
+                      }
+                      className={actionBtn}
+                    >
+                      {u.status === "disabled" ? "Enable" : "Disable"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => patch(u.id, { regenerate: true })}
+                      className={actionBtn}
+                      title="Make a new link and kill the old one"
+                    >
+                      New link
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => remove(u)}
+                      className="rounded-control border border-[rgba(226,6,2,.35)] bg-red-subtle px-2.5 py-1 text-xs font-semibold text-state-bad transition hover:border-red"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+
+                {/* The link itself, for long-press/copy on mobile. */}
+                <div className="mt-2 truncate rounded-control bg-surface-1 px-3 py-1.5 text-[11px] text-ink-muted">
+                  {origin ? linkFor(u) : "…"}
+                </div>
+              </>
+            )}
           </div>
         ))}
         {users.length === 0 && (

@@ -75,7 +75,7 @@ export async function getUserByInviteToken(token: string): Promise<AppUser | nul
 
 export async function updateUser(
   id: string,
-  patch: Partial<Pick<AppUser, "name" | "phone" | "role" | "status">>,
+  patch: Partial<Pick<AppUser, "name" | "phone" | "email" | "role" | "status">>,
 ): Promise<void> {
   const sb = getSupabase();
   const { error } = await sb.from("app_users").update(patch).eq("id", id);
