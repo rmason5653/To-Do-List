@@ -337,8 +337,12 @@ export default function Dashboard({
     }
   }, []);
 
-  const removeTask = useCallback(async (id: string) => {
-    setTasks((prev) => prev.filter((t) => t.id !== id));
+  const [pendingDelete, setPendingDelete] = useState<Task | null>(null);
+  const deleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingRef = useRef<Task | null>(null);
+
+  // Actually hit the server. Runs after the 5s undo window closes.
+  const finalizeDelete = useCallback(async (id: string) => {
     busy.current += 1;
     try {
       await fetch(`/api/tasks/${id}`, { method: "DELETE" });
@@ -346,6 +350,57 @@ export default function Dashboard({
       busy.current -= 1;
     }
   }, []);
+
+  const flushPending = useCallback(() => {
+    if (deleteTimer.current) {
+      clearTimeout(deleteTimer.current);
+      deleteTimer.current = null;
+    }
+    const p = pendingRef.current;
+    pendingRef.current = null;
+    if (p) void finalizeDelete(p.id);
+  }, [finalizeDelete]);
+
+  // Soft delete: drop the row now, show an Undo toast, commit to the server
+  // only after the window elapses. Used by swipe-left and the More menu.
+  const removeTask = useCallback(
+    (task: Task) => {
+      if (pendingRef.current && pendingRef.current.id !== task.id) flushPending();
+      else if (deleteTimer.current) {
+        clearTimeout(deleteTimer.current);
+        deleteTimer.current = null;
+      }
+      pendingRef.current = task;
+      setPendingDelete(task);
+      setTasks((prev) => prev.filter((t) => t.id !== task.id));
+      deleteTimer.current = setTimeout(() => {
+        const p = pendingRef.current;
+        pendingRef.current = null;
+        deleteTimer.current = null;
+        setPendingDelete(null);
+        if (p) void finalizeDelete(p.id);
+      }, 5000);
+    },
+    [finalizeDelete, flushPending],
+  );
+
+  const undoDelete = useCallback(() => {
+    if (deleteTimer.current) {
+      clearTimeout(deleteTimer.current);
+      deleteTimer.current = null;
+    }
+    const p = pendingRef.current;
+    pendingRef.current = null;
+    setPendingDelete(null);
+    if (p) setTasks((cur) => (cur.some((t) => t.id === p.id) ? cur : [...cur, p]));
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (deleteTimer.current) clearTimeout(deleteTimer.current);
+    },
+    [],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -666,7 +721,7 @@ export default function Dashboard({
                             recurrence={recurrence[t.id]}
                             reminder={reminders.has(t.id)}
                             onPatch={(patch) => patchTask(t.id, patch)}
-                            onDelete={() => removeTask(t.id)}
+                            onDelete={() => removeTask(t)}
                           />
                         ))}
                     </div>
@@ -674,6 +729,25 @@ export default function Dashboard({
                 )
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {pendingDelete && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4"
+          style={{ paddingBottom: "calc(1rem + env(safe-area-inset-bottom))" }}
+        >
+          <div className="flex items-center gap-4 rounded-lg border border-line bg-panel2 px-4 py-2.5 shadow-e3">
+            <span className="text-sm text-ink">Task deleted</span>
+            <button
+              onClick={undoDelete}
+              className="font-display text-xs font-bold uppercase tracking-wide text-mason-gold transition hover:brightness-110 active:brightness-95"
+            >
+              Undo
+            </button>
           </div>
         </div>
       )}

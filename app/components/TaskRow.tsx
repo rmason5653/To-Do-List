@@ -121,6 +121,31 @@ function MoreIcon() {
   );
 }
 
+function CheckGlyph() {
+  return (
+    <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
+      <path d="M7.6 13.2 4.4 10l-1.1 1.1 4.3 4.3 9-9L15.5 5.3z" />
+    </svg>
+  );
+}
+
+function TrashIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
 const DASHED_CHIP =
   "rounded-full border border-dashed border-line px-2 py-0.5 text-[11px] text-muted transition hover:text-ink";
 
@@ -364,10 +389,61 @@ export default function TaskRow({
           : "bg-muted"
       : null;
 
+  // Swipe gestures (touch only) on the mobile card: right = toggle done,
+  // left = delete (with Undo at the list level). overflow-hidden on the
+  // wrapper clips the drag so it can never cause horizontal page scroll.
+  const [dx, setDx] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const swipe = useRef({ x: 0, y: 0, active: false, decided: false, horiz: false });
+  const SWIPE_TRIGGER = 96;
+
+  function onSwipeStart(e: React.PointerEvent) {
+    if (e.pointerType === "mouse") return; // desktop uses the row buttons
+    swipe.current = {
+      x: e.clientX,
+      y: e.clientY,
+      active: true,
+      decided: false,
+      horiz: false,
+    };
+  }
+  function onSwipeMove(e: React.PointerEvent) {
+    const s = swipe.current;
+    if (!s.active) return;
+    const moveX = e.clientX - s.x;
+    const moveY = e.clientY - s.y;
+    if (!s.decided) {
+      if (Math.abs(moveX) < 10 && Math.abs(moveY) < 10) return; // movement threshold
+      s.decided = true;
+      s.horiz = Math.abs(moveX) > Math.abs(moveY); // horizontal intent vs scroll
+      if (s.horiz) {
+        setDragging(true);
+        (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+      }
+    }
+    if (s.horiz) setDx(Math.max(-140, Math.min(140, moveX)));
+  }
+  function onSwipeEnd() {
+    const s = swipe.current;
+    if (s.horiz) {
+      setDragging(false);
+      if (dx >= SWIPE_TRIGGER) onPatch({ completed: !done });
+      else if (dx <= -SWIPE_TRIGGER) onDelete();
+      setDx(0);
+    }
+    s.active = false;
+    s.decided = false;
+    s.horiz = false;
+  }
+  const swipeBg = dx > 0 ? "bg-mason-green/15" : dx < 0 ? "bg-mason-red/15" : "";
+
   return (
     <div className="relative border-b border-line last:border-b-0">
       {rail && (
-        <span aria-hidden className={`absolute inset-y-0 left-0 w-[3px] ${rail}`} />
+        <span
+          aria-hidden
+          className={`absolute inset-y-0 left-0 hidden w-[3px] sm:block ${rail}`}
+        />
       )}
 
       {/* Desktop: an aligned grid row */}
@@ -386,22 +462,49 @@ export default function TaskRow({
         {moreButton}
       </div>
 
-      {/* Mobile: a stacked card */}
-      <div
-        className={`flex items-start gap-3 px-3 py-3 transition-colors hover:bg-panel2 sm:hidden ${
-          done ? "opacity-70" : ""
-        }`}
-      >
-        {checkbox}
-        <div className="min-w-0 flex-1">
-          {cells.task}
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
-            {cells.status}
-            {cells.priority}
-            {cells.assignee}
-            {cells.due}
-            {cells.notes}
-            {moreButton}
+      {/* Mobile: a swipeable stacked card — swipe right = done, left = delete */}
+      <div className="relative overflow-hidden sm:hidden">
+        {dx !== 0 && (
+          <div
+            aria-hidden
+            className={`absolute inset-0 flex items-center px-5 ${swipeBg}`}
+          >
+            {dx > 0 ? (
+              <span className="flex items-center gap-1.5 font-display text-xs font-bold uppercase tracking-wide text-mason-green">
+                <CheckGlyph /> {done ? "Reopen" : "Done"}
+              </span>
+            ) : (
+              <span className="ml-auto flex items-center gap-1.5 font-display text-xs font-bold uppercase tracking-wide text-mason-red">
+                Delete <TrashIcon />
+              </span>
+            )}
+          </div>
+        )}
+        <div
+          onPointerDown={onSwipeStart}
+          onPointerMove={onSwipeMove}
+          onPointerUp={onSwipeEnd}
+          onPointerCancel={onSwipeEnd}
+          style={{
+            transform: `translateX(${dx}px)`,
+            transition: dragging ? "none" : "transform 150ms ease-out",
+            touchAction: "pan-y",
+          }}
+          className={`relative flex items-start gap-3 bg-panel px-3 py-3 ${
+            done ? "opacity-70" : ""
+          }`}
+        >
+          {checkbox}
+          <div className="min-w-0 flex-1">
+            {cells.task}
+            <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5">
+              {cells.status}
+              {cells.priority}
+              {cells.assignee}
+              {cells.due}
+              {cells.notes}
+              {moreButton}
+            </div>
           </div>
         </div>
       </div>
@@ -477,11 +580,10 @@ export default function TaskRow({
                 Remind in Slack
               </span>
             </label>
+            {/* Undo toast covers mistakes, so no blocking confirm here. */}
             <button
-              onClick={() => {
-                if (confirm("Delete this task?")) onDelete();
-              }}
-              className="rounded-lg px-3 py-2 text-sm font-medium text-mason-red transition hover:bg-mason-red/10"
+              onClick={onDelete}
+              className="rounded-lg px-3 py-2 text-sm font-medium text-mason-red transition hover:bg-mason-red/10 active:brightness-95"
             >
               Delete
             </button>
