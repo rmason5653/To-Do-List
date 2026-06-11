@@ -31,7 +31,7 @@ export async function listConsumableItems(): Promise<ConsumableItem[]> {
   const sb = getSupabase();
   const { data, error } = await sb
     .from("consumable_par")
-    .select("item_name, sort, leave_behind")
+    .select("item_name, sort, leave_behind, fixed_par")
     .order("sort", { ascending: true });
   if (error) throw new Error(error.message);
   const seen = new Map<string, ConsumableItem>();

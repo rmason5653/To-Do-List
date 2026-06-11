@@ -16,6 +16,9 @@ export default async function SettingsPage() {
 
   try {
     [settings, items] = await Promise.all([getSettings(), listConsumableItems()]);
+    // Bulk supplies (fixed par, e.g. a gallon of soap) aren't driven by the
+    // leave-behind math — they're edited on the Stockroom, not here.
+    items = items.filter((i) => !i.fixed_par);
   } catch (err) {
     loadError = (err as Error).message;
   }

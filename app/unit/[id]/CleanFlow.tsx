@@ -177,8 +177,19 @@ export default function CleanFlow({
                     {c.item_name}
                   </div>
                   <div className="text-[11px] text-ink-muted">
-                    Put out <b className="text-ink-secondary">{c.leave_behind}</b>{" "}
-                    · flag if {c.reorder_point} or fewer left
+                    {c.fixed_par ? (
+                      // Bulk supply (e.g. a gallon of soap) — lives in the
+                      // closet; flag when it's about to run out.
+                      <>
+                        Keep <b className="text-ink-secondary">{c.closet_par}</b>{" "}
+                        in the closet · flag when it&apos;s running low
+                      </>
+                    ) : (
+                      <>
+                        Put out <b className="text-ink-secondary">{c.leave_behind}</b>{" "}
+                        · flag if {c.reorder_point} or fewer left
+                      </>
+                    )}
                   </div>
                 </div>
                 <button

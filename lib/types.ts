@@ -37,6 +37,7 @@ export interface ConsumableItem {
   item_name: string;
   sort: number;
   leave_behind: number;
+  fixed_par: boolean; // bulk supply: par is set directly, not calculated
 }
 
 /** A team member account (admin or cleaner), invited by login link. */
@@ -63,6 +64,7 @@ export interface ConsumablePar {
   closet_par: number;
   reorder_point: number;
   current_actual: number;
+  fixed_par: boolean; // bulk supply (e.g. a gallon of soap): par set, not calculated
 }
 
 export interface LinenPar {
@@ -82,6 +84,7 @@ export interface CentralReserveItem {
   quantity_on_hand: number;
   reorder_point: number;
   par_level: number; // target bulk level; buy up to this
+  fixed_par: boolean; // bulk supply: targets set by hand, skipped by recalc
 }
 
 export interface PullLogEntry {

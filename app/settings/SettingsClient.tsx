@@ -78,10 +78,11 @@ export default function SettingsClient({
       <p className="max-w-2xl text-sm text-ink-tertiary">
         Par is <b className="text-ink-secondary">calculated</b>, never typed.
         These three inputs drive every closet par, reorder point, and Stockroom
-        target — change one and the math re-runs across all 63 units. Linen par
-        is the exception: set it per unit from the{" "}
+        target — change one and the math re-runs across all 63 units. Two
+        exceptions: linen par is set per unit from the{" "}
         <b className="text-ink-secondary">Manage linen par</b> panel on each
-        unit&apos;s page.
+        unit&apos;s page, and bulk supplies (Dawn, Conditioner, 3-in-1) keep a
+        set par you edit on the Stockroom.
       </p>
 
       {/* Global knobs — each explains what it means and what raising it does. */}

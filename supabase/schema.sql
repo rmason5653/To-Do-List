@@ -76,6 +76,7 @@ create table if not exists consumable_par (
   closet_par     int  not null,
   reorder_point  int  not null,
   current_actual int  not null,
+  fixed_par      boolean not null default false, -- bulk supply: par set, not calculated
   updated_at     timestamptz not null default now(),
   unique (unit_id, item_name)
 );
@@ -103,6 +104,7 @@ create table if not exists central_reserve (
   quantity_on_hand int  not null default 0,
   reorder_point    int  not null default 0,  -- when to buy more bulk
   par_level        int  not null default 0,  -- target bulk level; buy up to this
+  fixed_par        boolean not null default false, -- bulk supply: targets set by hand
   updated_at       timestamptz not null default now(),
   unique (item_name, category)
 );
@@ -237,7 +239,8 @@ begin
 end;
 $$;
 
--- Recompute calculated par from the inputs (consumables only; linens stored).
+-- Recompute calculated par from the inputs. Skips linens (stored) and bulk
+-- supplies (fixed_par = true — their par/reorder are set directly).
 create or replace function recalc_par() returns void
 language plpgsql
 set search_path = public
@@ -250,7 +253,7 @@ begin
      set closet_par    = cp.leave_behind * (coalesce(u.turnover_frequency, s.default_turnover_frequency) + s.buffer_turnovers),
          reorder_point = cp.leave_behind * s.buffer_turnovers,
          updated_at    = now()
-    from units u where u.unit_id = cp.unit_id;
+    from units u where u.unit_id = cp.unit_id and cp.fixed_par = false;
   update central_reserve cr
      set par_level     = round(sub.weekly_total * s.central_buffer)::int,
          reorder_point = sub.weekly_total,
@@ -259,6 +262,7 @@ begin
       select cp.item_name,
              sum(cp.leave_behind * coalesce(u.turnover_frequency, s.default_turnover_frequency))::int as weekly_total
       from consumable_par cp join units u on u.unit_id = cp.unit_id
+      where cp.fixed_par = false
       group by cp.item_name
     ) sub
    where cr.category = 'consumable' and cr.item_name = sub.item_name;
@@ -341,19 +345,24 @@ begin
     ('Riviera 208', 'Riviera', 63, '1 pass', true, 'ok');
 
   -- Consumable par — same tier for every unit. current_actual starts at par.
-  insert into consumable_par (unit_id, item_name, sort, leave_behind, closet_par, reorder_point, current_actual)
-  select u.unit_id, c.item_name, c.sort, c.leave_behind, c.closet_par, c.reorder_point, c.closet_par
+  insert into consumable_par (unit_id, item_name, sort, leave_behind, closet_par, reorder_point, current_actual, fixed_par)
+  select u.unit_id, c.item_name, c.sort, c.leave_behind, c.closet_par, c.reorder_point, c.closet_par, c.fixed_par
   from units u
   cross join (values
-    ('Kitchen trash bags',   1, 3, 12, 3),
-    ('Paper towel',          2, 2,  8, 2),
-    ('Dishwasher pods',      3, 3, 12, 3),
-    ('Laundry pods',         4, 5, 20, 5),
-    ('Bathroom trash bags',  5, 3, 12, 3),
-    ('Toilet paper',         6, 3, 12, 3),
-    ('Coffee pods',          7, 5, 20, 5),
-    ('Creamer',              8, 5, 20, 5)
-  ) as c(item_name, sort, leave_behind, closet_par, reorder_point);
+    ('Kitchen trash bags',   1, 3, 12, 3, false),
+    ('Paper towel',          2, 2,  8, 2, false),
+    ('Dishwasher pods',      3, 3, 12, 3, false),
+    ('Laundry pods',         4, 5, 20, 5, false),
+    ('Bathroom trash bags',  5, 3, 12, 3, false),
+    ('Toilet paper',         6, 3, 12, 3, false),
+    ('Coffee pods',          7, 5, 20, 5, false),
+    ('Creamer',              8, 5, 20, 5, false),
+    ('Sponges',              9, 1,  4, 1, false),
+    -- Bulk supplies: one jug lives in the closet; par is set, not calculated.
+    ('Dawn',                10, 0,  1, 0, true),
+    ('Conditioner',         11, 0,  1, 0, true),
+    ('3-in-1',              12, 0,  1, 0, true)
+  ) as c(item_name, sort, leave_behind, closet_par, reorder_point, fixed_par);
 
   -- Linen par — per unit. Spec profiles where the building is known; new
   -- buildings (Citizen, Lenox Park) default to 4/4/1/1/1, tunable later.
@@ -400,6 +409,7 @@ begin
     ('Toilet paper',        'consumable', 6, 570, 190, 570),
     ('Coffee pods',         'consumable', 7, 950, 320, 950),
     ('Creamer',             'consumable', 8, 950, 320, 950),
+    ('Sponges',             'consumable', 9, 190,  63, 190),
     ('bath_towel',          'linen',      9, 40,  12,  40),
     ('washcloth',           'linen',     10, 40,  12,  40),
     ('hand_towel',          'linen',     11, 20,   6,  20),
@@ -418,6 +428,12 @@ begin
     ('fitted_sheet_twin',   'linen',     22,  0,   8,  24),
     ('flat_sheet_twin',     'linen',     23,  0,   8,  24),
     ('quilt_twin',          'linen',     24,  0,   4,  12);
+
+  -- Bulk supplies (jugs, not per-turnover): targets set by hand, never recalced.
+  insert into central_reserve (item_name, category, sort, quantity_on_hand, reorder_point, par_level, fixed_par) values
+    ('Dawn',        'consumable', 10, 0, 4, 12, true),
+    ('Conditioner', 'consumable', 11, 0, 4, 12, true),
+    ('3-in-1',      'consumable', 12, 0, 4, 12, true);
 
   -- Compute calculated consumable par + central targets from the inputs.
   perform recalc_par();

@@ -70,7 +70,8 @@ export default function GuidePage() {
             <div className="rounded-control bg-surface-1 p-4">
               <p className="font-display text-sm font-bold text-state-warn">Consumables</p>
               <p className="mt-1 text-xs text-ink-muted">
-                Toilet paper, paper towels, trash bags, pods, coffee, creamer.
+                Toilet paper, paper towels, trash bags, pods, coffee, creamer,
+                sponges, and the closet soaps (Dawn, conditioner, 3-in-1).
               </p>
               <p className="mt-2 text-sm text-ink-secondary">
                 Live in the unit&apos;s owner closet. They run <b>down</b> every

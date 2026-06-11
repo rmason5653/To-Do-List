@@ -140,7 +140,7 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
           </div>
           <div className="tnum text-[11px] text-ink-muted">
             par {item.par_level} · reorder {item.reorder_point}
-            {item.category === "consumable" && (
+            {item.category === "consumable" && !item.fixed_par && (
               <>
                 {" · "}
                 <Link
@@ -169,7 +169,9 @@ function Row({ item, first }: { item: CentralReserveItem; first: boolean }) {
         </div>
 
         <div className="flex shrink-0 gap-1.5">
-          {item.category === "consumable" ? (
+          {/* Calculated consumables only take a recount (par is computed);
+              linens and bulk supplies (fixed par) edit all three numbers. */}
+          {item.category === "consumable" && !item.fixed_par ? (
             <button type="button" onClick={startCount} className={actionBtn}>
               Count
             </button>
