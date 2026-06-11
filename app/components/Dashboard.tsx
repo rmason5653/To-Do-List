@@ -25,6 +25,8 @@ import type {
 
 type Filter = "all" | "ops" | "personal";
 type Grouping = "time" | "priority" | "recent";
+// One-tap slices driven by the stat tiles.
+type QuickFilter = "overdue" | "dueToday" | "doneToday" | "open" | null;
 
 function mergeTask(t: Task, patch: TaskPatch): Task {
   const next = { ...t, ...patch } as Task;
@@ -40,26 +42,45 @@ function StatTile({
   value,
   tone,
   alarm,
+  active,
+  activeBorder,
+  onClick,
 }: {
   label: string;
   value: number;
   tone: string;
   alarm?: boolean;
+  active: boolean;
+  activeBorder: string;
+  onClick: () => void;
 }) {
-  // Overdue reads like an alarm only when it is actually firing.
-  const shell =
-    alarm && value > 0
+  // The tiles are the instrument panel AND the controls: tap to filter the
+  // list to that slice, tap again to clear. Overdue reads like an alarm only
+  // when it is actually firing.
+  const shell = active
+    ? `${activeBorder} bg-panel2`
+    : alarm && value > 0
       ? "border-mason-red/40 bg-mason-red/10"
       : "border-line bg-panel";
   return (
-    <div className={`rounded-xl border p-3 shadow-e1 ${shell}`}>
+    <button
+      onClick={onClick}
+      aria-pressed={active}
+      title={active ? "Clear this filter" : `Show only: ${label}`}
+      className={`cursor-pointer rounded-xl border p-3 text-left shadow-e1 transition duration-150 ease-out hover:-translate-y-px hover:shadow-e2 active:translate-y-0 active:brightness-95 ${shell}`}
+    >
       <div className={`tnum font-display text-2xl font-extrabold tracking-tight ${tone}`}>
         {value}
       </div>
-      <div className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted">
         {label}
+        {active && (
+          <span aria-hidden className="text-ink">
+            ×
+          </span>
+        )}
       </div>
-    </div>
+    </button>
   );
 }
 
@@ -145,6 +166,7 @@ export default function Dashboard({
   );
   const [filter, setFilter] = useState<Filter>("all");
   const [assigneeFilter, setAssigneeFilter] = useState<string | null>(null);
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>(null);
   const [grouping, setGrouping] = useState<Grouping>("time");
   const [query, setQuery] = useState("");
   const [syncing, setSyncing] = useState(false);
@@ -338,11 +360,26 @@ export default function Dashboard({
     });
   }, [tasks, filter, assigneeFilter, query]);
 
+  // The stat-tile slice applies only to the visible list; `stats` stays
+  // computed from the unsliced set so the panel keeps showing the full picture.
+  const visible = useMemo(() => {
+    if (!quickFilter) return filtered;
+    return filtered.filter((t) => {
+      const done = isDone(t);
+      if (quickFilter === "overdue")
+        return !done && !!t.due_date && t.due_date < today;
+      if (quickFilter === "dueToday") return !done && t.due_date === today;
+      if (quickFilter === "doneToday")
+        return done && t.updated_at.slice(0, 10) === today;
+      return !done; // "open"
+    });
+  }, [filtered, quickFilter, today]);
+
   const groups = useMemo(() => {
-    if (grouping === "priority") return groupByPriority(filtered);
-    if (grouping === "recent") return groupByRecent(filtered);
-    return groupByTime(filtered, today);
-  }, [grouping, filtered, today]);
+    if (grouping === "priority") return groupByPriority(visible);
+    if (grouping === "recent") return groupByRecent(visible);
+    return groupByTime(visible, today);
+  }, [grouping, visible, today]);
 
   const stats = useMemo(() => {
     let overdue = 0;
@@ -386,32 +423,60 @@ export default function Dashboard({
   }
 
   const syncTone = !sync ? "text-muted" : sync.ok ? "text-mason-green" : "text-mason-red";
+  const syncDot = syncing
+    ? "bg-mason-gold animate-pulse"
+    : !sync
+      ? "bg-muted"
+      : sync.ok
+        ? "bg-mason-green"
+        : "bg-mason-red";
+
+  const toggleQuickFilter = (f: QuickFilter) =>
+    setQuickFilter((prev) => (prev === f ? null : f));
+
+  // Genuine inbox-zero (no filters hiding anything) — the milestone moment.
+  const allClear =
+    tasks.length > 0 &&
+    stats.open === 0 &&
+    filter === "all" &&
+    !assigneeFilter &&
+    !query.trim() &&
+    !quickFilter;
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
-      <header className="mb-5 flex flex-wrap items-end justify-between gap-3">
+    <main className="mx-auto max-w-7xl px-4 pb-6 sm:px-6 sm:pb-8 lg:px-8">
+      {/* Sticky command bar — wordmark, sync state, and actions stay reachable
+          mid-list, which is where they're needed on a phone. */}
+      <header className="glass-header sticky top-0 z-30 -mx-4 mb-5 flex flex-wrap items-center justify-between gap-3 border-b border-line px-4 py-3 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div>
-          <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink">
+          <h1 className="font-display text-xl font-extrabold tracking-tight text-ink sm:text-2xl">
             PUNCH <span className="text-mason-red">LIST</span>
           </h1>
-          <p className="text-xs font-medium uppercase tracking-wide text-muted">
+          <p className="hidden text-xs font-medium uppercase tracking-wide text-muted sm:block">
             {dateLabel}
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className={`text-xs font-medium ${syncTone}`}>
-            {syncing ? "Syncing…" : sync ? sync.message : "Standalone mode"}
+          <span
+            aria-live="polite"
+            title={syncing ? "Syncing…" : sync ? sync.message : "Standalone mode"}
+            className={`flex items-center gap-1.5 text-xs font-medium ${syncTone}`}
+          >
+            <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${syncDot}`} />
+            <span className="hidden md:inline">
+              {syncing ? "Syncing…" : sync ? sync.message : "Standalone mode"}
+            </span>
           </span>
           <button
             onClick={triggerSync}
             disabled={syncing}
-            className="rounded-lg border border-mason-red px-3 py-1.5 font-display text-xs font-bold text-mason-red transition hover:bg-mason-red hover:text-bone disabled:opacity-50"
+            className="rounded-lg border border-mason-red px-3 py-1.5 font-display text-xs font-bold text-mason-red transition hover:bg-mason-red hover:text-bone active:brightness-95 disabled:opacity-50"
           >
             Sync now
           </button>
           <button
             onClick={toggleTheme}
-            className="rounded-lg border border-line px-2.5 py-1.5 font-display text-xs font-semibold text-muted transition hover:text-ink"
+            className="rounded-lg border border-line px-2.5 py-1.5 font-display text-xs font-semibold text-muted transition hover:text-ink active:brightness-95"
             title="Toggle theme"
           >
             {theme === "dark" ? "Light" : "Dark"}
@@ -420,11 +485,50 @@ export default function Dashboard({
       </header>
 
       <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        <StatTile label="Overdue" value={stats.overdue} tone="text-mason-red" alarm />
-        <StatTile label="Due today" value={stats.dueToday} tone="text-mason-gold" />
-        <StatTile label="Completed today" value={stats.doneToday} tone="text-mason-green" />
-        <StatTile label="Open total" value={stats.open} tone="text-ink" />
+        <StatTile
+          label="Overdue"
+          value={stats.overdue}
+          tone="text-mason-red"
+          alarm
+          active={quickFilter === "overdue"}
+          activeBorder="border-mason-red/60"
+          onClick={() => toggleQuickFilter("overdue")}
+        />
+        <StatTile
+          label="Due today"
+          value={stats.dueToday}
+          tone="text-mason-gold"
+          active={quickFilter === "dueToday"}
+          activeBorder="border-mason-gold/60"
+          onClick={() => toggleQuickFilter("dueToday")}
+        />
+        <StatTile
+          label="Completed today"
+          value={stats.doneToday}
+          tone="text-mason-green"
+          active={quickFilter === "doneToday"}
+          activeBorder="border-mason-green/60"
+          onClick={() => toggleQuickFilter("doneToday")}
+        />
+        <StatTile
+          label="Open total"
+          value={stats.open}
+          tone="text-ink"
+          active={quickFilter === "open"}
+          activeBorder="border-muted"
+          onClick={() => toggleQuickFilter("open")}
+        />
       </div>
+
+      {allClear && (
+        <div className="mb-4 rounded-xl border border-mason-green/40 bg-panel p-8 text-center shadow-e1">
+          {/* Milestone moment — sanctioned American Captain use (3 of 5). */}
+          <p className="font-punch text-4xl uppercase tracking-[0.02em] text-ink sm:text-5xl">
+            All clear
+          </p>
+          <p className="mt-2 text-sm text-muted">Every open task is done. Go build.</p>
+        </div>
+      )}
 
       <div className="mb-4">
         <QuickAdd
@@ -525,6 +629,7 @@ export default function Dashboard({
               {groups.every((g) => g.tasks.length === 0) ? (
                 <p className="px-3 py-8 text-center text-sm text-muted">
                   No tasks match these filters.
+                  {quickFilter && " Tap the highlighted tile to clear it."}
                 </p>
               ) : (
                 groups.map((g) =>
@@ -535,7 +640,7 @@ export default function Dashboard({
                         className="flex w-full items-center gap-2 border-b border-line bg-panel2 px-3 py-1.5"
                       >
                         <Chevron open={!collapsed.has(g.id)} />
-                        <span className="text-xs font-semibold uppercase tracking-wide text-ink">
+                        <span className="font-display text-xs font-bold uppercase tracking-wide text-ink">
                           {g.title}
                         </span>
                         <span className="rounded-full border border-line bg-panel px-1.5 py-0.5 text-[10px] font-medium text-muted">

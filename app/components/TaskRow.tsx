@@ -33,7 +33,7 @@ function StatusSelect({
       value={status}
       onChange={(e) => onChange(e.target.value as Status)}
       title="Change status"
-      className={`cursor-pointer appearance-none rounded-md border px-1.5 py-1 text-center text-[10px] font-semibold uppercase tracking-wide outline-none ${STATUS_STYLE[status]}`}
+      className={`cursor-pointer appearance-none rounded-md border px-1.5 py-1 text-center text-[11px] font-semibold uppercase tracking-wide outline-none ${STATUS_STYLE[status]}`}
     >
       {(["not_started", "in_progress", "done"] as Status[]).map((s) => (
         <option key={s} value={s}>
@@ -297,9 +297,12 @@ export default function TaskRow({
     due: (
       <div className="relative inline-flex">
         {task.due_date ? (
+          // Overdue reads like an alarm, not just tinted text.
           <span
             className={`flex items-center gap-1 text-[11px] font-medium ${
-              overdue ? "text-mason-red" : "text-muted"
+              overdue
+                ? "rounded-full border border-mason-red/35 bg-mason-red/10 px-2 py-0.5 text-mason-red"
+                : "text-muted"
             }`}
           >
             <ClockIcon />
@@ -324,7 +327,7 @@ export default function TaskRow({
     <button
       aria-label={done ? "Mark not done" : "Mark done"}
       onClick={() => onPatch({ completed: !done })}
-      className={`hit-area flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition ${
+      className={`hit-area flex h-5 w-5 shrink-0 items-center justify-center rounded-full border transition active:scale-90 ${
         done
           ? "border-mason-green bg-mason-green text-bone"
           : "border-line hover:border-mason-green"
@@ -350,11 +353,28 @@ export default function TaskRow({
     </button>
   );
 
+  // Glanceable urgency: a left-edge rail colored by star level (3 red, 2 gold,
+  // 1 steel) on open tasks, so priority scans without reading the row.
+  const rail =
+    !done && task.priority
+      ? task.priority >= 3
+        ? "bg-mason-red"
+        : task.priority === 2
+          ? "bg-mason-gold"
+          : "bg-muted"
+      : null;
+
   return (
-    <div className="border-b border-line last:border-b-0">
+    <div className="relative border-b border-line last:border-b-0">
+      {rail && (
+        <span aria-hidden className={`absolute inset-y-0 left-0 w-[3px] ${rail}`} />
+      )}
+
       {/* Desktop: an aligned grid row */}
       <div
-        className="hidden items-center gap-2 px-3 py-3 transition-colors hover:bg-panel2 sm:grid"
+        className={`hidden items-center gap-2 px-3 py-3 transition-colors hover:bg-panel2 sm:grid ${
+          done ? "opacity-70 hover:opacity-100" : ""
+        }`}
         style={{ gridTemplateColumns: gridTemplate(columnOrder) }}
       >
         {checkbox}
@@ -367,7 +387,11 @@ export default function TaskRow({
       </div>
 
       {/* Mobile: a stacked card */}
-      <div className="flex items-start gap-3 px-3 py-3 transition-colors hover:bg-panel2 sm:hidden">
+      <div
+        className={`flex items-start gap-3 px-3 py-3 transition-colors hover:bg-panel2 sm:hidden ${
+          done ? "opacity-70" : ""
+        }`}
+      >
         {checkbox}
         <div className="min-w-0 flex-1">
           {cells.task}

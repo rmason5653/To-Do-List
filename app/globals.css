@@ -6,6 +6,7 @@
    Tokens map to the v4 surface ramp / text ramp; red + gold stay constant. */
 :root {
   --canvas: #0b0b0d; /* surface-0 — page */
+  --canvas-glass: rgba(11, 11, 13, 0.85); /* sticky header (the one sanctioned glass) */
   --panel: #16161a; /* surface-2 — cards */
   --panel-2: #1c1c21; /* surface-3 — inputs, wells, hover rows */
   --line: #2a2a31; /* steel-derived hairline (also faint icon color) */
@@ -16,6 +17,7 @@
 
 .light {
   --canvas: #f5f2ec; /* bone */
+  --canvas-glass: rgba(245, 242, 236, 0.88);
   --panel: #ffffff;
   --panel-2: #ece9e2;
   --line: #d9d5cd;
@@ -49,6 +51,12 @@ body {
 @layer components {
   .field {
     @apply rounded-lg border border-line bg-panel2 px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-mason-red;
+  }
+  /* Sticky command bar — v4's single sanctioned glass: 8px blur at ~85%. */
+  .glass-header {
+    background: var(--canvas-glass);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
 }
 

@@ -52,7 +52,7 @@ export default function QuickAdd({
           if (e.key === "Enter") submit();
         }}
         placeholder="Add a task and press Enter…"
-        className="field min-w-[12rem] flex-1"
+        className="field min-w-[12rem] flex-1 basis-full sm:basis-auto"
       />
       <div className="flex rounded-lg border border-line bg-panel2 p-0.5 text-xs font-semibold">
         {(["ops", "personal"] as Category[]).map((c) => (
@@ -85,7 +85,7 @@ export default function QuickAdd({
       <button
         onClick={submit}
         disabled={busy || !title.trim()}
-        className="grow rounded-lg bg-mason-red px-4 py-2 font-display text-sm font-bold text-bone transition hover:bg-mason-red-hover hover:opacity-100 disabled:opacity-50 sm:grow-0"
+        className="grow rounded-lg bg-mason-red px-4 py-2 font-display text-sm font-bold text-bone transition hover:bg-mason-red-hover hover:opacity-100 active:brightness-95 disabled:opacity-50 sm:grow-0"
       >
         Add
       </button>
