@@ -52,12 +52,17 @@ export default function LoginPage() {
         <input
           type="password"
           autoFocus
+          autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Password"
           className="field mt-4 w-full"
         />
-        {error && <p className="mt-2 text-sm text-mason-red">{error}</p>}
+        {error && (
+          <p className="mt-2 text-sm text-mason-red" role="alert">
+            {error}
+          </p>
+        )}
         <button
           type="submit"
           disabled={busy}

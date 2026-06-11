@@ -406,16 +406,24 @@ export default function Dashboard({
 
   if (loadError) {
     return (
-      <main className="mx-auto max-w-2xl px-4 py-16">
-        <div className="rounded-2xl border border-line bg-panel p-8">
-          <h1 className="text-lg font-bold text-ink">Finish the setup</h1>
-          <p className="mt-2 text-sm text-muted">The app could not reach its database:</p>
-          <pre className="mt-2 overflow-auto rounded-lg bg-panel2 p-3 text-xs text-mason-red">
+      <main className="flex min-h-dvh items-center justify-center px-4 py-16">
+        <div className="w-full max-w-2xl rounded-2xl border border-line bg-panel p-8 shadow-e2">
+          <p className="font-display text-xs font-bold uppercase tracking-wide text-muted">
+            Punch List — Mason Homes
+          </p>
+          <h1 className="mt-1 font-display text-xl font-extrabold tracking-tight text-ink">
+            Finish the setup
+          </h1>
+          <p className="mt-2 text-sm text-muted">
+            The app could not reach its database:
+          </p>
+          <pre className="mt-3 overflow-auto rounded-lg border border-mason-red/30 bg-mason-red/10 p-3 text-xs text-mason-red">
             {loadError}
           </pre>
           <p className="mt-4 text-xs text-muted">
-            Set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY, then redeploy. Full
-            instructions are in the project README.
+            Set <code className="text-ink">SUPABASE_URL</code> and{" "}
+            <code className="text-ink">SUPABASE_SERVICE_ROLE_KEY</code>, then
+            redeploy. Full instructions are in the project README.
           </p>
         </div>
       </main>
