@@ -3,7 +3,17 @@ import { SESSION_COOKIE, verifySession } from "@/lib/users";
 
 // Open: the login screen, its endpoint, and the invite link (a new cleaner
 // has no session yet — the token in the URL is the credential).
-const OPEN_PATHS = ["/login", "/api/login", "/api/setup", "/api/cron", "/join"];
+const OPEN_PATHS = [
+  "/login",
+  "/api/login",
+  "/api/setup",
+  "/api/cron",
+  "/join",
+  // Install/branding assets — fetched by the OS before anyone is logged in.
+  "/manifest.webmanifest",
+  "/icon",
+  "/apple-icon",
+];
 
 // Admin-only areas.
 const ADMIN_PATHS = ["/settings", "/team", "/activity"];

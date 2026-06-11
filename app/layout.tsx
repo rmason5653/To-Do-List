@@ -42,6 +42,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   themeColor: "#0B0B0D",
+  // Draw edge-to-edge on notched phones; bars pad with safe-area insets.
+  viewportFit: "cover",
 };
 
 export default async function RootLayout({

@@ -98,6 +98,25 @@ body {
   font-feature-settings: "tnum";
 }
 
+/* Field use — phones, one thumb, mid-clean. */
+/* Kill the 300ms double-tap-zoom wait on every tap (pinch zoom still works). */
+body {
+  touch-action: manipulation;
+}
+/* No gray iOS tap flash; our own pressed states do that job. */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+/* iOS auto-zooms any focused input under 16px — hold inputs at 16px on
+   phones so the viewport never jumps mid-count. */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
 /* v4 interaction state — focus-visible is required everywhere:
    2px red outline, 2px offset. Global default so nothing slips through. */
 :focus-visible {

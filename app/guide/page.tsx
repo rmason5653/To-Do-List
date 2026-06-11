@@ -117,7 +117,7 @@ export default function GuidePage() {
               <B>Flag an issue</B> and set the real count with −/+.
             </Step>
             <Step n={5}>
-              Type your <b>name</b> (first time only) → tap{" "}
+              Pick your <b>name</b> from the list (it&apos;s remembered) → tap{" "}
               <B>Mark clean complete</B>.
             </Step>
           </ol>
@@ -145,7 +145,7 @@ export default function GuidePage() {
               Drive to each unit and refill its closet up to par.
             </Step>
             <Step n={5}>
-              In the app, type your name and tap <B>Refill to par</B> on each
+              In the app, pick your name and tap <B>Refill to par</B> on each
               unit — or <B>Refill all to par</B> to clear the whole list.
             </Step>
           </ol>

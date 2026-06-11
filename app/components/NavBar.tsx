@@ -54,7 +54,7 @@ export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
   const moreActive = moreLinks.some((l) => isActive(l.href));
 
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-surface-4/85 backdrop-blur-[8px]">
+    <header className="sticky top-0 z-40 border-b border-line bg-surface-4/85 pt-[env(safe-area-inset-top)] backdrop-blur-[8px]">
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-3 px-4 sm:px-6 lg:px-8">
         <Link
           href="/"
@@ -76,13 +76,21 @@ export default function NavBar({ isAdmin }: { isAdmin: boolean }) {
             <Link
               key={l.href}
               href={l.href}
-              className={`shrink-0 rounded-control px-3 py-1.5 text-sm font-medium transition duration-150 ease-out ${
+              className={`relative shrink-0 rounded-control px-3 py-1.5 text-sm font-medium transition duration-150 ease-out ${
                 isActive(l.href)
                   ? "bg-surface-2 text-ink-primary"
                   : "text-ink-tertiary hover:text-ink-secondary"
               }`}
             >
               {l.label}
+              {/* Active-tab marker. Brand note: a second red accent can share
+                  the bar with the red CTA — wayfinding is function, kept tiny. */}
+              {isActive(l.href) && (
+                <span
+                  aria-hidden
+                  className="absolute inset-x-3 bottom-0.5 h-[2px] rounded-full bg-red"
+                />
+              )}
             </Link>
           ))}
 

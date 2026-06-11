@@ -103,13 +103,16 @@ export default function CleanFlow({
 
   const section = "rounded-card border border-line bg-surface-2 p-5 shadow-e1";
   const stepBtn =
-    "h-9 w-9 rounded-control border border-line-strong bg-surface-3 text-lg font-bold text-ink-secondary transition hover:border-red hover:text-ink-primary active:brightness-95 disabled:opacity-40";
+    "h-11 w-11 shrink-0 rounded-control border border-line-strong bg-surface-3 text-lg font-bold text-ink-secondary transition hover:border-red hover:text-ink-primary active:brightness-95 disabled:opacity-40";
 
   return (
     <div className="space-y-4 pb-28">
       {/* 1 — Parking */}
       <section className={section}>
-        <h2 className="font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+        <h2 className="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+          <span className="tnum flex h-5 w-5 items-center justify-center rounded-full border border-line-strong bg-surface-3 text-[11px] text-ink-tertiary">
+            1
+          </span>
           Parking pass
         </h2>
         {unit.has_parking_pass ? (
@@ -153,7 +156,10 @@ export default function CleanFlow({
 
       {/* 2 — Consumables */}
       <section className={section}>
-        <h2 className="font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+        <h2 className="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+          <span className="tnum flex h-5 w-5 items-center justify-center rounded-full border border-line-strong bg-surface-3 text-[11px] text-ink-tertiary">
+            2
+          </span>
           Consumables
         </h2>
         <p className="mt-1 text-xs text-ink-muted">
@@ -195,7 +201,10 @@ export default function CleanFlow({
 
       {/* 3 — Linens */}
       <section className={section}>
-        <h2 className="font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+        <h2 className="flex items-center gap-2 font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+          <span className="tnum flex h-5 w-5 items-center justify-center rounded-full border border-line-strong bg-surface-3 text-[11px] text-ink-tertiary">
+            3
+          </span>
           Linens
         </h2>
         <p className="mt-1 text-xs text-ink-muted">
@@ -283,7 +292,7 @@ export default function CleanFlow({
       </section>
 
       {/* Sticky complete bar */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface-4/90 backdrop-blur-[8px]">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface-4/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-[8px]">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <StaffSelect
             value={staff}
