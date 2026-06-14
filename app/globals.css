@@ -60,6 +60,21 @@ body {
   }
 }
 
+/* Date field: we render our own label/value overlay (see QuickAdd), so make the
+   native text transparent. iOS Safari's empty-state placeholder is invisible and
+   has no reliable CSS hook; this guarantees a consistent, legible field instead. */
+.date-native,
+.date-native::-webkit-datetime-edit {
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+/* Keep the calendar picker affordance visible on dark surfaces (desktop). */
+.date-native::-webkit-calendar-picker-indicator {
+  filter: invert(0.7);
+  opacity: 0.85;
+  cursor: pointer;
+}
+
 /* Mobile: keep text inputs >= 16px so iOS Safari doesn't auto-zoom on focus. */
 @media (max-width: 639px) {
   input:not([type="checkbox"]):not([type="radio"]),

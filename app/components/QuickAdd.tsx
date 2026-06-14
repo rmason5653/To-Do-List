@@ -21,6 +21,16 @@ export default function QuickAdd({
   const [priority, setPriority] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Parse the YYYY-MM-DD value as a *local* date (not UTC) so the label never
+  // shows the day before in negative-offset timezones.
+  function formatDue(value: string) {
+    const [y, m, d] = value.split("-").map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, {
+      month: "short",
+      day: "numeric",
+    });
+  }
+
   async function submit() {
     const trimmed = title.trim();
     if (!trimmed || busy) return;
@@ -67,12 +77,24 @@ export default function QuickAdd({
           </button>
         ))}
       </div>
-      <input
-        type="date"
-        value={due}
-        onChange={(e) => setDue(e.target.value)}
-        className="field text-muted"
-      />
+      {/* Native date placeholders are invisible/inconsistent on iOS Safari, so
+          we hide the native text (.date-native) and render our own label here. */}
+      <div className="relative">
+        <input
+          type="date"
+          value={due}
+          onChange={(e) => setDue(e.target.value)}
+          aria-label="Due date"
+          className="field date-native w-full min-w-[8rem]"
+        />
+        <span
+          className={`pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm ${
+            due ? "text-ink" : "text-muted"
+          }`}
+        >
+          {due ? formatDue(due) : "Due date"}
+        </span>
+      </div>
       <div
         className="flex items-center rounded-lg border border-line bg-panel2 px-2.5 py-2"
         title="Priority"
