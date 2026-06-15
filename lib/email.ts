@@ -1,5 +1,5 @@
-// Sends the invite/login link by email via Resend. Free tier covers a small
-// team. If RESEND_API_KEY is unset it no-ops (the manual link still works).
+// Sends the account-setup link by email via Resend. Free tier covers a small
+// team. If RESEND_API_KEY is unset it no-ops (Copy/Text the link instead).
 
 export function emailConfigured(): boolean {
   return !!process.env.RESEND_API_KEY;
@@ -17,10 +17,10 @@ export async function sendInviteEmail(
   const html = `
     <div style="font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#0B0B0D">
       <p>Hi ${name},</p>
-      <p>You're set up on <b>Mason Homes Par</b>, our inventory app. Tap the button on your phone to log in — no app to download.</p>
+      <p>You've been added to <b>Mason Homes Par</b>, our inventory app. Tap below to create your password. After that you log in any time with your email and password — no app to download.</p>
       <p>
         <a href="${link}" style="display:inline-block;background:#E20602;color:#F5F2EC;text-decoration:none;padding:12px 20px;border-radius:6px;font-weight:700">
-          Log in to Par
+          Create your password
         </a>
       </p>
       <p style="color:#707176;font-size:13px">Or open this link: <a href="${link}">${link}</a></p>
@@ -35,7 +35,7 @@ export async function sendInviteEmail(
     body: JSON.stringify({
       from,
       to,
-      subject: "Your Mason Homes Par login",
+      subject: "Set up your Mason Homes Par account",
       html,
     }),
   });
