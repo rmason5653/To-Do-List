@@ -21,6 +21,16 @@ const ADMIN_PATHS = ["/settings", "/team", "/activity"];
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // One front door. Sessions are per-host cookies, so two live domains = split
+  // logins. Funnel the legacy alias to the canonical domain (temporary redirect
+  // so it's never cached hard — easy to undo if the canonical ever changes).
+  if (req.headers.get("host") === "inventory.livemasonhomes.com") {
+    return NextResponse.redirect(
+      `https://parinventory.livemasonhomes.com${pathname}${req.nextUrl.search}`,
+      307,
+    );
+  }
+
   if (OPEN_PATHS.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return NextResponse.next();
   }
