@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createTask, deleteTask, getTask, updateTask } from "@/lib/tasks";
+import { deleteTaskAttachments } from "@/lib/attachments";
 import { deleteTaskFromSlack, pushTaskToSlack } from "@/lib/sync";
 import { normalizeInput } from "@/lib/normalize";
 import { isDone, todayISO } from "@/lib/grouping";
@@ -134,6 +135,13 @@ export async function DELETE(
       } catch {
         // Saved as a tombstone; the next sync retries the Slack delete.
       }
+    }
+
+    // Clear storage objects first; the DB rows cascade when the task is gone.
+    try {
+      await deleteTaskAttachments(id);
+    } catch {
+      // Orphaned objects are harmless; the index rows still cascade-delete.
     }
 
     await deleteTask(id);

@@ -8,3 +8,7 @@ out
 *.tsbuildinfo
 next-env.d.ts
 .DS_Store
+
+# Playwright artifacts
+/test-results/
+/playwright-report/

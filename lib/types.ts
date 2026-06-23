@@ -59,3 +59,18 @@ export type TaskPatch = Partial<TaskInput> & {
   recurrence?: Recurrence | null;
   reminder?: boolean;
 };
+
+/** A file or image attached to a task, stored in Supabase Storage. */
+export interface Attachment {
+  id: string;
+  task_id: string;
+  name: string; // original filename, for display + download
+  path: string; // object path inside the storage bucket
+  mime: string | null;
+  size: number | null; // bytes
+  created_at: string;
+  url?: string | null; // short-lived signed URL, attached at read time
+}
+
+/** Attachments grouped by task id (the shape the dashboard consumes). */
+export type AttachmentMap = Record<string, Attachment[]>;

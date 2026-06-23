@@ -27,16 +27,17 @@ export const DEFAULT_COLUMN_ORDER: ColumnId[] = [
 ];
 
 const CHECKBOX_WIDTH = "1.75rem";
-const MORE_WIDTH = "2rem";
+// Trailing cell holds the attachments (paperclip) and "more" buttons.
+const ACTIONS_WIDTH = "3.5rem";
 const STORAGE_KEY = "todo_columns";
 
 /** CSS grid-template-columns: the fixed checkbox column, the data columns,
- *  and the fixed trailing "more" column. */
+ *  and the fixed trailing actions column (paperclip + "more"). */
 export function gridTemplate(order: ColumnId[]): string {
   return [
     CHECKBOX_WIDTH,
     ...order.map((id) => COLUMNS[id].width),
-    MORE_WIDTH,
+    ACTIONS_WIDTH,
   ].join(" ");
 }
 
