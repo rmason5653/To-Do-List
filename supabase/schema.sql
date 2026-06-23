@@ -30,9 +30,40 @@ create table if not exists app_meta (
   updated_at timestamptz not null default now()
 );
 
+-- Files/images attached to a task. The bytes live in the `task-files` storage
+-- bucket; this table is the index. Deleting a task cascades its rows here (the
+-- app also clears the storage objects).
+create table if not exists attachments (
+  id          uuid primary key default gen_random_uuid(),
+  task_id     uuid not null references tasks(id) on delete cascade,
+  name        text not null,
+  path        text not null,
+  mime        text,
+  size        bigint,
+  created_at  timestamptz not null default now()
+);
+
+create index if not exists attachments_task_idx on attachments (task_id);
+
+-- Private bucket for task files. The app reads/writes it server-side and hands
+-- the browser short-lived signed URLs, so it stays non-public.
+insert into storage.buckets (id, name, public)
+values ('task-files', 'task-files', false)
+on conflict (id) do nothing;
+
+-- Mirror the app's "either service-role or anon key works" model for storage:
+-- service-role bypasses RLS; this grants the anon role the same access, scoped
+-- to just this bucket. The bucket is still non-public (no anonymous web URLs).
+drop policy if exists "task_files_anon_all" on storage.objects;
+create policy "task_files_anon_all" on storage.objects
+  for all to anon
+  using (bucket_id = 'task-files')
+  with check (bucket_id = 'task-files');
+
 -- The app talks to Supabase with a single key used server-side only, behind
 -- the app's own password gate. Open the two tables to that key so either a
 -- service_role key or a publishable/anon key works.
-alter table tasks    disable row level security;
-alter table app_meta disable row level security;
-grant select, insert, update, delete on tasks, app_meta to anon;
+alter table tasks       disable row level security;
+alter table app_meta    disable row level security;
+alter table attachments disable row level security;
+grant select, insert, update, delete on tasks, app_meta, attachments to anon;

@@ -5,8 +5,16 @@ import { dueLabel } from "@/lib/grouping";
 import { RECURRENCE_LABEL, RECURRENCE_RULES } from "@/lib/recurrence";
 import { AssigneePicker, AssigneeTag, memberInitials } from "./Assignee";
 import PriorityStars from "./PriorityStars";
+import { AttachmentGallery, PaperclipIcon } from "./Attachments";
 import { type ColumnId, gridTemplate } from "./columns";
-import type { Recurrence, Status, Task, TaskPatch, TeamMember } from "@/lib/types";
+import type {
+  Attachment,
+  Recurrence,
+  Status,
+  Task,
+  TaskPatch,
+  TeamMember,
+} from "@/lib/types";
 
 const STATUS_LABEL: Record<Status, string> = {
   not_started: "Not started",
@@ -229,8 +237,11 @@ export default function TaskRow({
   columnOrder,
   recurrence,
   reminder,
+  attachments = [],
   onPatch,
   onDelete,
+  onUploadFiles,
+  onDeleteAttachment,
 }: {
   task: Task;
   today: string;
@@ -238,12 +249,18 @@ export default function TaskRow({
   columnOrder: ColumnId[];
   recurrence?: Recurrence;
   reminder?: boolean;
+  attachments?: Attachment[];
   onPatch: (patch: TaskPatch) => void;
   onDelete: () => void;
+  onUploadFiles?: (files: File[]) => Promise<void> | void;
+  onDeleteAttachment?: (attachmentId: string) => void;
 }) {
-  const [expandMode, setExpandMode] = useState<"notes" | "more" | null>(null);
+  const [expandMode, setExpandMode] = useState<"notes" | "more" | "files" | null>(
+    null,
+  );
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => setTitle(task.title), [task.title]);
   useEffect(() => setDescription(task.description ?? ""), [task.description]);
@@ -378,6 +395,50 @@ export default function TaskRow({
     </button>
   );
 
+  async function handleFiles(files: File[]) {
+    if (files.length === 0 || !onUploadFiles) return;
+    setUploading(true);
+    try {
+      await onUploadFiles(files);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  // Paperclip lives in the trailing actions cell; only rendered when the parent
+  // wired up uploads (the smoke harness renders TaskRow without it).
+  const attachButton = onUploadFiles ? (
+    <button
+      onClick={() => setExpandMode((m) => (m === "files" ? null : "files"))}
+      title={
+        attachments.length
+          ? `${attachments.length} file${attachments.length > 1 ? "s" : ""}`
+          : "Attach files"
+      }
+      className={`hit-area relative flex transition hover:text-mason-red ${
+        expandMode === "files"
+          ? "text-mason-red"
+          : attachments.length
+            ? "text-ink"
+            : "text-line"
+      }`}
+    >
+      <PaperclipIcon />
+      {attachments.length > 0 && (
+        <span className="absolute -right-2 -top-1.5 flex h-3.5 min-w-[0.875rem] items-center justify-center rounded-full bg-mason-red px-1 text-[9px] font-bold leading-none text-bone">
+          {attachments.length}
+        </span>
+      )}
+    </button>
+  ) : null;
+
+  const trailingActions = (
+    <div className="flex items-center justify-end gap-1.5">
+      {attachButton}
+      {moreButton}
+    </div>
+  );
+
   // Glanceable urgency: a left-edge rail colored by star level (3 red, 2 gold,
   // 1 steel) on open tasks, so priority scans without reading the row.
   const rail =
@@ -459,7 +520,7 @@ export default function TaskRow({
             {cells[id]}
           </div>
         ))}
-        {moreButton}
+        {trailingActions}
       </div>
 
       {/* Mobile: a swipeable stacked card — swipe right = done, left = delete */}
@@ -503,6 +564,7 @@ export default function TaskRow({
               {cells.assignee}
               {cells.due}
               {cells.notes}
+              {attachButton}
               {moreButton}
             </div>
           </div>
@@ -524,6 +586,38 @@ export default function TaskRow({
             rows={3}
             className="field w-full resize-y"
           />
+        </div>
+      )}
+
+      {expandMode === "files" && onUploadFiles && (
+        <div className="border-t border-line bg-panel2 p-3">
+          <AttachmentGallery items={attachments} onDelete={onDeleteAttachment} />
+          <div className="mt-2 flex items-center gap-3">
+            <label
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-line bg-panel px-3 py-1.5 text-xs font-medium text-ink transition hover:border-mason-red hover:text-mason-red ${
+                uploading ? "pointer-events-none opacity-60" : ""
+              }`}
+            >
+              <PaperclipIcon className="h-3.5 w-3.5" />
+              {uploading ? "Uploading…" : "Add files"}
+              <input
+                type="file"
+                multiple
+                className="hidden"
+                disabled={uploading}
+                onChange={async (e) => {
+                  const files = Array.from(e.target.files ?? []);
+                  e.target.value = "";
+                  await handleFiles(files);
+                }}
+              />
+            </label>
+            {attachments.length === 0 && !uploading && (
+              <span className="text-xs text-muted">
+                Images preview here; other files open in a new tab. Max 10 MB each.
+              </span>
+            )}
+          </div>
         </div>
       )}
 

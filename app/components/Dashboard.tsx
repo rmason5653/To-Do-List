@@ -15,6 +15,7 @@ import {
 } from "./columns";
 import { groupByPriority, groupByRecent, groupByTime, isDone, todayISO } from "@/lib/grouping";
 import type {
+  AttachmentMap,
   RecurrenceMap,
   SyncStatus,
   Task,
@@ -148,6 +149,7 @@ export default function Dashboard({
   initialTeam,
   initialRecurrence,
   initialReminders,
+  initialAttachments,
   loadError,
 }: {
   initialTasks: Task[];
@@ -155,12 +157,14 @@ export default function Dashboard({
   initialTeam: TeamMember[];
   initialRecurrence: RecurrenceMap;
   initialReminders: string[];
+  initialAttachments: AttachmentMap;
   loadError: string | null;
 }) {
   const [tasks, setTasks] = useState<Task[]>(initialTasks);
   const [sync, setSync] = useState<SyncStatus | null>(initialSync);
   const [team, setTeam] = useState<TeamMember[]>(initialTeam);
   const [recurrence, setRecurrence] = useState<RecurrenceMap>(initialRecurrence);
+  const [attachments, setAttachments] = useState<AttachmentMap>(initialAttachments);
   const [reminders, setReminders] = useState<Set<string>>(
     () => new Set(initialReminders),
   );
@@ -247,6 +251,7 @@ export default function Dashboard({
       if (data.team) setTeam(data.team);
       if (data.recurrence) setRecurrence(data.recurrence);
       if (data.reminders) setReminders(new Set<string>(data.reminders));
+      if (data.attachments) setAttachments(data.attachments);
     } catch {
       /* offline; keep current view */
     }
@@ -281,7 +286,7 @@ export default function Dashboard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const addTask = useCallback(async (input: TaskInput) => {
+  const addTask = useCallback(async (input: TaskInput): Promise<Task | null> => {
     busy.current += 1;
     try {
       const res = await fetch("/api/tasks", {
@@ -292,11 +297,53 @@ export default function Dashboard({
       if (res.ok) {
         const { task } = await res.json();
         setTasks((prev) => [...prev, task]);
+        return task as Task;
+      }
+      return null;
+    } finally {
+      busy.current -= 1;
+    }
+  }, []);
+
+  // Upload files to a task and merge the saved attachments (with signed URLs)
+  // into local state. Used by both the composer and per-row paperclip.
+  const uploadFiles = useCallback(async (taskId: string, files: File[]) => {
+    if (files.length === 0) return;
+    const body = new FormData();
+    for (const f of files) body.append("files", f);
+    busy.current += 1;
+    try {
+      const res = await fetch(`/api/tasks/${taskId}/attachments`, {
+        method: "POST",
+        body,
+      });
+      if (res.ok) {
+        const { attachments: created } = await res.json();
+        setAttachments((prev) => ({
+          ...prev,
+          [taskId]: [...(prev[taskId] ?? []), ...created],
+        }));
       }
     } finally {
       busy.current -= 1;
     }
   }, []);
+
+  const deleteAttachment = useCallback(
+    async (taskId: string, attachmentId: string) => {
+      setAttachments((prev) => ({
+        ...prev,
+        [taskId]: (prev[taskId] ?? []).filter((a) => a.id !== attachmentId),
+      }));
+      busy.current += 1;
+      try {
+        await fetch(`/api/attachments/${attachmentId}`, { method: "DELETE" });
+      } finally {
+        busy.current -= 1;
+      }
+    },
+    [],
+  );
 
   const patchTask = useCallback(async (id: string, patch: TaskPatch) => {
     setTasks((prev) => prev.map((t) => (t.id === id ? mergeTask(t, patch) : t)));
@@ -598,6 +645,7 @@ export default function Dashboard({
           defaultCategory={filter === "personal" ? "personal" : "ops"}
           team={team}
           onAdd={addTask}
+          onUploadFiles={uploadFiles}
         />
       </div>
 
@@ -720,8 +768,13 @@ export default function Dashboard({
                             columnOrder={columnOrder}
                             recurrence={recurrence[t.id]}
                             reminder={reminders.has(t.id)}
+                            attachments={attachments[t.id] ?? []}
                             onPatch={(patch) => patchTask(t.id, patch)}
                             onDelete={() => removeTask(t)}
+                            onUploadFiles={(files) => uploadFiles(t.id, files)}
+                            onDeleteAttachment={(attId) =>
+                              deleteAttachment(t.id, attId)
+                            }
                           />
                         ))}
                     </div>
