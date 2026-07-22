@@ -45,8 +45,16 @@ export default function RestockClient({
   const [error, setError] = useState("");
 
   useEffect(() => {
+    // The logged-in user is who's doing the work — default to them. The
+    // last-picked name is only a fallback (e.g. an off-roster admin session).
     const remembered = localStorage.getItem(STAFF_KEY) ?? "";
-    setStaff(staffNames.includes(remembered) ? remembered : viewerName || "");
+    setStaff(
+      viewerName && staffNames.includes(viewerName)
+        ? viewerName
+        : staffNames.includes(remembered)
+          ? remembered
+          : viewerName || "",
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

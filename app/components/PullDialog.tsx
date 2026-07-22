@@ -17,6 +17,7 @@ import type {
 interface Options {
   units: Pick<Unit, "unit_id" | "name">[];
   items: Pick<CentralReserveItem, "item_name" | "category" | "quantity_on_hand">[];
+  viewer_name?: string;
 }
 
 export interface PullPrefill {
@@ -64,6 +65,9 @@ export default function PullDialog({
       if (!res.ok) throw new Error("Could not load Stockroom items.");
       const data: Options = await res.json();
       setOpts(data);
+      // Who's pulling defaults to the logged-in user; the last typed name is
+      // only a fallback for off-roster sessions.
+      if (data.viewer_name) setStaff(data.viewer_name);
       // Seed defaults from prefill / first available option.
       const seedItem =
         prefill?.item_name && prefill.category

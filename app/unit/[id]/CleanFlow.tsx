@@ -47,8 +47,16 @@ export default function CleanFlow({
   // Default to the remembered pick if it's still on the roster, otherwise the
   // logged-in user. Runs once on mount (client-only localStorage read).
   useEffect(() => {
+    // The logged-in user is who's doing the work — default to them. The
+    // last-picked name is only a fallback (e.g. an off-roster admin session).
     const remembered = localStorage.getItem(STAFF_KEY) ?? "";
-    setStaff(staffNames.includes(remembered) ? remembered : viewerName || "");
+    setStaff(
+      viewerName && staffNames.includes(viewerName)
+        ? viewerName
+        : staffNames.includes(remembered)
+          ? remembered
+          : viewerName || "",
+    );
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

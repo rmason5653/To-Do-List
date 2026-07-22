@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
 import { listCentralReserve, listUnits } from "@/lib/inventory";
-import { isAdmin } from "@/lib/auth-context";
+import { getViewer, isAdmin } from "@/lib/auth-context";
 import { REASONS_BY_CATEGORY } from "@/lib/constants";
 import type { Category, PullReason } from "@/lib/types";
 
@@ -10,9 +10,10 @@ export const dynamic = "force-dynamic";
 // Options for the pull dialog: destination units + central items with stock.
 export async function GET() {
   try {
-    const [units, reserve] = await Promise.all([
+    const [units, reserve, viewer] = await Promise.all([
       listUnits(),
       listCentralReserve(),
+      getViewer(),
     ]);
     return NextResponse.json({
       units: units.map((u) => ({ unit_id: u.unit_id, name: u.name })),
@@ -21,6 +22,8 @@ export async function GET() {
         category: r.category,
         quantity_on_hand: r.quantity_on_hand,
       })),
+      // Who's logged in — the dialog defaults "who's pulling" to them.
+      viewer_name: viewer?.name ?? "",
     });
   } catch (err) {
     return NextResponse.json({ error: (err as Error).message }, { status: 500 });
