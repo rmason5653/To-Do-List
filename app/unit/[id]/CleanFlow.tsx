@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { linenLabel } from "@/lib/constants";
+import { QUEEN_BEDDING, linenLabel } from "@/lib/constants";
 import StaffSelect from "@/app/components/StaffSelect";
 import type { ConsumablePar, LinenPar, Unit } from "@/lib/types";
 
@@ -33,6 +33,10 @@ export default function CleanFlow({
 
   const anyShort = useMemo(
     () => linens.some((l) => l.current_actual < l.par_count),
+    [linens],
+  );
+  const hasQueenBedding = useMemo(
+    () => linens.some((l) => QUEEN_BEDDING.has(l.linen_type)),
     [linens],
   );
   const [linensOk, setLinensOk] = useState<boolean>(!anyShort);
@@ -229,6 +233,13 @@ export default function CleanFlow({
         <p className="mt-1 text-xs text-ink-muted">
           Counts should match par. Flag anything damaged, stained, or missing.
         </p>
+        {hasQueenBedding && (
+          <p className="mt-2 rounded-control border border-[rgba(245,184,0,.3)] bg-gold-subtle px-3 py-2 text-xs text-state-warn">
+            If this unit has a queen pullout, its bedding is in the{" "}
+            <b>linen bag in the closet</b>, not on the sofa bed. Open the bag: a
+            full set is queen sheets, 1 queen quilt, and 2 queen pillowcases.
+          </p>
+        )}
         <div className="mt-3 grid grid-cols-2 gap-3">
           <button
             type="button"

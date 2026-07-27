@@ -28,6 +28,13 @@ export const LINEN_TYPES: { key: string; label: string; size?: LinenSize }[] = [
   { key: "quilt_twin", label: "Quilts (Twin)", size: "Twin" },
 ];
 
+// Queen bedding means the unit has a queen bed or a queen pullout. Pullout
+// bedding is bagged in the closet rather than left on the sofa bed, so the
+// clean flow points cleaners at the bag when a unit carries any of these.
+export const QUEEN_BEDDING = new Set(
+  LINEN_TYPES.filter((l) => l.size === "Queen").map((l) => l.key),
+);
+
 const LINEN_LABEL = new Map(LINEN_TYPES.map((l) => [l.key, l.label]));
 
 /** Sort index of a linen type by catalog order; unknown keys sort last. */

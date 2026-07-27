@@ -82,7 +82,8 @@ export default function GuidePage() {
             <div className="rounded-control bg-surface-1 p-4">
               <p className="font-display text-sm font-bold text-state-ok">Linens</p>
               <p className="mt-1 text-xs text-ink-muted">
-                Bath towels, washcloths, hand / makeup / kitchen towels.
+                Bath towels, washcloths, hand / makeup / kitchen towels, plus the
+                sheets, quilts, and pillowcases for the beds that unit has.
               </p>
               <p className="mt-2 text-sm text-ink-secondary">
                 Stay <b>at the unit</b>, washed on site. They should never run
@@ -113,8 +114,8 @@ export default function GuidePage() {
               <B>Needs restock</B>. Leave the rest on <B>OK</B>.
             </Step>
             <Step n={4}>
-              <b>Linens</b> — if every towel is there and clean, tap{" "}
-              <B>All match par</B>. If one&apos;s damaged/stained/missing, tap{" "}
+              <b>Linens</b> — if every towel and bedding set is there and clean,
+              tap <B>All match par</B>. If one&apos;s damaged/stained/missing, tap{" "}
               <B>Flag an issue</B> and set the real count with −/+.
             </Step>
             <Step n={5}>
@@ -125,6 +126,24 @@ export default function GuidePage() {
           <p className="mt-3 text-xs text-ink-muted">
             You do <b>not</b> drive to the Stockroom for one low item — flagging is
             enough.
+          </p>
+        </Card>
+
+        {/* Pullout bedding */}
+        <Card kicker="Easy to miss" title="Queen pullout bedding is bagged in the closet">
+          <p className="text-sm text-ink-secondary">
+            If a unit has a queen pullout, its bedding is in a{" "}
+            <b>linen bag in the closet</b> — not made up on the sofa bed. Every
+            unit uses the same kit, so a complete bag is:
+          </p>
+          <ul className="mt-3 space-y-1.5 rounded-control bg-surface-1 p-4 text-sm text-ink-secondary">
+            <li>1 set of queen sheets — fitted + flat</li>
+            <li>1 queen quilt</li>
+            <li>2 queen pillowcases</li>
+          </ul>
+          <p className="mt-3 text-xs text-ink-muted">
+            Open the bag and check inside. A bag that&apos;s there but missing a
+            pillowcase is still short — flag it like any other linen.
           </p>
         </Card>
 
