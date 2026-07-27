@@ -35,6 +35,25 @@ export default function CleanFlow({
     () => linens.some((l) => l.current_actual < l.par_count),
     [linens],
   );
+  // Bagged bedding this unit carries, so the clean flow can name each bag and
+  // what a complete one holds. Standing beds are made up and never listed.
+  const bags = useMemo(() => {
+    const out: { label: string; contents: string }[] = [];
+    if (unit.has_pullout) {
+      out.push({
+        label: "Queen pullout couch",
+        contents: "queen sheets, 1 queen quilt, 2 queen pillowcases",
+      });
+    }
+    if (unit.rollaway_beds > 0) {
+      out.push({
+        label: `${unit.rollaway_beds} twin rollaway${unit.rollaway_beds > 1 ? "s" : ""}`,
+        contents: "twin sheets, 1 twin quilt, 1 queen pillowcase — each",
+      });
+    }
+    return out;
+  }, [unit.has_pullout, unit.rollaway_beds]);
+
   const [linensOk, setLinensOk] = useState<boolean>(!anyShort);
   const [linenActual, setLinenActual] = useState<Record<string, number>>(() =>
     Object.fromEntries(linens.map((l) => [l.linen_type, l.current_actual])),
@@ -229,12 +248,22 @@ export default function CleanFlow({
         <p className="mt-1 text-xs text-ink-muted">
           Counts should match par. Flag anything damaged, stained, or missing.
         </p>
-        {unit.has_pullout && (
-          <p className="mt-2 rounded-control border border-[rgba(245,184,0,.3)] bg-gold-subtle px-3 py-2 text-xs text-state-warn">
-            This unit has a <b>queen pullout couch</b>. Its bedding is in the linen bag
-            in the closet, not on the sofa bed. Open the bag: a full set is queen
-            sheets, 1 queen quilt, and 2 queen pillowcases.
-          </p>
+        {bags.length > 0 && (
+          <div className="mt-2 rounded-control border border-[rgba(245,184,0,.3)] bg-gold-subtle px-3 py-2 text-xs text-state-warn">
+            <p>
+              Bedding for {bags.length > 1 ? "these" : "this"} is in a{" "}
+              <b>linen bag in the closet</b>, not made up on the bed. Open each
+              bag and check inside — a bag that&apos;s there but a piece short is
+              still short.
+            </p>
+            <ul className="mt-1.5 space-y-1">
+              {bags.map((b) => (
+                <li key={b.label}>
+                  <b>{b.label}</b> — {b.contents}
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         <div className="mt-3 grid grid-cols-2 gap-3">
           <button

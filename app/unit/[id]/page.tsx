@@ -62,6 +62,7 @@ export default async function UnitPage({
               unitId={unit.unit_id}
               linens={linens}
               hasPullout={unit.has_pullout}
+              rollawayBeds={unit.rollaway_beds}
             />
           </div>
         )}

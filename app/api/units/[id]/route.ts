@@ -3,8 +3,8 @@ import { getSupabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
 
-// Two callers: the Parking view's confirmation toggle, and the manager's
-// pullout-couch switch on the unit page. Each sends only its own field.
+// Callers: the Parking view's confirmation toggle, and the manager's bagged-
+// bedding controls (pullout couch, rollaway count). Each sends only its field.
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> },
@@ -27,6 +27,17 @@ export async function PATCH(
       return NextResponse.json({ error: "has_pullout must be true or false." }, { status: 400 });
     }
     patch.has_pullout = body.has_pullout;
+  }
+
+  if (body.rollaway_beds !== undefined) {
+    const n = Number(body.rollaway_beds);
+    if (!Number.isInteger(n) || n < 0) {
+      return NextResponse.json(
+        { error: "Rollaway beds must be a whole number." },
+        { status: 400 },
+      );
+    }
+    patch.rollaway_beds = n;
   }
 
   if (Object.keys(patch).length === 0) {

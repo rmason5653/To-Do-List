@@ -130,19 +130,36 @@ export default function GuidePage() {
         </Card>
 
         {/* Pullout bedding */}
-        <Card kicker="Easy to miss" title="Pullout couch bedding is bagged in the closet">
+        <Card kicker="Easy to miss" title="Some bedding is bagged in the closet">
           <p className="text-sm text-ink-secondary">
-            Units with a <b>pullout couch</b> keep its bedding in a linen bag in
-            the closet — not made up on the sofa bed. The unit page tells you
-            when there&apos;s one. Every pullout uses the same kit:
+            A <b>pullout couch</b> and a <b>twin rollaway</b> keep their bedding
+            in a linen bag in the closet — not made up on the bed. The unit page
+            tells you when a unit has one and how many. The kits never vary:
           </p>
-          <ul className="mt-3 space-y-1.5 rounded-control bg-surface-1 p-4 text-sm text-ink-secondary">
-            <li>1 set of queen sheets — fitted + flat</li>
-            <li>1 queen quilt</li>
-            <li>2 queen pillowcases</li>
-          </ul>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-control bg-surface-1 p-4">
+              <p className="font-display text-sm font-bold text-ink-primary">
+                Queen pullout couch
+              </p>
+              <ul className="mt-2 space-y-1.5 text-sm text-ink-secondary">
+                <li>1 set of queen sheets — fitted + flat</li>
+                <li>1 queen quilt</li>
+                <li>2 queen pillowcases</li>
+              </ul>
+            </div>
+            <div className="rounded-control bg-surface-1 p-4">
+              <p className="font-display text-sm font-bold text-ink-primary">
+                Twin rollaway — one bag each
+              </p>
+              <ul className="mt-2 space-y-1.5 text-sm text-ink-secondary">
+                <li>1 set of twin sheets — fitted + flat</li>
+                <li>1 twin quilt</li>
+                <li>1 queen pillowcase</li>
+              </ul>
+            </div>
+          </div>
           <p className="mt-3 text-xs text-ink-muted">
-            Open the bag and check inside. A bag that&apos;s there but missing a
+            Open every bag and check inside. A bag that&apos;s there but missing a
             pillowcase is still short — flag it like any other linen.
           </p>
         </Card>

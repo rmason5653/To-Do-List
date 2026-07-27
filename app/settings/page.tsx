@@ -2,7 +2,7 @@ import { getSettings, listConsumableItems, listUnits } from "@/lib/inventory";
 import { Container, PageHeader, SetupNotice } from "@/app/components/ui";
 import type { ConsumableItem, Settings, Unit } from "@/lib/types";
 import SettingsClient from "./SettingsClient";
-import PulloutClient from "./PulloutClient";
+import UnitPropsClient from "./UnitPropsClient";
 
 export const dynamic = "force-dynamic";
 
@@ -40,10 +40,10 @@ export default async function SettingsPage() {
 
           <section>
             <h2 className="font-display text-lg font-bold tracking-[-0.01em] text-ink-primary">
-              Unit properties
+              Bagged bedding
             </h2>
             <div className="mt-3">
-              <PulloutClient units={units} />
+              <UnitPropsClient units={units} />
             </div>
           </section>
         </div>

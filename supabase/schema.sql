@@ -22,10 +22,13 @@ create table if not exists units (
   parking_confirmed_at timestamptz,
   last_cleaned_at      timestamptz,
   turnover_frequency   int,                            -- turnovers/week; null = global default
-  -- Pullout couch: its bedding is bagged in the closet (queen sheets, 1 queen
-  -- quilt, 2 queen pillowcases). Tracked, not inferred from queen linen — a
-  -- queen main bed carries the same sizes.
+  -- Bagged bedding, kept in the closet rather than made up on the bed. Neither
+  -- is inferable from linen sizes (a queen main bed and a standing twin carry
+  -- the same ones), so both are tracked.
+  -- Pullout: queen sheets, 1 queen quilt, 2 queen pillowcases.
   has_pullout          boolean not null default false,
+  -- Per rollaway: twin sheets, 1 twin quilt, 1 queen pillowcase.
+  rollaway_beds        int     not null default 0,
   created_at           timestamptz not null default now()
 );
 

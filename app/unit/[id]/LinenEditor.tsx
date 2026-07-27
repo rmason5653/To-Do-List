@@ -12,16 +12,19 @@ export default function LinenEditor({
   unitId,
   linens,
   hasPullout,
+  rollawayBeds,
 }: {
   unitId: string;
   linens: LinenPar[];
   hasPullout: boolean;
+  rollawayBeds: number;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [busyKey, setBusyKey] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [pullout, setPullout] = useState(hasPullout);
+  const [rollaways, setRollaways] = useState(String(rollawayBeds));
   const [draft, setDraft] = useState<Record<string, string>>(() =>
     Object.fromEntries(linens.map((l) => [l.linen_type, String(l.par_count)])),
   );
@@ -105,6 +108,32 @@ export default function LinenEditor({
     }
   }
 
+  async function saveRollaways() {
+    const n = parseInt(rollaways, 10);
+    if (!Number.isInteger(n) || n < 0) {
+      setError("Rollaway beds must be a whole number.");
+      return;
+    }
+    setBusyKey("__rollaway__");
+    setError("");
+    try {
+      const res = await fetch(`/api/units/${unitId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rollaway_beds: n }),
+      });
+      if (!res.ok) {
+        const d = await res.json().catch(() => ({}));
+        throw new Error(d.error || "Could not save.");
+      }
+      router.refresh();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBusyKey(null);
+    }
+  }
+
   async function add() {
     if (!newType) {
       setError("Pick a linen type to add.");
@@ -171,29 +200,62 @@ export default function LinenEditor({
             bedding (King or Queen) this unit actually uses.
           </p>
 
-          {/* Drives the closet-bag reminder cleaners see during a clean. Queen
-              linen alone can't stand in for this — a queen main bed uses the
-              same sizes. */}
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-control bg-surface-1 px-3 py-2.5">
-            <span className="min-w-0 text-sm text-ink-secondary">
-              Has a <b className="text-ink-primary">queen pullout couch</b>
-              <span className="block text-[11px] text-ink-muted">
-                Reminds cleaners its bedding is bagged in the closet.
+          {/* Both drive the closet-bag reminder cleaners see during a clean.
+              Linen size can't stand in for either — a queen main bed and a
+              standing twin use the same sizes. */}
+          <div className="mb-4 space-y-2">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-control bg-surface-1 px-3 py-2.5">
+              <span className="min-w-0 text-sm text-ink-secondary">
+                Has a <b className="text-ink-primary">queen pullout couch</b>
+                <span className="block text-[11px] text-ink-muted">
+                  Bagged in the closet: queen sheets, quilt, 2 queen pillowcases.
+                </span>
               </span>
-            </span>
-            <button
-              type="button"
-              onClick={togglePullout}
-              disabled={busyKey === "__pullout__"}
-              aria-pressed={pullout}
-              className={`rounded-control border px-3 py-1.5 font-display text-xs font-bold transition disabled:opacity-50 ${
-                pullout
-                  ? "border-[rgba(31,138,76,.5)] bg-green-subtle text-state-ok"
-                  : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-ink-primary"
-              }`}
-            >
-              {busyKey === "__pullout__" ? "…" : pullout ? "Yes" : "No"}
-            </button>
+              <button
+                type="button"
+                onClick={togglePullout}
+                disabled={busyKey === "__pullout__"}
+                aria-pressed={pullout}
+                className={`rounded-control border px-3 py-1.5 font-display text-xs font-bold transition disabled:opacity-50 ${
+                  pullout
+                    ? "border-[rgba(31,138,76,.5)] bg-green-subtle text-state-ok"
+                    : "border-line-strong bg-surface-3 text-ink-tertiary hover:text-ink-primary"
+                }`}
+              >
+                {busyKey === "__pullout__" ? "…" : pullout ? "Yes" : "No"}
+              </button>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-control bg-surface-1 px-3 py-2.5">
+              <span className="min-w-0 text-sm text-ink-secondary">
+                <b className="text-ink-primary">Twin rollaway beds</b>
+                <span className="block text-[11px] text-ink-muted">
+                  One bag each: twin sheets, quilt, 1 queen pillowcase. Standing
+                  twin beds stay 0.
+                </span>
+              </span>
+              <span className="flex items-center gap-2">
+                <input
+                  type="number"
+                  min={0}
+                  value={rollaways}
+                  onChange={(e) => setRollaways(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") saveRollaways();
+                  }}
+                  aria-label="Twin rollaway beds"
+                  className={field}
+                />
+                <button
+                  type="button"
+                  onClick={saveRollaways}
+                  disabled={busyKey === "__rollaway__"}
+                  className="rounded-control bg-red px-3 py-1.5 font-display text-xs font-bold text-bone transition hover:bg-red-hover active:brightness-95 disabled:opacity-50"
+                >
+                  {busyKey === "__rollaway__" ? "…" : "Save"}
+                </button>
+              </span>
+            </div>
           </div>
 
           {linens.length > 0 ? (
