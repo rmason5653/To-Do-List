@@ -176,7 +176,7 @@ export default function LinenEditor({
               same sizes. */}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-control bg-surface-1 px-3 py-2.5">
             <span className="min-w-0 text-sm text-ink-secondary">
-              Has a <b className="text-ink-primary">pullout couch</b>
+              Has a <b className="text-ink-primary">queen pullout couch</b>
               <span className="block text-[11px] text-ink-muted">
                 Reminds cleaners its bedding is bagged in the closet.
               </span>

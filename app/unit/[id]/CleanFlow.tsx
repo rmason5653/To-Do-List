@@ -231,7 +231,7 @@ export default function CleanFlow({
         </p>
         {unit.has_pullout && (
           <p className="mt-2 rounded-control border border-[rgba(245,184,0,.3)] bg-gold-subtle px-3 py-2 text-xs text-state-warn">
-            This unit has a <b>pullout couch</b>. Its bedding is in the linen bag
+            This unit has a <b>queen pullout couch</b>. Its bedding is in the linen bag
             in the closet, not on the sofa bed. Open the bag: a full set is queen
             sheets, 1 queen quilt, and 2 queen pillowcases.
           </p>
