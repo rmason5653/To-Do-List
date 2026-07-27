@@ -58,7 +58,11 @@ export default async function UnitPage({
 
         {admin && (
           <div className="mt-6">
-            <LinenEditor unitId={unit.unit_id} linens={linens} />
+            <LinenEditor
+              unitId={unit.unit_id}
+              linens={linens}
+              hasPullout={unit.has_pullout}
+            />
           </div>
         )}
 

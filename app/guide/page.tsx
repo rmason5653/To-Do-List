@@ -130,11 +130,11 @@ export default function GuidePage() {
         </Card>
 
         {/* Pullout bedding */}
-        <Card kicker="Easy to miss" title="Queen pullout bedding is bagged in the closet">
+        <Card kicker="Easy to miss" title="Pullout couch bedding is bagged in the closet">
           <p className="text-sm text-ink-secondary">
-            If a unit has a queen pullout, its bedding is in a{" "}
-            <b>linen bag in the closet</b> — not made up on the sofa bed. Every
-            unit uses the same kit, so a complete bag is:
+            Units with a <b>pullout couch</b> keep its bedding in a linen bag in
+            the closet — not made up on the sofa bed. The unit page tells you
+            when there&apos;s one. Every pullout uses the same kit:
           </p>
           <ul className="mt-3 space-y-1.5 rounded-control bg-surface-1 p-4 text-sm text-ink-secondary">
             <li>1 set of queen sheets — fitted + flat</li>

@@ -23,6 +23,10 @@ export interface Unit {
   parking_confirmed_at: string | null;
   last_cleaned_at: string | null;
   turnover_frequency: number | null; // turnovers/week; null = use global default
+  // A pullout couch is stocked with its own bagged bedding set, kept in the
+  // closet. Queen linen alone doesn't imply one — a queen main bed carries the
+  // same sizes — so this is tracked rather than inferred.
+  has_pullout: boolean;
 }
 
 /** Global inputs that drive the calculated par math. */

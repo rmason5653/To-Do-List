@@ -22,6 +22,10 @@ create table if not exists units (
   parking_confirmed_at timestamptz,
   last_cleaned_at      timestamptz,
   turnover_frequency   int,                            -- turnovers/week; null = global default
+  -- Pullout couch: its bedding is bagged in the closet (queen sheets, 1 queen
+  -- quilt, 2 queen pillowcases). Tracked, not inferred from queen linen — a
+  -- queen main bed carries the same sizes.
+  has_pullout          boolean not null default false,
   created_at           timestamptz not null default now()
 );
 
