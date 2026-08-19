@@ -37,7 +37,9 @@ export default async function RestockPage() {
       listUnits(),
       listConsumables(),
       listCentralReserve(),
-      listActiveStaffNames(),
+      // Managers only — the run is theirs, so the picker can't attribute it
+      // to a cleaner.
+      listActiveStaffNames("admin"),
       getViewer(),
     ]);
     staffNames = names;

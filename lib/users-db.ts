@@ -75,17 +75,19 @@ export async function resetUserPassword(id: string): Promise<string> {
 
 /**
  * Names of active team members, for the "who did this" picker on the clean and
- * restock flows. Returns [] if the table isn't set up yet so those flows still
- * render (the picker just falls back to the logged-in user).
+ * restock flows. Pass a role to narrow it — restock is manager-run, so that
+ * picker asks for "admin" and can't log the run under a cleaner. Returns [] if
+ * the table isn't set up yet so those flows still render (the picker just falls
+ * back to the logged-in user).
  */
-export async function listActiveStaffNames(): Promise<string[]> {
+export async function listActiveStaffNames(
+  role?: "admin" | "cleaner",
+): Promise<string[]> {
   try {
     const sb = getSupabase();
-    const { data, error } = await sb
-      .from("app_users")
-      .select("name")
-      .eq("status", "active")
-      .order("name", { ascending: true });
+    let q = sb.from("app_users").select("name").eq("status", "active");
+    if (role) q = q.eq("role", role);
+    const { data, error } = await q.order("name", { ascending: true });
     if (error) return [];
     return (data ?? []).map((r) => r.name as string);
   } catch {
