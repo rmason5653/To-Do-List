@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import {
   buildRestockRun,
   listConsumables,
@@ -10,7 +11,7 @@ import {
   PageHeader,
   SetupNotice,
 } from "@/app/components/ui";
-import { getViewer } from "@/lib/auth-context";
+import { getViewer, isAdmin } from "@/lib/auth-context";
 import { listActiveStaffNames } from "@/lib/users-db";
 import RestockClient, {
   type PickItem,
@@ -21,11 +22,14 @@ import DigestButton from "./DigestButton";
 export const dynamic = "force-dynamic";
 
 export default async function RestockPage() {
+  // Manager-only. Middleware already gates /restock; this is the second lock so
+  // the page can't render a run for a cleaner if that list ever drifts.
+  if (!(await isAdmin())) redirect("/");
+
   let runs: RestockRun[] = [];
   let pickList: PickItem[] = [];
   let staffNames: string[] = [];
   let viewerName = "";
-  let admin = false;
   let loadError: string | null = null;
 
   try {
@@ -38,7 +42,6 @@ export default async function RestockPage() {
     ]);
     staffNames = names;
     viewerName = viewer?.name ?? "";
-    admin = viewer?.role === "admin";
 
     runs = buildRestockRun(units, cons).map((r) => ({
       unit_id: r.unit.unit_id,
@@ -84,7 +87,7 @@ export default async function RestockPage() {
               {runs.length} {runs.length === 1 ? "unit" : "units"} below reorder
             </p>
           )}
-          {admin && <DigestButton />}
+          <DigestButton />
         </div>
       </PageHeader>
 

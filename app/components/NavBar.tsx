@@ -10,7 +10,7 @@ import ThemeToggle from "./ThemeToggle";
 // more: kept off the main bar (under "More") so the daily-use tabs stay short.
 const LINKS = [
   { href: "/", label: "Home", admin: false, more: false },
-  { href: "/restock", label: "Restock", admin: false, more: false },
+  { href: "/restock", label: "Restock", admin: true, more: false },
   { href: "/central", label: "Stockroom", admin: true, more: false },
   { href: "/linens", label: "Linens", admin: true, more: false },
   { href: "/guide", label: "Guide", admin: false, more: false },

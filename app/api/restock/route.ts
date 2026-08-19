@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isAdmin } from "@/lib/auth-context";
 import { getSupabase } from "@/lib/supabase";
 
 export const dynamic = "force-dynamic";
@@ -7,6 +8,14 @@ export const dynamic = "force-dynamic";
 // par, drawing down central and logging each transfer (handled atomically by
 // the restock_unit RPC). Returns the number of items refilled.
 export async function POST(req: Request) {
+  // Managers only. Cleaners flag what's low during a clean; the refill itself
+  // (and the stock drawdown it writes) is a manager action.
+  if (!(await isAdmin()))
+    return NextResponse.json(
+      { error: "Only a manager can run a restock." },
+      { status: 403 },
+    );
+
   const body = await req.json().catch(() => ({}));
   const staff = String(body.staff_name ?? "").trim();
   const unitId = String(body.unit_id ?? "");

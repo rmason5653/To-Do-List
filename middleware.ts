@@ -15,8 +15,9 @@ const OPEN_PATHS = [
   "/apple-icon",
 ];
 
-// Admin-only areas.
-const ADMIN_PATHS = ["/settings", "/team", "/activity"];
+// Admin-only areas. Restock is manager-only: cleaners flag what's low during a
+// clean, a manager does the physical refill and marks it done.
+const ADMIN_PATHS = ["/settings", "/team", "/activity", "/restock"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;

@@ -165,7 +165,11 @@ export default function GuidePage() {
         </Card>
 
         {/* Weekly restock */}
-        <Card kicker="Once a week" title="The restock run — refill every closet in one trip">
+        <Card kicker="Once a week · Managers only" title="The restock run — refill every closet in one trip">
+          <p className="mb-3 rounded-control border border-line-strong bg-surface-1 px-3 py-2 text-xs text-ink-muted">
+            Cleaners don&apos;t run this one — flag what&apos;s low during the
+            clean and a manager refills it on the weekly run.
+          </p>
           <ol className="space-y-3">
             <Step n={1}>
               Tap <B>Restock</B> in the top menu.
