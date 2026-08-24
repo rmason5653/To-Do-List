@@ -9,13 +9,34 @@ export const dynamic = "force-dynamic";
 // A standalone, no-login-needed walkthrough for cleaners. Mirrors the real
 // in-app labels so the steps match what they see.
 
-function Step({ n, children }: { n: number; children: React.ReactNode }) {
+function Step({
+  n,
+  children,
+  manager = false,
+}: {
+  n: number;
+  children: React.ReactNode;
+  manager?: boolean;
+}) {
   return (
     <li className="flex gap-3">
-      <span className="tnum mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-red text-xs font-bold text-bone">
+      <span
+        className={`tnum mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+          manager
+            ? "border border-line-strong bg-surface-3 text-ink-tertiary"
+            : "bg-red text-bone"
+        }`}
+      >
         {n}
       </span>
-      <span className="text-sm leading-relaxed text-ink-secondary">{children}</span>
+      <span className="text-sm leading-relaxed text-ink-secondary">
+        {children}
+        {manager && (
+          <span className="ml-2 whitespace-nowrap rounded-full border border-line-strong bg-surface-3 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-[0.04em] text-ink-muted">
+            Manager
+          </span>
+        )}
+      </span>
     </li>
   );
 }
@@ -198,18 +219,22 @@ export default function GuidePage() {
 
         {/* Damaged linen */}
         <Card kicker="When a towel is bad" title="Replace a damaged or missing linen">
+          <p className="mb-3 rounded-control border border-line-strong bg-surface-1 px-3 py-2 text-xs text-ink-muted">
+            Cleaners: step 1 is yours. Flag it, finish the clean, and you&apos;re
+            done — a manager handles the Stockroom half.
+          </p>
           <ol className="space-y-3">
             <Step n={1}>
               During the clean, under <b>Linens</b>, tap <B>Flag an issue</B> and
               lower the count for the bad towel. Complete the clean.
             </Step>
-            <Step n={2}>Go to the Stockroom and grab a replacement.</Step>
-            <Step n={3}>
+            <Step n={2} manager>Go to the Stockroom and grab a replacement.</Step>
+            <Step n={3} manager>
               Open the unit → tap <B>Pull from Stockroom</B> (top of the page).
               It&apos;s pre-filled to that unit. Pick the towel, quantity, reason{" "}
               <B>Damage replacement</B> or <B>Stain out</B> → <B>Log pull</B>.
             </Step>
-            <Step n={4}>
+            <Step n={4} manager>
               Take it back to the unit. The app sets that unit back to par and
               subtracts 1 from the Stockroom.
             </Step>
@@ -221,7 +246,14 @@ export default function GuidePage() {
         </Card>
 
         {/* Urgent consumable */}
-        <Card kicker="When it can't wait" title="Refill a unit from the Stockroom right now">
+        <Card
+          kicker="When it can't wait · Managers only"
+          title="Refill a unit from the Stockroom right now"
+        >
+          <p className="mb-3 rounded-control border border-line-strong bg-surface-1 px-3 py-2 text-xs text-ink-muted">
+            Cleaners: flag it during the clean and tell a manager — they&apos;ll
+            bring it over. The steps below are theirs.
+          </p>
           <ol className="space-y-3">
             <Step n={1}>Go to the Stockroom and grab the item(s).</Step>
             <Step n={2}>

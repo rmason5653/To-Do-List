@@ -16,6 +16,7 @@ import {
   formatWhen,
 } from "@/app/components/ui";
 import UnitPicker, { type UnitSummary } from "@/app/components/UnitPicker";
+import { isAdmin } from "@/lib/auth-context";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,11 @@ function rollup(
 }
 
 export default async function HomePage() {
+  // Portfolio status below is the manager view — every card on it links to a
+  // page cleaners can't open. Resolve the role once, then skip both the
+  // section and the reads that exist only to feed it.
+  const admin = await isAdmin();
+
   let units: Unit[] = [];
   let cons: ConsumablePar[] = [];
   let linens: LinenPar[] = [];
@@ -65,16 +71,20 @@ export default async function HomePage() {
       listConsumables(),
       listLinens(),
     ]);
-    const reserve = await listCentralReserve();
-    counts = buildCounts(units, cons, linens, reserve);
+    if (admin) {
+      const reserve = await listCentralReserve();
+      counts = buildCounts(units, cons, linens, reserve);
+    }
   } catch (err) {
     loadError = (err as Error).message;
   }
 
-  try {
-    recentCleans = await listRecentCleans();
-  } catch {
-    // Non-critical — the dashboard still renders without the clean feed.
+  if (admin) {
+    try {
+      recentCleans = await listRecentCleans();
+    } catch {
+      // Non-critical — the dashboard still renders without the clean feed.
+    }
   }
 
   const roll = rollup(units, cons, linens);
@@ -134,68 +144,71 @@ export default async function HomePage() {
         <UnitPicker units={summaries} />
       )}
 
-      {/* Portfolio status — manager view, below the cleaner's workflow. */}
-      <section className="mt-12 border-t border-line pt-8">
-        <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
-          Portfolio status
-        </h2>
-        <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
-          <StatCard
-            label="Units to restock"
-            value={counts.unitsBelowReorder}
-            tone={counts.unitsBelowReorder > 0 ? "warn" : "ok"}
-            hint="Below reorder point"
-            href="/restock"
-          />
-          <StatCard
-            label="Stockroom items low"
-            value={counts.centralLow}
-            tone={counts.centralLow > 0 ? "warn" : "ok"}
-            hint="Time to buy bulk"
-            href="/central"
-          />
-          <StatCard
-            label="Linen issues"
-            value={counts.linenShortUnits}
-            tone={counts.linenShortUnits > 0 ? "bad" : "ok"}
-            hint="Units below par"
-            href="/linens"
-          />
-          <StatCard
-            label="Parking missing"
-            value={counts.parkingMissing}
-            tone={counts.parkingMissing > 0 ? "bad" : "ok"}
-            hint="Passes unaccounted"
-            href="/parking"
-          />
-        </div>
-
-        {recentCleans.length > 0 && (
-          <div className="mt-6">
-            <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
-              Recent cleans
-            </h3>
-            <div className="overflow-hidden rounded-card border border-line bg-surface-2 shadow-e1">
-              {recentCleans.map((c, idx) => (
-                <div
-                  key={`${c.unit_name}-${c.completed_at}-${idx}`}
-                  className={`flex items-center justify-between gap-3 px-4 py-2.5 text-sm ${
-                    idx > 0 ? "border-t border-line" : ""
-                  }`}
-                >
-                  <span className="font-medium text-ink-primary">
-                    {c.unit_name ?? "—"}
-                  </span>
-                  <span className="flex items-center gap-3 text-xs text-ink-muted">
-                    {c.staff_name && <span>{c.staff_name}</span>}
-                    <span className="tnum">{formatWhen(c.completed_at)}</span>
-                  </span>
-                </div>
-              ))}
-            </div>
+      {/* Portfolio status — manager view. Cleaners never see it: every
+          card links to a page they can't open. */}
+      {admin && (
+        <section className="mt-12 border-t border-line pt-8">
+          <h2 className="mb-4 font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+            Portfolio status
+          </h2>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            <StatCard
+              label="Units to restock"
+              value={counts.unitsBelowReorder}
+              tone={counts.unitsBelowReorder > 0 ? "warn" : "ok"}
+              hint="Below reorder point"
+              href="/restock"
+            />
+            <StatCard
+              label="Stockroom items low"
+              value={counts.centralLow}
+              tone={counts.centralLow > 0 ? "warn" : "ok"}
+              hint="Time to buy bulk"
+              href="/central"
+            />
+            <StatCard
+              label="Linen issues"
+              value={counts.linenShortUnits}
+              tone={counts.linenShortUnits > 0 ? "bad" : "ok"}
+              hint="Units below par"
+              href="/linens"
+            />
+            <StatCard
+              label="Parking missing"
+              value={counts.parkingMissing}
+              tone={counts.parkingMissing > 0 ? "bad" : "ok"}
+              hint="Passes unaccounted"
+              href="/parking"
+            />
           </div>
-        )}
-      </section>
+
+          {recentCleans.length > 0 && (
+            <div className="mt-6">
+              <h3 className="mb-3 font-display text-sm font-bold uppercase tracking-[0.06em] text-ink-secondary">
+                Recent cleans
+              </h3>
+              <div className="overflow-hidden rounded-card border border-line bg-surface-2 shadow-e1">
+                {recentCleans.map((c, idx) => (
+                  <div
+                    key={`${c.unit_name}-${c.completed_at}-${idx}`}
+                    className={`flex items-center justify-between gap-3 px-4 py-2.5 text-sm ${
+                      idx > 0 ? "border-t border-line" : ""
+                    }`}
+                  >
+                    <span className="font-medium text-ink-primary">
+                      {c.unit_name ?? "—"}
+                    </span>
+                    <span className="flex items-center gap-3 text-xs text-ink-muted">
+                      {c.staff_name && <span>{c.staff_name}</span>}
+                      <span className="tnum">{formatWhen(c.completed_at)}</span>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </section>
+      )}
     </Container>
   );
 }
